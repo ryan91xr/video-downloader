@@ -75,7 +75,7 @@ button {
   <h2>🎬 Video Downloader</h2>
   <input id="linkInput" placeholder="Paste TikTok link">
 
-  <button onclick="handleDownload()">Download</button>
+  <button onclick="handleDownload()">Fetch Video</button>
 
   <div class="loader" id="loader"></div>
   <div id="message"></div>
@@ -84,13 +84,14 @@ button {
     <p id="videoTitle"></p>
     <img id="thumbnail">
 
-    <a id="downloadLink" download>
-      <button>⬇ Download</button>
-    </a>
+    <!-- NEW DOWNLOAD BUTTON -->
+    <button onclick="forceDownload()">⬇ Download Video</button>
   </div>
 </div>
 
 <script>
+let videoUrl = ""; // store video link
+
 async function handleDownload() {
   let input = document.getElementById("linkInput").value;
   let loader = document.getElementById("loader");
@@ -98,7 +99,6 @@ async function handleDownload() {
   let result = document.getElementById("result");
   let title = document.getElementById("videoTitle");
   let thumbnail = document.getElementById("thumbnail");
-  let downloadLink = document.getElementById("downloadLink");
 
   message.innerHTML = "";
   result.style.display = "none";
@@ -115,7 +115,7 @@ async function handleDownload() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-RapidAPI-Key": "fa17d7fc83mshfc10bf4dff50de5p1765c9jsn6f1fc92a3a5c",
+      "X-RapidAPI-Key": "fa17d7fc83mshfc10bf4dff50de5p1765c9jsn6f1fc92a3a5c",
         "X-RapidAPI-Host": "tiktok-video-no-watermark2.p.rapidapi.com"
       },
       body: JSON.stringify({
@@ -134,7 +134,9 @@ async function handleDownload() {
 
       title.innerHTML = data.data.title;
       thumbnail.src = data.data.cover;
-      downloadLink.href = data.data.play;
+
+      // store video URL
+      videoUrl = data.data.play;
 
     } else {
       message.innerHTML = "⚠️ Failed to fetch video";
@@ -145,6 +147,21 @@ async function handleDownload() {
     message.innerHTML = "❌ Error occurred";
     console.error(error);
   }
+}
+
+// FORCE DOWNLOAD FUNCTION
+function forceDownload() {
+  if (!videoUrl) {
+    alert("No video loaded!");
+    return;
+  }
+
+  let a = document.createElement("a");
+  a.href = videoUrl + "?download=1";
+  a.download = "tiktok_video.mp4";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 </script>
 
