@@ -171,12 +171,19 @@ async function downloadTikTok(link) {
     if (data.download) {
       message.innerHTML = "✅ Download ready";
 
-      let a = document.createElement("a");
-      a.href = data.download;
-      a.download = "tiktok.mp4";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const res = await fetch(data.download);
+const blob = await res.blob();
+
+const url = window.URL.createObjectURL(blob);
+
+let a = document.createElement("a");
+a.href = url;
+a.download = "tiktok.mp4";
+document.body.appendChild(a);
+a.click();
+a.remove();
+
+window.URL.revokeObjectURL(url);
 
     } else {
       message.innerHTML = "⚠️ Failed to get video";
