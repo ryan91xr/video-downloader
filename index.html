@@ -16,7 +16,6 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
-/* CARD */
 .card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(15px);
@@ -28,7 +27,6 @@ body {
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 
-/* TITLE */
 h1 {
   margin-bottom: 5px;
 }
@@ -39,7 +37,6 @@ h1 {
   margin-bottom: 20px;
 }
 
-/* INPUT */
 input {
   width: 100%;
   padding: 14px;
@@ -52,7 +49,6 @@ input {
   font-size: 14px;
 }
 
-/* BUTTON */
 button {
   width: 100%;
   padding: 14px;
@@ -69,14 +65,12 @@ button:hover {
   transform: scale(1.05);
 }
 
-/* MESSAGE */
 #message {
   margin-top: 15px;
   font-size: 13px;
   color: #ccc;
 }
 
-/* LOADER SCREEN */
 #loaderScreen {
   position: fixed;
   top: 0;
@@ -156,34 +150,45 @@ async function handleDownload() {
   setTimeout(() => hideLoader(), 2000);
 }
 
-// TIKTOK
+
+// 🔥 TIKTOK (NO PREVIEW, DIRECT DOWNLOAD)
 async function downloadTikTok(link) {
   let message = document.getElementById("message");
 
-  const response = await fetch("https://tiktok-video-no-watermark2.p.rapidapi.com/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-RapidAPI-Key": "fa17d7fc83mshfc10bf4dff50de5p1765c9jsn6f1fc92a3a5c",
-      "X-RapidAPI-Host": "tiktok-video-no-watermark2.p.rapidapi.com"
-    },
-    body: JSON.stringify({
-      url: link,
-      hd: "1"
-    })
-  });
+  message.innerHTML = "🔄 Processing TikTok...";
 
-  const data = await response.json();
+  try {
+    const response = await fetch("https://tikvid-backend.onrender.com/download", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ url: link })
+    });
 
-  if (data && data.data) {
-    message.innerHTML = "✅ TikTok download ready";
-    window.open(data.data.play, "_blank");
-  } else {
-    message.innerHTML = "⚠️ TikTok failed";
+    const data = await response.json();
+
+    if (data.download) {
+      message.innerHTML = "✅ Download ready";
+
+      let a = document.createElement("a");
+      a.href = data.download;
+      a.download = "tiktok.mp4";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } else {
+      message.innerHTML = "⚠️ Failed to get video";
+    }
+
+  } catch (error) {
+    message.innerHTML = "❌ Server error";
   }
 }
 
-// YOUTUBE
+
+// YOUTUBE (redirect method)
 function downloadYouTube(link) {
   let message = document.getElementById("message");
 
@@ -193,6 +198,7 @@ function downloadYouTube(link) {
 
   window.open(url, "_blank");
 }
+
 
 // LOADER
 function showLoader() {
