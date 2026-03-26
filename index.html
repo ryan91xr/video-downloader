@@ -13,16 +13,18 @@ body {
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  font-family: Arial;
+  font-family: Arial, sans-serif;
 }
 
+/* Card */
 .card {
-  background: #0d1b1e;
+  background: rgba(13, 27, 30, 0.95);
   padding: 30px;
   border-radius: 20px;
   width: 320px;
   text-align: center;
   color: white;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 
 input {
@@ -30,7 +32,9 @@ input {
   padding: 12px;
   border-radius: 10px;
   border: none;
-  margin: 10px 0;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  outline: none;
 }
 
 button {
@@ -39,31 +43,38 @@ button {
   border-radius: 10px;
   border: none;
   background: #00d4aa;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-.loader {
+/* Fullscreen Loader */
+#loaderScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
   display: none;
-  margin: 10px auto;
-  border: 4px solid #333;
-  border-top: 4px solid #00d4aa;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  flex-direction: column;
+  color: white;
+}
+
+.spinner {
+  border: 5px solid #333;
+  border-top: 5px solid #00d4aa;
   border-radius: 50%;
-  width: 25px;
-  height: 25px;
+  width: 40px;
+  height: 40px;
+  margin-top: 15px;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
   100% { transform: rotate(360deg); }
-}
-
-#result {
-  display: none;
-  margin-top: 10px;
-}
-
-#result img {
-  width: 100%;
-  border-radius: 10px;
 }
 </style>
 
@@ -73,49 +84,40 @@ button {
 
 <div class="card">
   <h2>🎬 Video Downloader</h2>
-  <input id="linkInput" placeholder="Paste TikTok link">
+  <p>Paste your TikTok link</p>
 
-  <button onclick="handleDownload()">Fetch Video</button>
+  <input id="linkInput" placeholder="Enter video URL">
+  <button onclick="handleDownload()">Download</button>
 
-  <div class="loader" id="loader"></div>
-  <div id="message"></div>
+  <p id="message"></p>
+</div>
 
-  <div id="result">
-    <p id="videoTitle"></p>
-    <img id="thumbnail">
-
-    <!-- NEW DOWNLOAD BUTTON -->
-    <button onclick="forceDownload()">⬇ Download Video</button>
-  </div>
+<!-- FULLSCREEN LOADER -->
+<div id="loaderScreen">
+  <h2>⏳ Processing...</h2>
+  <div class="spinner"></div>
 </div>
 
 <script>
-let videoUrl = ""; // store video link
-
 async function handleDownload() {
   let input = document.getElementById("linkInput").value;
-  let loader = document.getElementById("loader");
   let message = document.getElementById("message");
-  let result = document.getElementById("result");
-  let title = document.getElementById("videoTitle");
-  let thumbnail = document.getElementById("thumbnail");
 
   message.innerHTML = "";
-  result.style.display = "none";
 
   if (!input) {
     message.innerHTML = "❌ Enter a link";
     return;
   }
 
-  loader.style.display = "block";
+  showLoader();
 
   try {
     const response = await fetch("https://tiktok-video-no-watermark2.p.rapidapi.com/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-      "X-RapidAPI-Key": "fa17d7fc83mshfc10bf4dff50de5p1765c9jsn6f1fc92a3a5c",
+        "X-RapidAPI-Key": "fa17d7fc83mshfc10bf4dff50de5p1765c9jsn6f1fc92a3a5c",
         "X-RapidAPI-Host": "tiktok-video-no-watermark2.p.rapidapi.com"
       },
       body: JSON.stringify({
@@ -126,42 +128,31 @@ async function handleDownload() {
 
     const data = await response.json();
 
-    loader.style.display = "none";
-
     if (data && data.data) {
-      message.innerHTML = "✅ Video ready!";
-      result.style.display = "block";
+      message.innerHTML = "✅ Starting download...";
 
-      title.innerHTML = data.data.title;
-      thumbnail.src = data.data.cover;
-
-      // store video URL
-      videoUrl = data.data.play;
+      // OPEN DOWNLOAD (no UI preview)
+      window.open(data.data.play, "_blank");
 
     } else {
       message.innerHTML = "⚠️ Failed to fetch video";
     }
 
   } catch (error) {
-    loader.style.display = "none";
     message.innerHTML = "❌ Error occurred";
-    console.error(error);
   }
+
+  setTimeout(() => {
+    hideLoader();
+  }, 2000);
 }
 
-// FORCE DOWNLOAD FUNCTION
-function forceDownload() {
-  if (!videoUrl) {
-    alert("No video loaded!");
-    return;
-  }
+function showLoader() {
+  document.getElementById("loaderScreen").style.display = "flex";
+}
 
-  let a = document.createElement("a");
-  a.href = videoUrl + "?download=1";
-  a.download = "tiktok_video.mp4";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+function hideLoader() {
+  document.getElementById("loaderScreen").style.display = "none";
 }
 </script>
 
