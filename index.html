@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multi Downloader</title>
+<title>TikVid Pro</title>
 
 <style>
 body {
@@ -12,35 +12,71 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  font-family: Arial;
+  background: linear-gradient(135deg, #0f2027, #1c2b33, #2c5364);
+  font-family: 'Segoe UI', sans-serif;
 }
 
+/* CARD */
 .card {
-  background: #0d1b1e;
-  padding: 30px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  padding: 35px;
   border-radius: 20px;
   width: 320px;
   text-align: center;
   color: white;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 
+/* TITLE */
+h1 {
+  margin-bottom: 5px;
+}
+
+.sub {
+  font-size: 13px;
+  color: #bbb;
+  margin-bottom: 20px;
+}
+
+/* INPUT */
 input {
   width: 100%;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 14px;
+  border-radius: 12px;
   border: none;
-  margin: 10px 0;
+  margin-bottom: 15px;
+  outline: none;
+  background: #111;
+  color: white;
+  font-size: 14px;
 }
 
+/* BUTTON */
 button {
   width: 100%;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 14px;
+  border-radius: 12px;
   border: none;
-  background: #00d4aa;
+  background: linear-gradient(135deg, #00d4aa, #00b894);
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
+button:hover {
+  transform: scale(1.05);
+}
+
+/* MESSAGE */
+#message {
+  margin-top: 15px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+/* LOADER SCREEN */
 #loaderScreen {
   position: fixed;
   top: 0;
@@ -59,9 +95,9 @@ button {
   border: 5px solid #333;
   border-top: 5px solid #00d4aa;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  margin-top: 10px;
+  width: 45px;
+  height: 45px;
+  margin-top: 15px;
   animation: spin 1s linear infinite;
 }
 
@@ -74,9 +110,12 @@ button {
 <body>
 
 <div class="card">
-  <h2>🌍 Multi Downloader</h2>
-  <input id="linkInput" placeholder="Paste TikTok / YouTube link">
-  <button onclick="handleDownload()">Download</button>
+  <h1>🚀 TikVid Pro</h1>
+  <p class="sub">Download TikTok & YouTube videos easily</p>
+
+  <input id="linkInput" placeholder="Paste video link here...">
+  <button onclick="handleDownload()">Download Now</button>
+
   <p id="message"></p>
 </div>
 
@@ -100,7 +139,6 @@ async function handleDownload() {
   showLoader();
 
   try {
-    // DETECT PLATFORM
     if (input.includes("tiktok")) {
       await downloadTikTok(input);
     } 
@@ -118,7 +156,7 @@ async function handleDownload() {
   setTimeout(() => hideLoader(), 2000);
 }
 
-// TIKTOK FUNCTION
+// TIKTOK
 async function downloadTikTok(link) {
   let message = document.getElementById("message");
 
@@ -145,13 +183,12 @@ async function downloadTikTok(link) {
   }
 }
 
-// YOUTUBE FUNCTION (Simple Redirect Method)
+// YOUTUBE
 function downloadYouTube(link) {
   let message = document.getElementById("message");
 
-  message.innerHTML = "✅ Redirecting to YouTube downloader...";
+  message.innerHTML = "🔄 Redirecting...";
 
-  // Use external downloader site
   let url = "https://en.savefrom.net/1-youtube-video-downloader-4/?url=" + encodeURIComponent(link);
 
   window.open(url, "_blank");
