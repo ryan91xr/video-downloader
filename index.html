@@ -8,32 +8,40 @@
 <style>
 body {
   margin: 0;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #0f2027, #1c2b33, #2c5364);
   font-family: 'Segoe UI', sans-serif;
 }
 
+/* HEADER */
+.header {
+  margin-top: 40px;
+  color: white;
+  text-align: center;
+}
+.header h1 {
+  margin: 0;
+  font-size: 26px;
+}
+.header p {
+  font-size: 13px;
+  color: #bbb;
+}
+
+/* CARD */
 .card {
-  background: rgba(255, 255, 255, 0.05);
+  margin-top: 20px;
+  background: rgba(255,255,255,0.05);
   backdrop-filter: blur(15px);
-  padding: 35px;
+  padding: 30px;
   border-radius: 20px;
-  width: 320px;
+  width: 330px;
   text-align: center;
   color: white;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-}
-
-h1 { margin-bottom: 5px; }
-
-.sub {
-  font-size: 13px;
-  color: #bbb;
-  margin-bottom: 20px;
 }
 
 input {
@@ -42,10 +50,8 @@ input {
   border-radius: 12px;
   border: none;
   margin-bottom: 10px;
-  outline: none;
   background: #111;
   color: white;
-  font-size: 14px;
 }
 
 button {
@@ -54,24 +60,36 @@ button {
   border-radius: 12px;
   border: none;
   background: linear-gradient(135deg, #00d4aa, #00b894);
-  color: black;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.3s;
+  margin-top: 8px;
 }
 
-button:hover { transform: scale(1.05); }
+/* PREVIEW */
+#previewBox {
+  display: none;
+  margin-top: 15px;
+  background: #111;
+  border-radius: 12px;
+  padding: 10px;
+}
 
+#previewBox img {
+  width: 100%;
+  border-radius: 10px;
+}
+
+/* MESSAGE */
 #message {
   margin-top: 10px;
   font-size: 13px;
-  color: #ccc;
 }
 
-#platform {
+/* FOOTER */
+.footer {
+  margin-top: 25px;
   font-size: 12px;
-  color: #00d4aa;
-  margin-bottom: 10px;
+  color: #aaa;
 }
 
 /* LOADER */
@@ -81,13 +99,12 @@ button:hover { transform: scale(1.05); }
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.9);
+  background: rgba(0,0,0,0.92);
   display: none;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   color: white;
-  z-index: 999;
 }
 
 .loader-text {
@@ -96,55 +113,54 @@ button:hover { transform: scale(1.05); }
 }
 
 .dots span {
-  display: inline-block;
   width: 10px;
   height: 10px;
-  margin: 6px;
   background: #00d4aa;
+  margin: 5px;
   border-radius: 50%;
-  animation: bounce 1.4s infinite ease-in-out both;
+  display: inline-block;
+  animation: bounce 1.4s infinite;
 }
 
-.dots span:nth-child(1) { animation-delay: -0.32s; }
-.dots span:nth-child(2) { animation-delay: -0.16s; }
+.dots span:nth-child(2){animation-delay:0.2s;}
+.dots span:nth-child(3){animation-delay:0.4s;}
 
 @keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
-  40% { transform: scale(1); opacity: 1; }
+  0%,80%,100% {transform: scale(0);}
+  40% {transform: scale(1);}
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-  <h1>🚀 FlashVidz</h1>
-  <p class="sub">Fast video downloads • No watermark • Free</p>
-
-  <input id="linkInput" placeholder="Paste video link here...">
-
-  <p id="platform"></p>
-
-  <button onclick="pasteLink()" style="margin-bottom:10px;background:#222;color:white;">
-    📋 Paste Link
-  </button>
-
-  <button id="downloadBtn" onclick="handleDownload()">Download Now</button>
-
-  <p id="message"></p>
+<div class="header">
+  <h1>⚡ FlashVidz</h1>
+  <p>Fast • No watermark • Free</p>
 </div>
 
-<!-- HOW TO USE -->
-<div style="margin-top:20px;color:#ccc;font-size:13px;text-align:center;">
-  <p><b>How to use:</b></p>
-  <p>1. Paste your video link</p>
-  <p>2. Click download</p>
-  <p>3. Save your video instantly</p>
+<div class="card">
+
+  <input id="linkInput" placeholder="Paste video link...">
+
+  <button onclick="pasteLink()">📋 Paste</button>
+  <button id="downloadBtn" onclick="handleDownload()">Download</button>
+
+  <div id="previewBox">
+    <img id="previewImg" src="">
+  </div>
+
+  <p id="message"></p>
+
+</div>
+
+<div class="footer">
+  Powered by FlashVidz • No login required
 </div>
 
 <!-- LOADER -->
 <div id="loaderScreen">
-  <h2 class="loader-text">Preparing your download...</h2>
+  <h2 class="loader-text" id="loaderText">Connecting...</h2>
   <div class="dots">
     <span></span><span></span><span></span>
   </div>
@@ -152,114 +168,91 @@ button:hover { transform: scale(1.05); }
 
 <script>
 
-// PLATFORM DETECTION
-document.getElementById("linkInput").addEventListener("input", function () {
-  let value = this.value;
-  let platform = document.getElementById("platform");
-
-  if (value.includes("tiktok")) {
-    platform.innerText = "TikTok detected ✅";
-  } else if (value.includes("youtube")) {
-    platform.innerText = "YouTube detected ▶️";
-  } else {
-    platform.innerText = "";
-  }
-});
-
-// PASTE BUTTON
-async function pasteLink() {
-  const text = await navigator.clipboard.readText();
+// Paste
+async function pasteLink(){
+  let text = await navigator.clipboard.readText();
   document.getElementById("linkInput").value = text;
 }
 
-// MAIN DOWNLOAD
-async function handleDownload() {
-  let input = document.getElementById("linkInput").value;
-  let message = document.getElementById("message");
+// Progress system
+function setLoaderText(text){
+  document.getElementById("loaderText").innerText = text;
+}
 
-  message.innerHTML = "";
+// Main
+async function handleDownload(){
+  let link = document.getElementById("linkInput").value;
+  let msg = document.getElementById("message");
 
-  if (!input) {
-    message.innerHTML = "❌ Enter a link";
+  if(!link){
+    msg.innerHTML="❌ Enter link";
     return;
   }
 
   showLoader();
+  setLoaderText("Connecting...");
 
-  try {
-    if (input.includes("tiktok")) {
-      await downloadTikTok(input);
-    } 
-    else if (input.includes("youtube")) {
-      downloadYouTube(input);
-    } 
-    else {
-      message.innerHTML = "⚠️ Unsupported link";
+  setTimeout(()=>setLoaderText("Fetching video..."),800);
+  setTimeout(()=>setLoaderText("Preparing download..."),1600);
+
+  try{
+    if(link.includes("tiktok")){
+      await downloadTikTok(link);
+    } else {
+      msg.innerHTML="⚠️ Unsupported";
     }
-
-  } catch (error) {
-    message.innerHTML = "❌ Error occurred";
+  }catch{
+    msg.innerHTML="❌ Error";
   }
 
   hideLoader();
 }
 
-// TIKTOK
-async function downloadTikTok(link) {
-  let message = document.getElementById("message");
+// TikTok
+async function downloadTikTok(link){
+  let msg = document.getElementById("message");
 
-  try {
-    const response = await fetch("https://tikvid-backend.onrender.com/download", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ url: link })
-    });
+  const res = await fetch("https://tikvid-backend.onrender.com/download",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json"},
+    body: JSON.stringify({url:link})
+  });
 
-    const data = await response.json();
+  const data = await res.json();
 
-    if (data.download) {
-      message.innerHTML = "🎉 Download started!";
-      message.style.color = "#00d4aa";
+  if(data.download){
 
-      const res = await fetch(data.download);
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+    // PREVIEW (simple)
+    document.getElementById("previewBox").style.display="block";
+    document.getElementById("previewImg").src = data.cover || "";
 
-      let a = document.createElement("a");
-      a.href = url;
-      a.download = "video.mp4";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+    msg.innerHTML="🎉 Download started";
 
-      window.URL.revokeObjectURL(url);
+    const file = await fetch(data.download);
+    const blob = await file.blob();
+    const url = URL.createObjectURL(blob);
 
-    } else {
-      message.innerHTML = "⚠️ Failed to get video";
-    }
+    let a = document.createElement("a");
+    a.href=url;
+    a.download="video.mp4";
+    a.click();
 
-  } catch (error) {
-    message.innerHTML = "❌ Server error";
+    URL.revokeObjectURL(url);
+
+  } else {
+    msg.innerHTML="⚠️ Failed";
   }
 }
 
-// YOUTUBE
-function downloadYouTube(link) {
-  let url = "https://en.savefrom.net/1-youtube-video-downloader-4/?url=" + encodeURIComponent(link);
-  window.open(url, "_blank");
+// Loader
+function showLoader(){
+  document.getElementById("loaderScreen").style.display="flex";
+  document.getElementById("downloadBtn").disabled=true;
 }
 
-// LOADER CONTROL
-function showLoader() {
-  document.getElementById("loaderScreen").style.display = "flex";
-  document.getElementById("downloadBtn").disabled = true;
-}
-
-function hideLoader() {
-  document.getElementById("loaderScreen").style.display = "none";
-  document.getElementById("downloadBtn").disabled = false;
+function hideLoader(){
+  document.getElementById("loaderScreen").style.display="none";
+  document.getElementById("downloadBtn").disabled=false;
 }
 
 </script>
