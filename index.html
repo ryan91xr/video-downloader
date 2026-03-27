@@ -22,9 +22,12 @@ body {
   color: white;
   text-align: center;
 }
-.header h1 {
-  margin: 0;
-  font-size: 26px;
+.brand {
+  font-size: 28px;
+  font-weight: 600;
+}
+.brand span {
+  color: #00d4aa;
 }
 .header p {
   font-size: 13px;
@@ -67,6 +70,11 @@ button {
   font-weight: bold;
   cursor: pointer;
   margin-top: 8px;
+  transition: 0.2s;
+}
+
+button:hover {
+  transform: scale(1.03);
 }
 
 button:disabled {
@@ -115,6 +123,7 @@ button:disabled {
   align-items: center;
   flex-direction: column;
   color: white;
+  z-index: 999;
 }
 
 .loader-text {
@@ -145,7 +154,7 @@ button:disabled {
 <body>
 
 <div class="header">
-  <h1>FlashVidz</h1>
+  <h1 class="brand">Flash<span>Vidz</span></h1>
   <p>Fast • No watermark • Free</p>
 </div>
 
@@ -178,13 +187,13 @@ button:disabled {
 
 <script>
 
-// Safe Paste
+// Paste
 async function pasteLink(){
   try {
     let text = await navigator.clipboard.readText();
     document.getElementById("linkInput").value = text;
   } catch {
-    alert("Clipboard access denied");
+    alert("Clipboard permission denied");
   }
 }
 
@@ -206,14 +215,14 @@ async function handleDownload(){
   showLoader();
 
   setLoaderText("Connecting...");
-  setTimeout(()=>setLoaderText("Fetching video..."),800);
-  setTimeout(()=>setLoaderText("Preparing download..."),1600);
+  setTimeout(()=>setLoaderText("Fetching video..."),700);
+  setTimeout(()=>setLoaderText("Preparing download..."),1400);
 
   try{
     if(link.includes("tiktok")){
       await downloadTikTok(link);
     } else {
-      msg.innerHTML="This platform is not supported yet";
+      msg.innerHTML="Platform not supported yet";
     }
   }catch{
     msg.innerHTML="Something went wrong. Try again.";
@@ -236,20 +245,24 @@ async function downloadTikTok(link){
 
   if(data.download){
 
+    // Preview
     if(data.cover){
       document.getElementById("previewBox").style.display="block";
       document.getElementById("previewImg").src = data.cover;
+    } else {
+      document.getElementById("previewBox").style.display="none";
     }
 
     msg.innerHTML="Download started";
 
+    // Auto download
     const file = await fetch(data.download);
     const blob = await file.blob();
     const url = URL.createObjectURL(blob);
 
     let a = document.createElement("a");
     a.href=url;
-    a.download="video.mp4";
+    a.download="flashvidz-video.mp4"; // better naming
     document.body.appendChild(a);
     a.click();
     a.remove();
