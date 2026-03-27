@@ -26,7 +26,7 @@ body {
 .brand {
   font-size: 30px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 .brand span {
   color: #00d4aa;
@@ -39,7 +39,7 @@ body {
 
 /* FEATURES */
 .features {
-  margin-top: 10px;
+  margin-top: 14px;
 }
 .features span {
   display: inline-block;
@@ -62,6 +62,7 @@ body {
   text-align: center;
   color: white;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 input {
@@ -70,7 +71,7 @@ input {
   border-radius: 12px;
   border: none;
   margin-bottom: 12px;
-  background: #111;
+  background: #0d0d0d;
   color: white;
   min-height: 50px;
 }
@@ -89,15 +90,16 @@ button {
   cursor: pointer;
   margin-top: 10px;
   min-height: 50px;
+  transition: 0.2s;
 }
 
-/* Secondary button */
+/* Paste button */
 button:first-of-type {
-  background: #1f2a30;
-  color: #ccc;
+  background: #24343b;
+  color: #ddd;
 }
 
-/* Primary button */
+/* Download button */
 #downloadBtn {
   background: linear-gradient(135deg, #00d4aa, #00b894);
   color: black;
@@ -142,7 +144,7 @@ button:disabled {
 
 /* FOOTER */
 .footer {
-  margin-top: 25px;
+  margin-top: 20px;
   font-size: 12px;
   color: #aaa;
 }
@@ -192,7 +194,7 @@ button:disabled {
 
 <div class="header">
   <h1 class="brand">Flash<span>Vidz</span></h1>
-  <p class="tagline">Download videos instantly in HD • No watermark • Free</p>
+  <p class="tagline">Download videos instantly in HD • No watermark</p>
 
   <div class="features">
     <span>Ultra-fast downloads</span>
@@ -219,7 +221,7 @@ button:disabled {
 </div>
 
 <div class="footer">
-  Powered by FlashVidz
+  FlashVidz
 </div>
 
 <div id="loaderScreen">
@@ -247,6 +249,7 @@ function setLoaderText(text){
 async function handleDownload(){
   let link = document.getElementById("linkInput").value.trim();
   let msg = document.getElementById("message");
+  let btn = document.getElementById("downloadBtn");
 
   msg.innerHTML = "";
 
@@ -255,6 +258,7 @@ async function handleDownload(){
     return;
   }
 
+  btn.innerText = "Processing...";
   showLoader();
 
   setLoaderText("Connecting...");
@@ -272,6 +276,8 @@ async function handleDownload(){
     hideLoader();
     msg.innerHTML="Something went wrong. Try again.";
   }
+
+  btn.innerText = "Download";
 }
 
 async function downloadTikTok(link){
