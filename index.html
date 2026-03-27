@@ -8,6 +8,7 @@
 <style>
 body {
   margin: 0;
+  padding: 15px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -25,6 +26,7 @@ body {
 .brand {
   font-size: 30px;
   font-weight: 700;
+  letter-spacing: 0.5px;
 }
 .brand span {
   color: #00d4aa;
@@ -53,9 +55,10 @@ body {
   margin-top: 20px;
   background: rgba(255,255,255,0.05);
   backdrop-filter: blur(15px);
-  padding: 30px;
+  padding: 25px;
   border-radius: 20px;
-  width: 330px;
+  width: 100%;
+  max-width: 360px;
   text-align: center;
   color: white;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
@@ -66,29 +69,42 @@ input {
   padding: 14px;
   border-radius: 12px;
   border: none;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   background: #111;
   color: white;
+  min-height: 50px;
 }
 
 input:focus {
-  outline: 2px solid #00d4aa;
+  outline: 1px solid #00d4aa;
 }
 
+/* BUTTONS */
 button {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, #00d4aa, #00b894);
   font-weight: bold;
   cursor: pointer;
-  margin-top: 8px;
-  transition: 0.2s;
+  margin-top: 10px;
+  min-height: 50px;
+}
+
+/* Secondary button */
+button:first-of-type {
+  background: #1f2a30;
+  color: #ccc;
+}
+
+/* Primary button */
+#downloadBtn {
+  background: linear-gradient(135deg, #00d4aa, #00b894);
+  color: black;
 }
 
 button:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 button:disabled {
@@ -100,7 +116,7 @@ button:disabled {
 .trust {
   font-size: 11px;
   color: #aaa;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 /* PREVIEW */
@@ -119,7 +135,7 @@ button:disabled {
 
 /* MESSAGE */
 #message {
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 13px;
   color: #ccc;
 }
@@ -181,7 +197,7 @@ button:disabled {
   <div class="features">
     <span>Ultra-fast downloads</span>
     <span>No watermark</span>
-    <span>Mobile friendly</span>
+    <span>HD quality</span>
   </div>
 </div>
 
@@ -206,7 +222,6 @@ button:disabled {
   Powered by FlashVidz
 </div>
 
-<!-- LOADER -->
 <div id="loaderScreen">
   <h2 class="loader-text" id="loaderText">Preparing your video...</h2>
   <div class="dots">
@@ -233,6 +248,8 @@ async function handleDownload(){
   let link = document.getElementById("linkInput").value.trim();
   let msg = document.getElementById("message");
 
+  msg.innerHTML = "";
+
   if(!link){
     msg.innerHTML="Please enter a valid link";
     return;
@@ -248,14 +265,15 @@ async function handleDownload(){
     if(link.includes("tiktok")){
       await downloadTikTok(link);
     } else {
+      hideLoader();
       msg.innerHTML="Platform not supported yet";
     }
   }catch{
+    hideLoader();
     msg.innerHTML="Something went wrong. Try again.";
   }
 }
 
-// TikTok
 async function downloadTikTok(link){
   let msg = document.getElementById("message");
 
@@ -267,7 +285,7 @@ async function downloadTikTok(link){
 
   const data = await res.json();
 
-  hideLoader(); // FIX: only hide loader AFTER response
+  hideLoader();
 
   if(data.download){
 
@@ -278,7 +296,7 @@ async function downloadTikTok(link){
       document.getElementById("previewBox").style.display="none";
     }
 
-    msg.innerHTML="Download started";
+    msg.innerHTML="Downloading...";
 
     const file = await fetch(data.download);
     const blob = await file.blob();
@@ -287,12 +305,16 @@ async function downloadTikTok(link){
     const timestamp = Date.now();
     let a = document.createElement("a");
     a.href=url;
-    a.download=`flashvidz_${timestamp}.mp4`; // FIXED naming
+    a.download=`flashvidz_${timestamp}.mp4`;
     document.body.appendChild(a);
     a.click();
     a.remove();
 
     URL.revokeObjectURL(url);
+
+    setTimeout(()=>{
+      msg.innerHTML="Download complete";
+    },1500);
 
   } else {
     msg.innerHTML="Unable to fetch video";
