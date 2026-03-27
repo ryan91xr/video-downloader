@@ -23,15 +23,29 @@ body {
   text-align: center;
 }
 .brand {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 30px;
+  font-weight: 700;
 }
 .brand span {
   color: #00d4aa;
 }
-.header p {
-  font-size: 13px;
-  color: #bbb;
+.tagline {
+  font-size: 14px;
+  color: #ccc;
+  margin-top: 6px;
+}
+
+/* FEATURES */
+.features {
+  margin-top: 10px;
+}
+.features span {
+  display: inline-block;
+  font-size: 11px;
+  margin: 4px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
 }
 
 /* CARD */
@@ -80,6 +94,13 @@ button:hover {
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* TRUST */
+.trust {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 8px;
 }
 
 /* PREVIEW */
@@ -155,15 +176,23 @@ button:disabled {
 
 <div class="header">
   <h1 class="brand">Flash<span>Vidz</span></h1>
-  <p>Fast • No watermark • Free</p>
+  <p class="tagline">Download videos instantly in HD • No watermark • Free</p>
+
+  <div class="features">
+    <span>Ultra-fast downloads</span>
+    <span>No watermark</span>
+    <span>Mobile friendly</span>
+  </div>
 </div>
 
 <div class="card">
 
-  <input id="linkInput" placeholder="Paste video link...">
+  <input id="linkInput" placeholder="Paste TikTok link here...">
 
   <button onclick="pasteLink()">Paste</button>
   <button id="downloadBtn" onclick="handleDownload()">Download</button>
+
+  <p class="trust">No login • Secure • Instant download</p>
 
   <div id="previewBox">
     <img id="previewImg" src="">
@@ -174,12 +203,12 @@ button:disabled {
 </div>
 
 <div class="footer">
-  Powered by FlashVidz • No login required
+  Powered by FlashVidz
 </div>
 
 <!-- LOADER -->
 <div id="loaderScreen">
-  <h2 class="loader-text" id="loaderText">Connecting...</h2>
+  <h2 class="loader-text" id="loaderText">Preparing your video...</h2>
   <div class="dots">
     <span></span><span></span><span></span>
   </div>
@@ -187,7 +216,6 @@ button:disabled {
 
 <script>
 
-// Paste
 async function pasteLink(){
   try {
     let text = await navigator.clipboard.readText();
@@ -197,12 +225,10 @@ async function pasteLink(){
   }
 }
 
-// Loader text
 function setLoaderText(text){
   document.getElementById("loaderText").innerText = text;
 }
 
-// Main
 async function handleDownload(){
   let link = document.getElementById("linkInput").value.trim();
   let msg = document.getElementById("message");
@@ -227,8 +253,6 @@ async function handleDownload(){
   }catch{
     msg.innerHTML="Something went wrong. Try again.";
   }
-
-  hideLoader();
 }
 
 // TikTok
@@ -243,9 +267,10 @@ async function downloadTikTok(link){
 
   const data = await res.json();
 
+  hideLoader(); // FIX: only hide loader AFTER response
+
   if(data.download){
 
-    // Preview
     if(data.cover){
       document.getElementById("previewBox").style.display="block";
       document.getElementById("previewImg").src = data.cover;
@@ -255,14 +280,14 @@ async function downloadTikTok(link){
 
     msg.innerHTML="Download started";
 
-    // Auto download
     const file = await fetch(data.download);
     const blob = await file.blob();
     const url = URL.createObjectURL(blob);
 
+    const timestamp = Date.now();
     let a = document.createElement("a");
     a.href=url;
-    a.download="flashvidz-video.mp4"; // better naming
+    a.download=`flashvidz_${timestamp}.mp4`; // FIXED naming
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -274,7 +299,6 @@ async function downloadTikTok(link){
   }
 }
 
-// Loader
 function showLoader(){
   document.getElementById("loaderScreen").style.display="flex";
   document.getElementById("downloadBtn").disabled=true;
