@@ -68,44 +68,54 @@ body {
   border: 1px solid rgba(255,255,255,0.12);
 }
 
-/* INPUT */
-input {
-  width: 100%;
+/* INPUT GROUP (NEW) */
+.input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.input-group input {
+  flex: 1;
   padding: 14px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.1);
-  margin-bottom: 12px;
   background: #0a0a0a;
   color: white;
 }
 
-input:focus {
+.input-group input:focus {
   outline: none;
   border-color: #00d4aa;
 }
 
-/* BUTTONS */
-button {
+/* PASTE BUTTON (NOW INLINE 🔥) */
+.paste-btn {
+  padding: 0 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  color: #e0f7f4;
+  border: 1px solid rgba(0,212,170,0.25);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* DOWNLOAD BUTTON */
+#downloadBtn {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
   border: none;
+  background: linear-gradient(135deg, #00d4aa, #00b894);
+  color: #00221c;
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
-  transition: 0.2s;
+  box-shadow: 0 6px 20px rgba(0,212,170,0.3);
 }
 
-/* Paste */
-button:first-of-type {
-  background: #24343b;
-  color: #ddd;
-}
-
-/* Download */
-#downloadBtn {
-  background: linear-gradient(135deg, #00d4aa, #00b894);
-  color: black;
+button:active {
+  transform: scale(0.97);
 }
 
 button:disabled {
@@ -204,9 +214,12 @@ button:disabled {
 
 <div class="card">
 
-  <input id="linkInput" placeholder="Paste TikTok link here...">
+  <!-- 🔥 NEW INPUT SYSTEM -->
+  <div class="input-group">
+    <input id="linkInput" placeholder="Paste TikTok link...">
+    <button class="paste-btn" onclick="pasteLink()">Paste</button>
+  </div>
 
-  <button onclick="pasteLink()">Paste Link</button>
   <button id="downloadBtn" onclick="handleDownload()">Download</button>
 
   <p class="trust">No login • Secure • Instant download</p>
@@ -232,7 +245,6 @@ button:disabled {
 
 let isDownloading = false;
 
-// Paste
 async function pasteLink(){
   try {
     let text = await navigator.clipboard.readText();
@@ -242,14 +254,12 @@ async function pasteLink(){
   }
 }
 
-// Loader text
 function setLoaderText(text){
   document.getElementById("loaderText").innerText = text;
 }
 
-// Main
 async function handleDownload(){
-  if(isDownloading) return; // prevent double click
+  if(isDownloading) return;
 
   let link = document.getElementById("linkInput").value.trim();
   let msg = document.getElementById("message");
@@ -293,7 +303,6 @@ async function handleDownload(){
   isDownloading = false;
 }
 
-// TikTok
 async function downloadTikTok(link){
   let msg = document.getElementById("message");
 
@@ -334,7 +343,6 @@ async function downloadTikTok(link){
   }
 }
 
-// Loader
 function showLoader(){
   document.getElementById("loaderScreen").style.display="flex";
 }
