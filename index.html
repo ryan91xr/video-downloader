@@ -236,25 +236,39 @@ async function handleDownload(){
   isDownloading = false;
 }
 
-// ✅ FIXED DOWNLOAD FUNCTION
+// ✅ IMPROVED DOWNLOAD FUNCTION
 async function genericDownload(link){
   const msg = document.getElementById("message");
 
   try{
+    msg.innerText = "Processing video...";
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+
     const res = await fetch("https://flashvidz-backend.onrender.com/download",{
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: link })
+      body: JSON.stringify({ url: link }),
+      signal: controller.signal
     });
 
+    clearTimeout(timeout);
+
     if(!res.ok){
-      msg.innerText = "Server not responding";
+      msg.innerText = "Server error";
       return;
     }
 
     msg.innerText = "Downloading...";
 
     const blob = await res.blob();
+
+    if(blob.size === 0){
+      msg.innerText = "Empty file received";
+      return;
+    }
+
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
@@ -270,7 +284,12 @@ async function genericDownload(link){
 
   } catch (err){
     console.log(err);
-    msg.innerText = "Download failed";
+
+    if(err.name === "AbortError"){
+      msg.innerText = "Server timeout (too slow)";
+    } else {
+      msg.innerText = "Download failed";
+    }
   }
 }
 
