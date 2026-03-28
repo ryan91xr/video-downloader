@@ -6,7 +6,6 @@
 <title>FlashVidz</title>
 
 <style>
-/* (your CSS unchanged) */
 body {
   margin: 0;
   padding: 20px 15px;
@@ -17,10 +16,28 @@ body {
   background: linear-gradient(135deg, #0f2027, #1c2b33, #2c5364);
   font-family: 'Segoe UI', sans-serif;
 }
-.header { margin-top: 20px; color: white; text-align: center; }
-.brand { font-size: 28px; font-weight: 700; }
-.brand span { color: #00d4aa; }
-.tagline { font-size: 13px; color: #ccc; margin-top: 6px; }
+
+.header {
+  margin-top: 20px;
+  color: white;
+  text-align: center;
+}
+
+.brand {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.brand span {
+  color: #00d4aa;
+}
+
+.tagline {
+  font-size: 13px;
+  color: #ccc;
+  margin-top: 6px;
+}
+
 .card {
   margin-top: 20px;
   background: rgba(255,255,255,0.06);
@@ -33,7 +50,13 @@ body {
   color: white;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
-.input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+
+.input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .input-group input {
   flex: 1;
   padding: 14px;
@@ -42,6 +65,7 @@ body {
   background: #0a0a0a;
   color: white;
 }
+
 .paste-btn {
   padding: 0 14px;
   border-radius: 12px;
@@ -49,6 +73,7 @@ body {
   color: #fff;
   border: 1px solid rgba(0,212,170,0.3);
 }
+
 #downloadBtn {
   width: 100%;
   padding: 14px;
@@ -59,8 +84,19 @@ body {
   font-weight: bold;
   margin-top: 10px;
 }
-#message { margin-top: 12px; font-size: 13px; color: #ccc; }
-.footer { margin-top: 20px; font-size: 12px; color: #aaa; }
+
+#message {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.footer {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #aaa;
+}
+
 #loaderScreen {
   position: fixed;
   top: 0;
@@ -74,6 +110,7 @@ body {
   flex-direction: column;
   color: white;
 }
+
 .dots span {
   width: 10px;
   height: 10px;
@@ -83,6 +120,7 @@ body {
   display: inline-block;
   animation: bounce 1.4s infinite;
 }
+
 @keyframes bounce {
   0%,80%,100% {transform: scale(0);}
   40% {transform: scale(1);}
@@ -192,33 +230,27 @@ async function handleDownload(){
   isDownloading = false;
 }
 
-/* ✅ FIXED FUNCTION (NO MORE FREEZE) */
+/* ✅ FINAL FIXED DOWNLOAD FUNCTION */
 async function genericDownload(link){
   const msg = document.getElementById("message");
 
   try{
     msg.innerText = "Starting download...";
 
-    const res = await fetch("https://flashvidz-backend.onrender.com/download",{
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: link })
-    });
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "https://flashvidz-backend.onrender.com/download";
 
-    if(!res.ok){
-      msg.innerText = "Server error";
-      return;
-    }
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "url";
+    input.value = link;
 
-    // 🔥 Direct download (no blob)
-    const downloadUrl = res.url;
+    form.appendChild(input);
+    document.body.appendChild(form);
 
-    const a = document.createElement("a");
-    a.href = downloadUrl;
-    a.download = "flashvidz.mp4";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    form.submit();
+    form.remove();
 
     msg.innerText = "Download started";
 
