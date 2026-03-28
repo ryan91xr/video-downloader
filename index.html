@@ -8,7 +8,7 @@
 <style>
 body {
   margin: 0;
-  padding: 15px;
+  padding: 20px 15px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -19,28 +19,31 @@ body {
 
 /* HEADER */
 .header {
-  margin-top: 40px;
+  margin-top: 20px;
   color: white;
   text-align: center;
 }
+
 .brand {
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
-  letter-spacing: 0.8px;
 }
+
 .brand span {
   color: #00d4aa;
 }
+
 .tagline {
-  font-size: 14px;
+  font-size: 13px;
   color: #ccc;
   margin-top: 6px;
 }
 
 /* FEATURES */
 .features {
-  margin-top: 14px;
+  margin-top: 10px;
 }
+
 .features span {
   display: inline-block;
   font-size: 11px;
@@ -55,7 +58,7 @@ body {
   margin-top: 20px;
   background: rgba(255,255,255,0.06);
   backdrop-filter: blur(18px);
-  padding: 25px;
+  padding: 22px;
   border-radius: 20px;
   width: 100%;
   max-width: 360px;
@@ -70,17 +73,15 @@ input {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
   margin-bottom: 12px;
   background: #0a0a0a;
   color: white;
-  min-height: 50px;
 }
 
 input:focus {
   outline: none;
-  border: 1px solid #00d4aa;
-  box-shadow: 0 0 0 2px rgba(0,212,170,0.2);
+  border-color: #00d4aa;
 }
 
 /* BUTTONS */
@@ -92,32 +93,19 @@ button {
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
-  min-height: 50px;
   transition: 0.2s;
 }
 
-/* ✅ FIXED PASTE BUTTON */
+/* Paste */
 button:first-of-type {
-  background: linear-gradient(135deg, #1e2d33, #2b3f46);
-  color: #e6fdf8;
-  border: 1px solid rgba(0,212,170,0.3);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  background: #24343b;
+  color: #ddd;
 }
 
-button:first-of-type:hover {
-  background: linear-gradient(135deg, #26383f, #335058);
-  box-shadow: 0 6px 18px rgba(0,212,170,0.2);
-}
-
-/* DOWNLOAD BUTTON */
+/* Download */
 #downloadBtn {
   background: linear-gradient(135deg, #00d4aa, #00b894);
-  color: #00221c;
-  box-shadow: 0 6px 20px rgba(0,212,170,0.4);
-}
-
-button:active {
-  transform: scale(0.97);
+  color: black;
 }
 
 button:disabled {
@@ -177,7 +165,7 @@ button:disabled {
 }
 
 .loader-text {
-  font-size: 18px;
+  font-size: 16px;
   margin-bottom: 20px;
 }
 
@@ -224,16 +212,14 @@ button:disabled {
   <p class="trust">No login • Secure • Instant download</p>
 
   <div id="previewBox">
-    <img id="previewImg" src="">
+    <img id="previewImg">
   </div>
 
   <p id="message"></p>
 
 </div>
 
-<div class="footer">
-  FlashVidz
-</div>
+<div class="footer">FlashVidz</div>
 
 <div id="loaderScreen">
   <h2 class="loader-text" id="loaderText">Preparing your video...</h2>
@@ -244,6 +230,9 @@ button:disabled {
 
 <script>
 
+let isDownloading = false;
+
+// Paste
 async function pasteLink(){
   try {
     let text = await navigator.clipboard.readText();
@@ -253,11 +242,15 @@ async function pasteLink(){
   }
 }
 
+// Loader text
 function setLoaderText(text){
   document.getElementById("loaderText").innerText = text;
 }
 
+// Main
 async function handleDownload(){
+  if(isDownloading) return; // prevent double click
+
   let link = document.getElementById("linkInput").value.trim();
   let msg = document.getElementById("message");
   let btn = document.getElementById("downloadBtn");
@@ -269,31 +262,38 @@ async function handleDownload(){
     return;
   }
 
+  isDownloading = true;
   btn.innerText = "Processing...";
   btn.disabled = true;
 
   showLoader();
 
-  setLoaderText("Connecting...");
-  setTimeout(()=>setLoaderText("Fetching video..."),700);
-  setTimeout(()=>setLoaderText("Preparing download..."),1400);
-
   try{
+    setLoaderText("Connecting...");
+    await new Promise(r=>setTimeout(r,600));
+
+    setLoaderText("Fetching video...");
+    await new Promise(r=>setTimeout(r,600));
+
+    setLoaderText("Preparing download...");
+
     if(link.includes("tiktok")){
       await downloadTikTok(link);
     } else {
-      hideLoader();
       msg.innerHTML="Platform not supported yet";
     }
+
   }catch{
-    hideLoader();
     msg.innerHTML="Something went wrong. Try again.";
   }
 
+  hideLoader();
   btn.innerText = "Download";
   btn.disabled = false;
+  isDownloading = false;
 }
 
+// TikTok
 async function downloadTikTok(link){
   let msg = document.getElementById("message");
 
@@ -305,15 +305,11 @@ async function downloadTikTok(link){
 
   const data = await res.json();
 
-  hideLoader();
-
   if(data.download){
 
     if(data.cover){
       document.getElementById("previewBox").style.display="block";
       document.getElementById("previewImg").src = data.cover;
-    } else {
-      document.getElementById("previewBox").style.display="none";
     }
 
     msg.innerHTML="Downloading...";
@@ -322,25 +318,23 @@ async function downloadTikTok(link){
     const blob = await file.blob();
     const url = URL.createObjectURL(blob);
 
-    const timestamp = Date.now();
-    let a = document.createElement("a");
+    const a = document.createElement("a");
     a.href=url;
-    a.download=`flashvidz_${timestamp}.mp4`;
+    a.download=`flashvidz_${Date.now()}.mp4`;
     document.body.appendChild(a);
     a.click();
     a.remove();
 
     URL.revokeObjectURL(url);
 
-    setTimeout(()=>{
-      msg.innerHTML="Download complete";
-    },1500);
+    msg.innerHTML="Download complete";
 
   } else {
     msg.innerHTML="Unable to fetch video";
   }
 }
 
+// Loader
 function showLoader(){
   document.getElementById("loaderScreen").style.display="flex";
 }
