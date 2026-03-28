@@ -17,7 +17,6 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
-/* HEADER */
 .header {
   margin-top: 20px;
   color: white;
@@ -39,21 +38,6 @@ body {
   margin-top: 6px;
 }
 
-/* FEATURES */
-.features {
-  margin-top: 10px;
-}
-
-.features span {
-  display: inline-block;
-  font-size: 11px;
-  margin: 4px;
-  padding: 6px 10px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 10px;
-}
-
-/* CARD */
 .card {
   margin-top: 20px;
   background: rgba(255,255,255,0.06);
@@ -68,11 +52,10 @@ body {
   border: 1px solid rgba(255,255,255,0.12);
 }
 
-/* INPUT GROUP (NEW) */
 .input-group {
   display: flex;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .input-group input {
@@ -89,7 +72,6 @@ body {
   border-color: #00d4aa;
 }
 
-/* PASTE BUTTON (NOW INLINE 🔥) */
 .paste-btn {
   padding: 0 14px;
   border-radius: 12px;
@@ -97,10 +79,8 @@ body {
   color: #e0f7f4;
   border: 1px solid rgba(0,212,170,0.25);
   font-size: 12px;
-  white-space: nowrap;
 }
 
-/* DOWNLOAD BUTTON */
 #downloadBtn {
   width: 100%;
   padding: 14px;
@@ -111,54 +91,26 @@ body {
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
-  box-shadow: 0 6px 20px rgba(0,212,170,0.3);
 }
 
-button:active {
-  transform: scale(0.97);
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* TRUST */
-.trust {
-  font-size: 11px;
+#platformDetect {
+  font-size: 12px;
   color: #aaa;
-  margin-top: 10px;
+  margin-bottom: 6px;
 }
 
-/* PREVIEW */
-#previewBox {
-  display: none;
-  margin-top: 15px;
-  background: #111;
-  border-radius: 12px;
-  padding: 10px;
-}
-
-#previewBox img {
-  width: 100%;
-  border-radius: 10px;
-}
-
-/* MESSAGE */
 #message {
   margin-top: 12px;
   font-size: 13px;
   color: #ccc;
 }
 
-/* FOOTER */
 .footer {
   margin-top: 20px;
   font-size: 12px;
   color: #aaa;
 }
 
-/* LOADER */
 #loaderScreen {
   position: fixed;
   top: 0;
@@ -171,12 +123,6 @@ button:disabled {
   align-items: center;
   flex-direction: column;
   color: white;
-  z-index: 999;
-}
-
-.loader-text {
-  font-size: 16px;
-  margin-bottom: 20px;
 }
 
 .dots span {
@@ -188,9 +134,6 @@ button:disabled {
   display: inline-block;
   animation: bounce 1.4s infinite;
 }
-
-.dots span:nth-child(2){animation-delay:0.2s;}
-.dots span:nth-child(3){animation-delay:0.4s;}
 
 @keyframes bounce {
   0%,80%,100% {transform: scale(0);}
@@ -204,28 +147,21 @@ button:disabled {
 <div class="header">
   <h1 class="brand">Flash<span>Vidz</span></h1>
   <p class="tagline">Download videos instantly in HD • No watermark</p>
-
-  <div class="features">
-    <span>Ultra-fast downloads</span>
-    <span>No watermark</span>
-    <span>HD quality</span>
-  </div>
 </div>
 
 <div class="card">
 
-  <!-- 🔥 NEW INPUT SYSTEM -->
   <div class="input-group">
-    <input id="linkInput" placeholder="Paste TikTok link...">
+    <input id="linkInput" placeholder="Paste video link...">
     <button class="paste-btn" onclick="pasteLink()">Paste</button>
   </div>
 
+  <p id="platformDetect"></p>
+
   <button id="downloadBtn" onclick="handleDownload()">Download</button>
 
-  <p class="trust">No login • Secure • Instant download</p>
-
-  <div id="previewBox">
-    <img id="previewImg">
+  <div id="previewBox" style="display:none;">
+    <img id="previewImg" style="width:100%; border-radius:10px;">
   </div>
 
   <p id="message"></p>
@@ -235,29 +171,48 @@ button:disabled {
 <div class="footer">FlashVidz</div>
 
 <div id="loaderScreen">
-  <h2 class="loader-text" id="loaderText">Preparing your video...</h2>
-  <div class="dots">
-    <span></span><span></span><span></span>
-  </div>
+  <h2 id="loaderText">Preparing...</h2>
+  <div class="dots"><span></span><span></span><span></span></div>
 </div>
 
 <script>
 
 let isDownloading = false;
 
+// Detect platform
+function detectPlatform(link){
+  link = link.toLowerCase();
+
+  if(link.includes("tiktok.com")) return "tiktok";
+  if(link.includes("instagram.com")) return "instagram";
+  if(link.includes("youtube.com") || link.includes("youtu.be")) return "youtube";
+
+  return "unknown";
+}
+
+// Live detection
+document.getElementById("linkInput").addEventListener("input", function(){
+  const platform = detectPlatform(this.value);
+  const display = document.getElementById("platformDetect");
+
+  display.innerText =
+    platform === "tiktok" ? "Detected: TikTok" :
+    platform === "instagram" ? "Detected: Instagram" :
+    platform === "youtube" ? "Detected: YouTube" : "";
+});
+
+// Paste (FIXED: permission safe)
 async function pasteLink(){
   try {
     let text = await navigator.clipboard.readText();
     document.getElementById("linkInput").value = text;
+    document.getElementById("linkInput").dispatchEvent(new Event("input"));
   } catch {
-    alert("Clipboard permission denied");
+    alert("Clipboard not allowed");
   }
 }
 
-function setLoaderText(text){
-  document.getElementById("loaderText").innerText = text;
-}
-
+// Main
 async function handleDownload(){
   if(isDownloading) return;
 
@@ -265,63 +220,58 @@ async function handleDownload(){
   let msg = document.getElementById("message");
   let btn = document.getElementById("downloadBtn");
 
-  msg.innerHTML = "";
+  msg.innerText = "";
 
   if(!link){
-    msg.innerHTML="Please enter a valid link";
+    msg.innerText="Enter a link";
     return;
   }
 
-  isDownloading = true;
-  btn.innerText = "Processing...";
-  btn.disabled = true;
+  const platform = detectPlatform(link);
 
+  isDownloading = true;
+  btn.disabled = true;
   showLoader();
 
   try{
-    setLoaderText("Connecting...");
-    await new Promise(r=>setTimeout(r,600));
-
-    setLoaderText("Fetching video...");
-    await new Promise(r=>setTimeout(r,600));
-
-    setLoaderText("Preparing download...");
-
-    if(link.includes("tiktok")){
-      await downloadTikTok(link);
-    } else {
-      msg.innerHTML="Platform not supported yet";
+    if(platform === "tiktok" || platform === "instagram"){
+      await genericDownload(link);
+    }
+    else if(platform === "youtube"){
+      window.open(`https://y2mate.nu/en?q=${encodeURIComponent(link)}`);
+    }
+    else{
+      msg.innerText="Unsupported link";
     }
 
   }catch{
-    msg.innerHTML="Something went wrong. Try again.";
+    msg.innerText="Error occurred";
   }
 
   hideLoader();
-  btn.innerText = "Download";
   btn.disabled = false;
   isDownloading = false;
 }
 
-async function downloadTikTok(link){
+// Download (FIXED: safer handling)
+async function genericDownload(link){
   let msg = document.getElementById("message");
 
-  const res = await fetch("https://tikvid-backend.onrender.com/download",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json"},
-    body: JSON.stringify({url:link})
-  });
+  try{
+    const res = await fetch("https://tikvid-backend.onrender.com/download",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body: JSON.stringify({url:link})
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if(data.download){
-
-    if(data.cover){
-      document.getElementById("previewBox").style.display="block";
-      document.getElementById("previewImg").src = data.cover;
+    if(!data.download){
+      msg.innerText="Download failed";
+      return;
     }
 
-    msg.innerHTML="Downloading...";
+    msg.innerText="Downloading...";
 
     const file = await fetch(data.download);
     const blob = await file.blob();
@@ -336,13 +286,14 @@ async function downloadTikTok(link){
 
     URL.revokeObjectURL(url);
 
-    msg.innerHTML="Download complete";
+    msg.innerText="Download complete";
 
-  } else {
-    msg.innerHTML="Unable to fetch video";
+  } catch {
+    msg.innerText="Server error";
   }
 }
 
+// Loader
 function showLoader(){
   document.getElementById("loaderScreen").style.display="flex";
 }
