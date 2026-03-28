@@ -53,8 +53,8 @@ body {
 /* CARD */
 .card {
   margin-top: 20px;
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(15px);
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(18px);
   padding: 25px;
   border-radius: 20px;
   width: 100%;
@@ -62,22 +62,25 @@ body {
   text-align: center;
   color: white;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
 }
 
+/* INPUT */
 input {
   width: 100%;
   padding: 14px;
   border-radius: 12px;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.08);
   margin-bottom: 12px;
-  background: #0d0d0d;
+  background: #0a0a0a;
   color: white;
   min-height: 50px;
 }
 
 input:focus {
-  outline: 1px solid #00d4aa;
+  outline: none;
+  border: 1px solid #00d4aa;
+  box-shadow: 0 0 0 2px rgba(0,212,170,0.2);
 }
 
 /* BUTTONS */
@@ -93,20 +96,28 @@ button {
   transition: 0.2s;
 }
 
-/* Paste button */
+/* ✅ FIXED PASTE BUTTON */
 button:first-of-type {
-  background: #24343b;
-  color: #ddd;
+  background: linear-gradient(135deg, #1e2d33, #2b3f46);
+  color: #e6fdf8;
+  border: 1px solid rgba(0,212,170,0.3);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
 }
 
-/* Download button */
+button:first-of-type:hover {
+  background: linear-gradient(135deg, #26383f, #335058);
+  box-shadow: 0 6px 18px rgba(0,212,170,0.2);
+}
+
+/* DOWNLOAD BUTTON */
 #downloadBtn {
   background: linear-gradient(135deg, #00d4aa, #00b894);
-  color: black;
+  color: #00221c;
+  box-shadow: 0 6px 20px rgba(0,212,170,0.4);
 }
 
-button:hover {
-  transform: scale(1.02);
+button:active {
+  transform: scale(0.97);
 }
 
 button:disabled {
@@ -207,7 +218,7 @@ button:disabled {
 
   <input id="linkInput" placeholder="Paste TikTok link here...">
 
-  <button onclick="pasteLink()">Paste</button>
+  <button onclick="pasteLink()">Paste Link</button>
   <button id="downloadBtn" onclick="handleDownload()">Download</button>
 
   <p class="trust">No login • Secure • Instant download</p>
@@ -259,6 +270,8 @@ async function handleDownload(){
   }
 
   btn.innerText = "Processing...";
+  btn.disabled = true;
+
   showLoader();
 
   setLoaderText("Connecting...");
@@ -278,6 +291,7 @@ async function handleDownload(){
   }
 
   btn.innerText = "Download";
+  btn.disabled = false;
 }
 
 async function downloadTikTok(link){
@@ -329,12 +343,10 @@ async function downloadTikTok(link){
 
 function showLoader(){
   document.getElementById("loaderScreen").style.display="flex";
-  document.getElementById("downloadBtn").disabled=true;
 }
 
 function hideLoader(){
   document.getElementById("loaderScreen").style.display="none";
-  document.getElementById("downloadBtn").disabled=false;
 }
 
 </script>
