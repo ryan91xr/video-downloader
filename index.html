@@ -236,15 +236,15 @@ async function handleDownload(){
   isDownloading = false;
 }
 
-// ✅ IMPROVED DOWNLOAD FUNCTION
+// ✅ FINAL STABLE DOWNLOAD FUNCTION
 async function genericDownload(link){
   const msg = document.getElementById("message");
 
   try{
-    msg.innerText = "Processing video...";
+    msg.innerText = "Waking server... ⏳";
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
+    const timeout = setTimeout(() => controller.abort(), 90000);
 
     const res = await fetch("https://flashvidz-backend.onrender.com/download",{
       method: "POST",
@@ -256,37 +256,39 @@ async function genericDownload(link){
     clearTimeout(timeout);
 
     if(!res.ok){
+      const text = await res.text();
+      console.log(text);
       msg.innerText = "Server error";
       return;
     }
 
-    msg.innerText = "Downloading...";
+    msg.innerText = "Downloading... 📥";
 
     const blob = await res.blob();
 
-    if(blob.size === 0){
-      msg.innerText = "Empty file received";
+    if(blob.size < 5000){
+      msg.innerText = "Download failed (empty)";
       return;
     }
 
-    const url = URL.createObjectURL(blob);
+    const downloadUrl = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
-    a.href = url;
+    a.href = downloadUrl;
     a.download = `flashvidz_${Date.now()}.mp4`;
     document.body.appendChild(a);
     a.click();
     a.remove();
 
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(downloadUrl);
 
-    msg.innerText = "Download complete";
+    msg.innerText = "Download complete ✅";
 
   } catch (err){
     console.log(err);
 
     if(err.name === "AbortError"){
-      msg.innerText = "Server timeout (too slow)";
+      msg.innerText = "Server timeout, try again";
     } else {
       msg.innerText = "Download failed";
     }
