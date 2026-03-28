@@ -49,13 +49,12 @@ body {
   text-align: center;
   color: white;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-  border: 1px solid rgba(255,255,255,0.12);
 }
 
 .input-group {
   display: flex;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .input-group input {
@@ -67,18 +66,12 @@ body {
   color: white;
 }
 
-.input-group input:focus {
-  outline: none;
-  border-color: #00d4aa;
-}
-
 .paste-btn {
   padding: 0 14px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.08);
-  color: #e0f7f4;
-  border: 1px solid rgba(0,212,170,0.25);
-  font-size: 12px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(0,212,170,0.3);
 }
 
 #downloadBtn {
@@ -87,16 +80,9 @@ body {
   border-radius: 12px;
   border: none;
   background: linear-gradient(135deg, #00d4aa, #00b894);
-  color: #00221c;
+  color: black;
   font-weight: bold;
-  cursor: pointer;
   margin-top: 10px;
-}
-
-#platformDetect {
-  font-size: 12px;
-  color: #aaa;
-  margin-bottom: 6px;
 }
 
 #message {
@@ -160,10 +146,6 @@ body {
 
   <button id="downloadBtn" onclick="handleDownload()">Download</button>
 
-  <div id="previewBox" style="display:none;">
-    <img id="previewImg" style="width:100%; border-radius:10px;">
-  </div>
-
   <p id="message"></p>
 
 </div>
@@ -201,12 +183,13 @@ document.getElementById("linkInput").addEventListener("input", function(){
     platform === "youtube" ? "Detected: YouTube" : "";
 });
 
-// Paste (FIXED: permission safe)
+// Paste
 async function pasteLink(){
   try {
-    let text = await navigator.clipboard.readText();
-    document.getElementById("linkInput").value = text;
-    document.getElementById("linkInput").dispatchEvent(new Event("input"));
+    const text = await navigator.clipboard.readText();
+    const input = document.getElementById("linkInput");
+    input.value = text;
+    input.dispatchEvent(new Event("input"));
   } catch {
     alert("Clipboard not allowed");
   }
@@ -216,14 +199,14 @@ async function pasteLink(){
 async function handleDownload(){
   if(isDownloading) return;
 
-  let link = document.getElementById("linkInput").value.trim();
-  let msg = document.getElementById("message");
-  let btn = document.getElementById("downloadBtn");
+  const link = document.getElementById("linkInput").value.trim();
+  const msg = document.getElementById("message");
+  const btn = document.getElementById("downloadBtn");
 
   msg.innerText = "";
 
   if(!link){
-    msg.innerText="Enter a link";
+    msg.innerText = "Enter a link";
     return;
   }
 
@@ -241,11 +224,11 @@ async function handleDownload(){
       window.open(`https://y2mate.nu/en?q=${encodeURIComponent(link)}`);
     }
     else{
-      msg.innerText="Unsupported link";
+      msg.innerText = "Unsupported link";
     }
 
-  }catch{
-    msg.innerText="Error occurred";
+  } catch {
+    msg.innerText = "Error occurred";
   }
 
   hideLoader();
@@ -253,53 +236,51 @@ async function handleDownload(){
   isDownloading = false;
 }
 
-// Download (FIXED: safer handling)
+// ✅ FIXED DOWNLOAD FUNCTION
 async function genericDownload(link){
-  let msg = document.getElementById("message");
+  const msg = document.getElementById("message");
 
   try{
-    const res = await fetch("https://tikvid-backend.onrender.com/download",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json"},
-      body: JSON.stringify({url:link})
+    const res = await fetch("https://flashvidz-backend.onrender.com/download",{
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: link })
     });
 
-    const data = await res.json();
-
-    if(!data.download){
-      msg.innerText="Download failed";
+    if(!res.ok){
+      msg.innerText = "Server not responding";
       return;
     }
 
-    msg.innerText="Downloading...";
+    msg.innerText = "Downloading...";
 
-    const file = await fetch(data.download);
-    const blob = await file.blob();
+    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
-    a.href=url;
-    a.download=`flashvidz_${Date.now()}.mp4`;
+    a.href = url;
+    a.download = `flashvidz_${Date.now()}.mp4`;
     document.body.appendChild(a);
     a.click();
     a.remove();
 
     URL.revokeObjectURL(url);
 
-    msg.innerText="Download complete";
+    msg.innerText = "Download complete";
 
-  } catch {
-    msg.innerText="Server error";
+  } catch (err){
+    console.log(err);
+    msg.innerText = "Download failed";
   }
 }
 
 // Loader
 function showLoader(){
-  document.getElementById("loaderScreen").style.display="flex";
+  document.getElementById("loaderScreen").style.display = "flex";
 }
 
 function hideLoader(){
-  document.getElementById("loaderScreen").style.display="none";
+  document.getElementById("loaderScreen").style.display = "none";
 }
 
 </script>
