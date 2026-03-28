@@ -6,6 +6,7 @@
 <title>FlashVidz</title>
 
 <style>
+/* (your CSS unchanged) */
 body {
   margin: 0;
   padding: 20px 15px;
@@ -16,28 +17,10 @@ body {
   background: linear-gradient(135deg, #0f2027, #1c2b33, #2c5364);
   font-family: 'Segoe UI', sans-serif;
 }
-
-.header {
-  margin-top: 20px;
-  color: white;
-  text-align: center;
-}
-
-.brand {
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.brand span {
-  color: #00d4aa;
-}
-
-.tagline {
-  font-size: 13px;
-  color: #ccc;
-  margin-top: 6px;
-}
-
+.header { margin-top: 20px; color: white; text-align: center; }
+.brand { font-size: 28px; font-weight: 700; }
+.brand span { color: #00d4aa; }
+.tagline { font-size: 13px; color: #ccc; margin-top: 6px; }
 .card {
   margin-top: 20px;
   background: rgba(255,255,255,0.06);
@@ -50,13 +33,7 @@ body {
   color: white;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
-
-.input-group {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
+.input-group { display: flex; gap: 8px; margin-bottom: 12px; }
 .input-group input {
   flex: 1;
   padding: 14px;
@@ -65,7 +42,6 @@ body {
   background: #0a0a0a;
   color: white;
 }
-
 .paste-btn {
   padding: 0 14px;
   border-radius: 12px;
@@ -73,7 +49,6 @@ body {
   color: #fff;
   border: 1px solid rgba(0,212,170,0.3);
 }
-
 #downloadBtn {
   width: 100%;
   padding: 14px;
@@ -84,19 +59,8 @@ body {
   font-weight: bold;
   margin-top: 10px;
 }
-
-#message {
-  margin-top: 12px;
-  font-size: 13px;
-  color: #ccc;
-}
-
-.footer {
-  margin-top: 20px;
-  font-size: 12px;
-  color: #aaa;
-}
-
+#message { margin-top: 12px; font-size: 13px; color: #ccc; }
+.footer { margin-top: 20px; font-size: 12px; color: #aaa; }
 #loaderScreen {
   position: fixed;
   top: 0;
@@ -110,7 +74,6 @@ body {
   flex-direction: column;
   color: white;
 }
-
 .dots span {
   width: 10px;
   height: 10px;
@@ -120,7 +83,6 @@ body {
   display: inline-block;
   animation: bounce 1.4s infinite;
 }
-
 @keyframes bounce {
   0%,80%,100% {transform: scale(0);}
   40% {transform: scale(1);}
@@ -153,7 +115,7 @@ body {
 <div class="footer">FlashVidz</div>
 
 <div id="loaderScreen">
-  <h2 id="loaderText">Preparing...</h2>
+  <h2>Preparing...</h2>
   <div class="dots"><span></span><span></span><span></span></div>
 </div>
 
@@ -161,18 +123,14 @@ body {
 
 let isDownloading = false;
 
-// Detect platform
 function detectPlatform(link){
   link = link.toLowerCase();
-
   if(link.includes("tiktok.com")) return "tiktok";
   if(link.includes("instagram.com")) return "instagram";
   if(link.includes("youtube.com") || link.includes("youtu.be")) return "youtube";
-
   return "unknown";
 }
 
-// Live detection
 document.getElementById("linkInput").addEventListener("input", function(){
   const platform = detectPlatform(this.value);
   const display = document.getElementById("platformDetect");
@@ -183,7 +141,6 @@ document.getElementById("linkInput").addEventListener("input", function(){
     platform === "youtube" ? "Detected: YouTube" : "";
 });
 
-// Paste
 async function pasteLink(){
   try {
     const text = await navigator.clipboard.readText();
@@ -195,7 +152,6 @@ async function pasteLink(){
   }
 }
 
-// Main
 async function handleDownload(){
   if(isDownloading) return;
 
@@ -236,66 +192,42 @@ async function handleDownload(){
   isDownloading = false;
 }
 
-// ✅ FINAL STABLE DOWNLOAD FUNCTION
+/* ✅ FIXED FUNCTION (NO MORE FREEZE) */
 async function genericDownload(link){
   const msg = document.getElementById("message");
 
   try{
-    msg.innerText = "Waking server... ⏳";
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 90000);
+    msg.innerText = "Starting download...";
 
     const res = await fetch("https://flashvidz-backend.onrender.com/download",{
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: link }),
-      signal: controller.signal
+      body: JSON.stringify({ url: link })
     });
 
-    clearTimeout(timeout);
-
     if(!res.ok){
-      const text = await res.text();
-      console.log(text);
       msg.innerText = "Server error";
       return;
     }
 
-    msg.innerText = "Downloading... 📥";
-
-    const blob = await res.blob();
-
-    if(blob.size < 5000){
-      msg.innerText = "Download failed (empty)";
-      return;
-    }
-
-    const downloadUrl = URL.createObjectURL(blob);
+    // 🔥 Direct download (no blob)
+    const downloadUrl = res.url;
 
     const a = document.createElement("a");
     a.href = downloadUrl;
-    a.download = `flashvidz_${Date.now()}.mp4`;
+    a.download = "flashvidz.mp4";
     document.body.appendChild(a);
     a.click();
     a.remove();
 
-    URL.revokeObjectURL(downloadUrl);
-
-    msg.innerText = "Download complete ✅";
+    msg.innerText = "Download started";
 
   } catch (err){
     console.log(err);
-
-    if(err.name === "AbortError"){
-      msg.innerText = "Server timeout, try again";
-    } else {
-      msg.innerText = "Download failed";
-    }
+    msg.innerText = "Download failed";
   }
 }
 
-// Loader
 function showLoader(){
   document.getElementById("loaderScreen").style.display = "flex";
 }
