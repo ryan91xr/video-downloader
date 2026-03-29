@@ -81,16 +81,6 @@ body {
   color: #fff;
   border: 1px solid rgba(0,212,170,0.3);
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.paste-btn:hover {
-  background: rgba(0,212,170,0.2);
-}
-
-.paste-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 #downloadBtn {
@@ -103,18 +93,11 @@ body {
   font-weight: bold;
   margin-top: 10px;
   cursor: pointer;
-  transition: all 0.2s;
   position: relative;
-}
-
-#downloadBtn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0,212,170,0.4);
 }
 
 #downloadBtn:disabled {
   opacity: 0.7;
-  cursor: not-allowed;
 }
 
 #downloadBtn.loading::after {
@@ -141,23 +124,8 @@ body {
   background: rgba(255,100,100,0.1);
   color: #ff6464;
   margin-top: 8px;
-  cursor: pointer;
   display: none;
 }
-
-#cancelBtn:hover {
-  background: rgba(255,100,100,0.2);
-}
-
-#message {
-  margin-top: 12px;
-  font-size: 13px;
-  min-height: 20px;
-}
-
-#message.error { color: #ff6464; }
-#message.success { color: #00d4aa; }
-#message.loading { color: #ccc; }
 
 .progress-container {
   width: 100%;
@@ -173,7 +141,12 @@ body {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #00d4aa, #00b894);
-  transition: width 0.3s ease;
+}
+
+#message {
+  margin-top: 12px;
+  font-size: 13px;
+  min-height: 20px;
 }
 
 .footer {
@@ -215,20 +188,11 @@ body {
 const CONFIG = {
   API_URL: window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/download'
-    : 'https://flashvidz-backend.onrender.com/download',
-  MAX_FILE_SIZE: 100 * 1024 * 1024
+    : 'https://flashvidz-backend.onrender.com/download'
 };
 
 let abortController = null;
 let downloadUrl = null;
-
-function detectPlatform(link) {
-  const url = link.toLowerCase();
-  if (url.includes('tiktok.com')) return 'tiktok';
-  if (url.includes('instagram.com')) return 'instagram';
-  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-  return 'unknown';
-}
 
 function setMessage(text, type = '') {
   const msg = document.getElementById('message');
@@ -247,58 +211,36 @@ function resetUI() {
 }
 
 async function pasteLink() {
-  const btn = document.getElementById('pasteBtn');
-  btn.disabled = true;
   try {
     const text = await navigator.clipboard.readText();
     document.getElementById('linkInput').value = text.trim();
   } catch {
-    setMessage('Clipboard access denied', 'error');
-  } finally {
-    btn.disabled = false;
+    setMessage('Clipboard denied');
   }
 }
 
 function cancelDownload() {
   if (abortController) abortController.abort();
   if (downloadUrl) URL.revokeObjectURL(downloadUrl);
-  setMessage('Download cancelled', 'error');
+  setMessage('Cancelled');
   resetUI();
 }
 
 async function handleDownload() {
-  let errorOccurred = false;
-
   const link = document.getElementById('linkInput').value.trim();
   const btn = document.getElementById('downloadBtn');
   const bar = document.getElementById('progressBar');
   const container = document.getElementById('progressContainer');
 
   if (!link) {
-    setMessage('Enter a video link', 'error');
-    return;
-  }
-
-  const platform = detectPlatform(link);
-
-  if (platform === 'youtube') {
-    window.open(`https://y2mate.nu/en?q=${encodeURIComponent(link)}`, '_blank');
-    return;
-  }
-
-  if (platform === 'unknown') {
-    setMessage('Unsupported platform', 'error');
+    setMessage('Enter link');
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = 'Downloading...';
   btn.classList.add('loading');
-  document.getElementById('pasteBtn').disabled = true;
   document.getElementById('cancelBtn').style.display = 'block';
   container.style.display = 'block';
-  bar.style.width = '0%';
-  setMessage('Starting download...', 'loading');
 
   abortController = new AbortController();
 
@@ -310,16 +252,7 @@ async function handleDownload() {
       signal: abortController.signal
     });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Download failed' }));
-      throw new Error(error.error);
-    }
-
-    const disposition = response.headers.get("Content-Disposition");
-    let filename = "flashvidz.mp4";
-    if (disposition && disposition.includes("filename=")) {
-      filename = disposition.split("filename=")[1].replace(/"/g, "");
-    }
+    if (!response.ok) throw new Error('Download failed');
 
     const contentLength = parseInt(response.headers.get('Content-Length')) || 0;
 
@@ -337,38 +270,38 @@ async function handleDownload() {
       if(contentLength){
         const percent = Math.floor((received / contentLength) * 100);
         bar.style.width = percent + "%";
-        setMessage(`Downloading... ${percent}%`, 'loading');
-      } else {
-        setMessage("Downloading...", 'loading');
       }
     }
 
     const blob = new Blob(chunks, { type: "video/mp4" });
     downloadUrl = URL.createObjectURL(blob);
 
-    // 🔥 AUTO DOWNLOAD IMPROVED
+    // ✅ FIXED AUTO DOWNLOAD + UNIQUE NAME
+    const filename = `flashvidz_${Date.now()}_${Math.floor(Math.random()*1000)}.mp4`;
+
     const a = document.createElement("a");
     a.href = downloadUrl;
     a.download = filename;
     a.style.display = "none";
-
     document.body.appendChild(a);
-    a.click();
+
+    setTimeout(() => {
+      a.click();
+    }, 50);
 
     setTimeout(() => {
       document.body.removeChild(a);
-    }, 100);
+    }, 200);
 
-    setMessage("Download started 📥", "success");
+    setMessage("Download started");
 
   } catch (err) {
-    if (err.name !== 'AbortError') {
-      errorOccurred = true;
-      setMessage(err.message || 'Download failed', 'error');
+    if (err.name !== "AbortError") {
+      setMessage("Error");
     }
   } finally {
     abortController = null;
-    setTimeout(resetUI, errorOccurred ? 0 : 2000);
+    setTimeout(resetUI, 1500);
   }
 }
 </script>
