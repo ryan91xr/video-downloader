@@ -216,7 +216,7 @@ const CONFIG = {
   API_URL: window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/download'
     : 'https://flashvidz-backend.onrender.com/download',
-  MAX_FILE_SIZE: 100 * 1024 * 1024 // 🔥 safer for mobile
+  MAX_FILE_SIZE: 100 * 1024 * 1024
 };
 
 let abortController = null;
@@ -346,12 +346,20 @@ async function handleDownload() {
     const blob = new Blob(chunks, { type: "video/mp4" });
     downloadUrl = URL.createObjectURL(blob);
 
+    // 🔥 AUTO DOWNLOAD IMPROVED
     const a = document.createElement("a");
     a.href = downloadUrl;
     a.download = filename;
+    a.style.display = "none";
+
+    document.body.appendChild(a);
     a.click();
 
-    setMessage("Download complete!", "success");
+    setTimeout(() => {
+      document.body.removeChild(a);
+    }, 100);
+
+    setMessage("Download started 📥", "success");
 
   } catch (err) {
     if (err.name !== 'AbortError') {
