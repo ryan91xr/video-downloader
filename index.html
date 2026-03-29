@@ -19,12 +19,26 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
-.header { margin-top: 20px; color: white; text-align: center; }
+.header {
+  margin-top: 20px;
+  color: white;
+  text-align: center;
+}
 
-.brand { font-size: 28px; font-weight: 700; }
-.brand span { color: #00d4aa; }
+.brand {
+  font-size: 28px;
+  font-weight: 700;
+}
 
-.tagline { font-size: 13px; color: #ccc; margin-top: 6px; }
+.brand span {
+  color: #00d4aa;
+}
+
+.tagline {
+  font-size: 13px;
+  color: #ccc;
+  margin-top: 6px;
+}
 
 .card {
   margin-top: 20px;
@@ -39,7 +53,11 @@ body {
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
 }
 
-.input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+.input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
 
 .input-group input {
   flex: 1;
@@ -48,6 +66,12 @@ body {
   border: 1px solid rgba(255,255,255,0.1);
   background: #0a0a0a;
   color: white;
+  font-size: 14px;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #00d4aa;
 }
 
 .paste-btn {
@@ -56,6 +80,7 @@ body {
   background: rgba(255,255,255,0.1);
   color: #fff;
   border: 1px solid rgba(0,212,170,0.3);
+  cursor: pointer;
 }
 
 #downloadBtn {
@@ -67,6 +92,11 @@ body {
   color: black;
   font-weight: bold;
   margin-top: 10px;
+  cursor: pointer;
+}
+
+#downloadBtn:disabled {
+  opacity: 0.7;
 }
 
 #cancelBtn {
@@ -77,7 +107,14 @@ body {
   background: rgba(255,100,100,0.1);
   color: #ff6464;
   margin-top: 8px;
+  cursor: pointer;
   display: none;
+}
+
+#message {
+  margin-top: 12px;
+  font-size: 13px;
+  min-height: 20px;
 }
 
 .progress-container {
@@ -94,11 +131,14 @@ body {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #00d4aa, #00b894);
+  transition: width 0.2s ease;
 }
 
-#message { margin-top: 12px; font-size: 13px; }
-
-.footer { margin-top: 20px; font-size: 12px; color: #aaa; }
+.footer {
+  margin-top: 20px;
+  font-size: 12px;
+  color: #aaa;
+}
 </style>
 </head>
 
@@ -112,8 +152,8 @@ body {
 <div class="card">
 
   <div class="input-group">
-    <input id="linkInput" placeholder="Paste video link...">
-    <button class="paste-btn" onclick="pasteLink()">Paste</button>
+    <input id="linkInput" placeholder="Paste video link..." autocomplete="off">
+    <button class="paste-btn" id="pasteBtn" onclick="pasteLink()">Paste</button>
   </div>
 
   <button id="downloadBtn" onclick="handleDownload()">Download</button>
@@ -136,7 +176,8 @@ const CONFIG = {
     : 'https://flashvidz-backend.onrender.com/download'
 };
 
-let downloadTimer = null;
+let abortController = null;
+let downloadUrl = null;
 
 function setMessage(text) {
   document.getElementById('message').textContent = text;
@@ -145,6 +186,7 @@ function setMessage(text) {
 function resetUI() {
   document.getElementById('downloadBtn').disabled = false;
   document.getElementById('downloadBtn').textContent = 'Download';
+  document.getElementById('pasteBtn').disabled = false;
   document.getElementById('cancelBtn').style.display = 'none';
   document.getElementById('progressContainer').style.display = 'none';
   document.getElementById('progressBar').style.width = '0%';
@@ -153,57 +195,83 @@ function resetUI() {
 async function pasteLink() {
   try {
     const text = await navigator.clipboard.readText();
-    document.getElementById("linkInput").value = text;
+    document.getElementById('linkInput').value = text;
   } catch {
-    setMessage("Clipboard not allowed");
+    setMessage('Clipboard not allowed');
   }
 }
 
 function cancelDownload() {
-  clearTimeout(downloadTimer);
-  setMessage("Cancelled");
+  if (abortController) abortController.abort();
+  setMessage('Cancelled');
   resetUI();
 }
 
-function handleDownload() {
-  const link = document.getElementById("linkInput").value.trim();
-  const btn = document.getElementById("downloadBtn");
-  const bar = document.getElementById("progressBar");
+async function handleDownload() {
+  const link = document.getElementById('linkInput').value.trim();
+  const btn = document.getElementById('downloadBtn');
+  const bar = document.getElementById('progressBar');
+  const container = document.getElementById('progressContainer');
 
   if (!link) {
-    setMessage("Enter a link");
+    setMessage('Enter a link');
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = "Downloading...";
-  document.getElementById("cancelBtn").style.display = "block";
-  document.getElementById("progressContainer").style.display = "block";
+  btn.textContent = 'Downloading...';
+  document.getElementById('pasteBtn').disabled = true;
+  document.getElementById('cancelBtn').style.display = 'block';
+  container.style.display = 'block';
 
-  setMessage("Downloading...");
+  setMessage('Starting download...');
 
-  // 🔥 REAL DOWNLOAD (NO POPUP)
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  iframe.src = CONFIG.API_URL + "?url=" + encodeURIComponent(link);
-  document.body.appendChild(iframe);
+  abortController = new AbortController();
 
-  // Fake progress
-  let progress = 0;
-  const interval = setInterval(() => {
-    progress += 10;
-    if (progress <= 90) {
-      bar.style.width = progress + "%";
+  let success = false;
+
+  try {
+    const response = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: link }),
+      signal: abortController.signal
+    });
+
+    const reader = response.body.getReader();
+    let received = 0;
+    const chunks = [];
+
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+
+      chunks.push(value);
+      received += value.length;
+
+      bar.style.width = Math.min(100, (received / 1000000) * 10) + "%";
     }
-  }, 300);
 
-  // Auto reset UI
-  downloadTimer = setTimeout(() => {
-    clearInterval(interval);
     bar.style.width = "100%";
+
+    const blob = new Blob(chunks);
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "flashvidz.mp4";
+    a.click();
+
+    success = true;
     setMessage("Download complete!");
-    resetUI();
-  }, 4000);
+
+  } catch {
+    setMessage("Download failed");
+  } finally {
+    setTimeout(() => {
+      resetUI();
+    }, success ? 1500 : 0);
+  }
 }
 </script>
 
