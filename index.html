@@ -91,39 +91,28 @@ body {
   color: #ccc;
 }
 
+/* 🔥 PROGRESS BAR */
+.progress-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  margin-top: 10px;
+  overflow: hidden;
+  display: none;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00d4aa, #00b894);
+  transition: width 0.2s ease;
+}
+
 .footer {
   margin-top: 20px;
   font-size: 12px;
   color: #aaa;
-}
-
-#loaderScreen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.92);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  color: white;
-}
-
-.dots span {
-  width: 10px;
-  height: 10px;
-  background: #00d4aa;
-  margin: 5px;
-  border-radius: 50%;
-  display: inline-block;
-  animation: bounce 1.4s infinite;
-}
-
-@keyframes bounce {
-  0%,80%,100% {transform: scale(0);}
-  40% {transform: scale(1);}
 }
 </style>
 </head>
@@ -142,20 +131,17 @@ body {
     <button class="paste-btn" onclick="pasteLink()">Paste</button>
   </div>
 
-  <!-- ❌ Removed platform detect -->
-
   <button id="downloadBtn" onclick="handleDownload()">Download</button>
+
+  <div class="progress-container" id="progressContainer">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
 
   <p id="message"></p>
 
 </div>
 
 <div class="footer">FlashVidz</div>
-
-<div id="loaderScreen">
-  <h2>Preparing...</h2>
-  <div class="dots"><span></span><span></span><span></span></div>
-</div>
 
 <script>
 
@@ -196,7 +182,6 @@ async function handleDownload(){
 
   isDownloading = true;
   btn.disabled = true;
-  showLoader();
 
   try{
     if(platform === "tiktok" || platform === "instagram"){
@@ -213,46 +198,76 @@ async function handleDownload(){
     msg.innerText = "Error occurred";
   }
 
-  hideLoader();
   btn.disabled = false;
   isDownloading = false;
 }
 
 async function genericDownload(link){
   const msg = document.getElementById("message");
+  const bar = document.getElementById("progressBar");
+  const container = document.getElementById("progressContainer");
 
   try{
-    msg.innerText = "Starting download...";
+    msg.innerText = "Starting...";
+    container.style.display = "block";
+    bar.style.width = "0%";
 
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "https://flashvidz-backend.onrender.com/download";
+    const response = await fetch("https://flashvidz-backend.onrender.com/download", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ url: link })
+    });
 
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "url";
-    input.value = link;
+    if(!response.ok){
+      msg.innerText = "Download failed";
+      container.style.display = "none";
+      return;
+    }
 
-    form.appendChild(input);
-    document.body.appendChild(form);
+    const contentLength = response.headers.get("Content-Length");
+    const reader = response.body.getReader();
 
-    form.submit();
-    form.remove();
+    let received = 0;
+    const chunks = [];
 
-    msg.innerText = "Download started";
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+
+      chunks.push(value);
+      received += value.length;
+
+      if(contentLength){
+        const percent = Math.floor((received / contentLength) * 100);
+        bar.style.width = percent + "%";
+        msg.innerText = `Downloading... ${percent}%`;
+      } else {
+        msg.innerText = "Downloading...";
+      }
+    }
+
+    const blob = new Blob(chunks, { type: "video/mp4" });
+    const urlBlob = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = urlBlob;
+    a.download = "flashvidz.mp4";
+    a.click();
+
+    msg.innerText = "Download complete ✅";
+
+    setTimeout(() => {
+      container.style.display = "none";
+      bar.style.width = "0%";
+    }, 2000);
 
   } catch (err){
     console.log(err);
-    msg.innerText = "Download failed";
+    msg.innerText = "Error occurred";
+    container.style.display = "none";
   }
-}
-
-function showLoader(){
-  document.getElementById("loaderScreen").style.display = "flex";
-}
-
-function hideLoader(){
-  document.getElementById("loaderScreen").style.display = "none";
 }
 
 </script>
