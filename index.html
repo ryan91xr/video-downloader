@@ -6,6 +6,8 @@
 <title>FlashVidz</title>
 
 <style>
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   padding: 20px 15px;
@@ -64,6 +66,12 @@ body {
   border: 1px solid rgba(255,255,255,0.1);
   background: #0a0a0a;
   color: white;
+  font-size: 14px;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #00d4aa;
 }
 
 .paste-btn {
@@ -72,6 +80,17 @@ body {
   background: rgba(255,255,255,0.1);
   color: #fff;
   border: 1px solid rgba(0,212,170,0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paste-btn:hover {
+  background: rgba(0,212,170,0.2);
+}
+
+.paste-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 #downloadBtn {
@@ -83,15 +102,63 @@ body {
   color: black;
   font-weight: bold;
   margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+#downloadBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,212,170,0.4);
+}
+
+#downloadBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+#downloadBtn.loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#cancelBtn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,100,100,0.5);
+  background: rgba(255,100,100,0.1);
+  color: #ff6464;
+  margin-top: 8px;
+  cursor: pointer;
+  display: none;
+}
+
+#cancelBtn:hover {
+  background: rgba(255,100,100,0.2);
 }
 
 #message {
   margin-top: 12px;
   font-size: 13px;
-  color: #ccc;
+  min-height: 20px;
 }
 
-/* 🔥 PROGRESS BAR */
+#message.error { color: #ff6464; }
+#message.success { color: #00d4aa; }
+#message.loading { color: #ccc; }
+
 .progress-container {
   width: 100%;
   height: 6px;
@@ -127,11 +194,12 @@ body {
 <div class="card">
 
   <div class="input-group">
-    <input id="linkInput" placeholder="Paste video link...">
-    <button class="paste-btn" onclick="pasteLink()">Paste</button>
+    <input id="linkInput" placeholder="Paste video link..." autocomplete="off">
+    <button class="paste-btn" id="pasteBtn" onclick="pasteLink()">Paste</button>
   </div>
 
   <button id="downloadBtn" onclick="handleDownload()">Download</button>
+  <button id="cancelBtn" onclick="cancelDownload()">Cancel</button>
 
   <div class="progress-container" id="progressContainer">
     <div class="progress-bar" id="progressBar"></div>
@@ -144,133 +212,211 @@ body {
 <div class="footer">FlashVidz</div>
 
 <script>
+// ==================== CONFIG ====================
+const CONFIG = {
+  API_URL: window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/download'
+    : 'https://flashvidz-backend.onrender.com/download',
+  MAX_FILE_SIZE: 500 * 1024 * 1024 // 500MB
+};
 
-let isDownloading = false;
+// ==================== STATE ====================
+let abortController = null;
+let downloadUrl = null;
 
-function detectPlatform(link){
-  link = link.toLowerCase();
-  if(link.includes("tiktok.com")) return "tiktok";
-  if(link.includes("instagram.com")) return "instagram";
-  if(link.includes("youtube.com") || link.includes("youtu.be")) return "youtube";
-  return "unknown";
+// ==================== UTILS ====================
+function detectPlatform(link) {
+  const url = link.toLowerCase();
+  if (url.includes('tiktok.com')) return 'tiktok';
+  if (url.includes('instagram.com')) return 'instagram';
+  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+  return 'unknown';
 }
 
-async function pasteLink(){
+function setMessage(text, type = '') {
+  const msg = document.getElementById('message');
+  msg.textContent = text;
+  msg.className = type;
+}
+
+function resetUI() {
+  document.getElementById('downloadBtn').disabled = false;
+  document.getElementById('downloadBtn').textContent = 'Download';
+  document.getElementById('downloadBtn').classList.remove('loading');
+  document.getElementById('pasteBtn').disabled = false;
+  document.getElementById('cancelBtn').style.display = 'none';
+  document.getElementById('progressContainer').style.display = 'none';
+  document.getElementById('progressBar').style.width = '0%';
+}
+
+// ==================== ACTIONS ====================
+async function pasteLink() {
+  const btn = document.getElementById('pasteBtn');
+  btn.disabled = true;
+  
   try {
     const text = await navigator.clipboard.readText();
-    document.getElementById("linkInput").value = text;
+    document.getElementById('linkInput').value = text.trim();
   } catch {
-    alert("Clipboard not allowed");
+    setMessage('Clipboard access denied', 'error');
+  } finally {
+    btn.disabled = false;
   }
 }
 
-async function handleDownload(){
-  if(isDownloading) return;
+function cancelDownload() {
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
+  }
+  if (downloadUrl) {
+    URL.revokeObjectURL(downloadUrl);
+    downloadUrl = null;
+  }
+  setMessage('Download cancelled', 'error');
+  resetUI();
+}
 
-  const link = document.getElementById("linkInput").value.trim();
-  const msg = document.getElementById("message");
-  const btn = document.getElementById("downloadBtn");
-
-  msg.innerText = "";
-
-  if(!link){
-    msg.innerText = "Enter a link";
+async function handleDownload() {
+  const link = document.getElementById('linkInput').value.trim();
+  const btn = document.getElementById('downloadBtn');
+  const bar = document.getElementById('progressBar');
+  const container = document.getElementById('progressContainer');
+  
+  if (!link) {
+    setMessage('Enter a video link', 'error');
     return;
   }
 
   const platform = detectPlatform(link);
-
-  isDownloading = true;
-  btn.disabled = true;
-
-  try{
-    if(platform === "tiktok" || platform === "instagram"){
-      await genericDownload(link);
-    }
-    else if(platform === "youtube"){
-      window.open(`https://y2mate.nu/en?q=${encodeURIComponent(link)}`);
-    }
-    else{
-      msg.innerText = "Unsupported link";
-    }
-
-  } catch {
-    msg.innerText = "Error occurred";
+  
+  if (platform === 'youtube') {
+    // External service fallback
+    window.open(`https://y2mate.nu/en?q=${encodeURIComponent(link)}`, '_blank');
+    return;
+  }
+  
+  if (platform === 'unknown') {
+    setMessage('Unsupported platform. Use TikTok, Instagram, or YouTube', 'error');
+    return;
   }
 
-  btn.disabled = false;
-  isDownloading = false;
-}
+  // Setup UI
+  btn.disabled = true;
+  btn.textContent = 'Downloading...';
+  btn.classList.add('loading');
+  document.getElementById('pasteBtn').disabled = true;
+  document.getElementById('cancelBtn').style.display = 'block';
+  container.style.display = 'block';
+  bar.style.width = '0%';
+  setMessage('Starting download...', 'loading');
 
-async function genericDownload(link){
-  const msg = document.getElementById("message");
-  const bar = document.getElementById("progressBar");
-  const container = document.getElementById("progressContainer");
+  // Create abort controller for cancellation
+  abortController = new AbortController();
 
-  try{
-    msg.innerText = "Starting...";
-    container.style.display = "block";
-    bar.style.width = "0%";
-
-    const response = await fetch("https://flashvidz-backend.onrender.com/download", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ url: link })
+  try {
+    const response = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: link }),
+      signal: abortController.signal
     });
 
-    if(!response.ok){
-      msg.innerText = "Download failed";
-      container.style.display = "none";
-      return;
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Download failed' }));
+      throw new Error(error.error || `Server error: ${response.status}`);
     }
 
-    const contentLength = response.headers.get("Content-Length");
+    const contentLength = parseInt(response.headers.get('Content-Length')) || 0;
+    
+    if (contentLength > CONFIG.MAX_FILE_SIZE) {
+      throw new Error('File too large (max 500MB)');
+    }
+
+    // Stream to file instead of buffering in memory
     const reader = response.body.getReader();
-
-    let received = 0;
-    const chunks = [];
-
-    while(true){
-      const { done, value } = await reader.read();
-      if(done) break;
-
-      chunks.push(value);
-      received += value.length;
-
-      if(contentLength){
-        const percent = Math.floor((received / contentLength) * 100);
-        bar.style.width = percent + "%";
-        msg.innerText = `Downloading... ${percent}%`;
-      } else {
-        msg.innerText = "Downloading...";
+    const stream = new ReadableStream({
+      start(controller) {
+        let received = 0;
+        
+        function pump() {
+          return reader.read().then(({ done, value }) => {
+            if (done) {
+              controller.close();
+              return;
+            }
+            
+            received += value.length;
+            controller.enqueue(value);
+            
+            if (contentLength) {
+              const percent = Math.min(100, Math.floor((received / contentLength) * 100));
+              bar.style.width = percent + '%';
+              setMessage(`Downloading... ${percent}%`, 'loading');
+            } else {
+              const mb = (received / 1024 / 1024).toFixed(1);
+              setMessage(`Downloading... ${mb} MB`, 'loading');
+            }
+            
+            return pump();
+          });
+        }
+        
+        return pump();
       }
+    });
+
+    // Create blob from stream
+    const blob = await new Response(stream).blob();
+    
+    // Cleanup previous URL if exists
+    if (downloadUrl) {
+      URL.revokeObjectURL(downloadUrl);
     }
-
-    const blob = new Blob(chunks, { type: "video/mp4" });
-    const urlBlob = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = urlBlob;
-    a.download = "flashvidz.mp4";
+    
+    downloadUrl = URL.createObjectURL(blob);
+    
+    // Trigger download
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `flashvidz_${platform}_${Date.now()}.mp4`;
+    document.body.appendChild(a);
     a.click();
-
-    msg.innerText = "Download complete ✅";
-
+    document.body.removeChild(a);
+    
+    setMessage('Download complete!', 'success');
+    
+    // Auto cleanup after delay
     setTimeout(() => {
-      container.style.display = "none";
-      bar.style.width = "0%";
-    }, 2000);
+      if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl);
+        downloadUrl = null;
+      }
+    }, 60000); // Keep for 1 minute in case user wants to retry
 
-  } catch (err){
-    console.log(err);
-    msg.innerText = "Error occurred";
-    container.style.display = "none";
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      return; // Already handled in cancelDownload
+    }
+    console.error('Download error:', err);
+    setMessage(err.message || 'Download failed', 'error');
+  } finally {
+    abortController = null;
+    setTimeout(resetUI, err?.name === 'AbortError' ? 0 : 2000);
   }
 }
 
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (downloadUrl) {
+    URL.revokeObjectURL(downloadUrl);
+  }
+  if (abortController) {
+    abortController.abort();
+  }
+});
 </script>
 
 </body>
 </html>
+
