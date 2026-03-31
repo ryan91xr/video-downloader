@@ -231,6 +231,7 @@ function detectPlatform(link) {
   if (url.includes('tiktok.com')) return 'tiktok';
   if (url.includes('instagram.com')) return 'instagram';
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+  if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook'; // ✅ Added Facebook
   return 'unknown';
 }
 
@@ -294,13 +295,10 @@ async function handleDownload() {
 
   const platform = detectPlatform(link);
   
-  if (platform === 'youtube') {
-    window.open(`https://y2mate.nu/en?q=${encodeURIComponent(link)}`, '_blank');
-    return;
-  }
+  // ✅ REMOVED YouTube redirect - now goes to backend directly
   
   if (platform === 'unknown') {
-    setMessage('Unsupported platform. Use TikTok, Instagram, or YouTube', 'error');
+    setMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error'); // ✅ Updated
     return;
   }
 
@@ -412,13 +410,17 @@ async function handleDownload() {
     }
     console.error('Download error:', err);
     
-    // Platform-specific error messages
+    // ✅ Updated platform-specific error messages
     let errorMsg = err.message || 'Download failed';
-    if (platform === 'instagram') {
+    if (platform === 'instagram' || platform === 'facebook') {
       if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
-        errorMsg = 'Instagram login required. Please try again later.';
+        errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
       } else if (errorMsg.includes('private')) {
-        errorMsg = 'This Instagram post is private.';
+        errorMsg = `This ${platform} post is private.`;
+      }
+    } else if (platform === 'youtube') {
+      if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
+        errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
       }
     }
     
