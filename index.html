@@ -19,6 +19,7 @@
       --accent: #00d4aa;
       --accent-dark: #00b894;
       --danger: #ff6464;
+      --focus: #92ffdd;
     }
 
     body {
@@ -46,6 +47,7 @@
       z-index: 20;
       display: grid;
       grid-template-columns: 40px 1fr auto;
+      grid-template-columns: 40px 1fr 40px;
       align-items: center;
       gap: 10px;
       padding: 10px 12px;
@@ -53,6 +55,11 @@
       background: rgba(15, 23, 32, 0.72);
       backdrop-filter: blur(14px);
       border: 1px solid var(--border);
+    }
+
+    .app-bar-spacer {
+      width: 40px;
+      height: 40px;
     }
 
     .icon-btn {
@@ -65,6 +72,11 @@
       display: grid;
       place-items: center;
       cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .hamburger {
@@ -97,6 +109,9 @@
       color: #041712;
       background: linear-gradient(135deg, #92ffdd, #00d4aa);
       border: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .menu {
@@ -122,46 +137,7 @@
     .menu-panel.active {
       opacity: 1;
       transform: translateY(0);
-      pointer-events: auto;
-    }
-
-    .menu-item {
-      width: 100%;
-      border: none;
-      border-radius: 10px;
-      color: var(--text);
-      background: transparent;
-      text-align: left;
-      padding: 11px 12px;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
-    .menu-item:hover,
-    .menu-item:focus-visible {
-      background: rgba(0, 212, 170, 0.16);
-      outline: none;
-    }
-
-    .tabs {
-      position: relative;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 4px;
-      overflow: hidden;
-    }
-
-    .tab-btn {
-      position: relative;
-      z-index: 1;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      padding: 10px 8px;
-      border-radius: 10px;
+@@ -165,83 +168,81 @@
       font-weight: 600;
       font-size: 0.9rem;
       cursor: pointer;
@@ -187,6 +163,11 @@
       transform: translateX(100%);
     }
 
+    .main-content {
+      display: grid;
+      gap: 12px;
+    }
+
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -210,6 +191,7 @@
       color: var(--muted);
       text-align: center;
       font-size: 0.85rem;
+      font-size: 0.9rem;
     }
 
     .input-group {
@@ -220,6 +202,7 @@
 
     .input-group input {
       flex: 1;
+      min-width: 0;
       padding: 12px;
       border-radius: 12px;
       border: 1px solid var(--border);
@@ -245,45 +228,7 @@
       padding: 0 12px;
       border: 1px solid rgba(0, 212, 170, 0.35);
       background: rgba(255, 255, 255, 0.08);
-      color: var(--text);
-    }
-
-    #downloadBtn {
-      width: 100%;
-      border: none;
-      padding: 13px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-      color: #05271f;
-      position: relative;
-    }
-
-    #cancelBtn {
-      display: none;
-      width: 100%;
-      margin-top: 8px;
-      padding: 11px;
-      border: 1px solid rgba(255, 100, 100, 0.55);
-      color: #ff8f8f;
-      background: rgba(255, 100, 100, 0.12);
-    }
-
-    #downloadBtn.loading::after {
-      content: "";
-      width: 14px;
-      height: 14px;
-      border: 2px solid transparent;
-      border-top-color: #05271f;
-      border-radius: 50%;
-      display: inline-block;
-      margin-left: 10px;
-      animation: spin 0.8s linear infinite;
-      vertical-align: middle;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    #message {
-      margin: 12px 0 0;
+@@ -287,118 +288,216 @@
       min-height: 20px;
       font-size: 0.86rem;
     }
@@ -309,6 +254,54 @@
       transition: width 0.2s ease;
     }
 
+    .how-it-works {
+      padding: 16px;
+      background: var(--surface-soft);
+    }
+
+    .how-it-works-title {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .step-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.16);
+      padding: 12px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .step-index {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: #05271f;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      font-size: 0.85rem;
+    }
+
+    .step-text {
+      margin: 0;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
     .downloads-empty {
       margin: 0;
       font-size: 0.9rem;
@@ -324,11 +317,45 @@
       padding: 4px 0 12px;
     }
 
+    :focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 390px) {
+      .input-group {
+        flex-direction: column;
+      }
+
+      .paste-btn {
+        width: 100%;
+        padding: 11px 12px;
+      }
+    }
+
     @media (min-width: 640px) {
       body { padding: 20px; }
       .app-shell { gap: 16px; }
       .panel { padding: 20px; }
       .brand { font-size: 1.8rem; }
+      .steps {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .step-item {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 </head>
@@ -349,21 +376,25 @@
 
       <h1 class="app-title">FlashVidz</h1>
       <span class="badge" aria-label="Promotion badge">Sale 60%</span>
+      <span class="app-bar-spacer" aria-hidden="true"></span>
     </header>
 
     <nav class="tabs" aria-label="Main tabs">
+    <nav class="tabs" aria-label="Main tabs" role="tablist">
       <span id="tabIndicator" class="tab-indicator" aria-hidden="true"></span>
       <button type="button" class="tab-btn active" data-tab-target="enter-url" id="tabEnterUrl" role="tab" aria-selected="true" aria-controls="panel-enter-url">Enter URL</button>
       <button type="button" class="tab-btn" data-tab-target="downloads" id="tabDownloads" role="tab" aria-selected="false" aria-controls="panel-downloads">Downloads</button>
     </nav>
 
     <main>
+    <main class="main-content">
       <section id="panel-enter-url" class="panel" role="tabpanel" aria-labelledby="tabEnterUrl">
         <h2 class="brand">Flash<span>Vidz</span></h2>
         <p class="tagline">Download videos instantly in HD • No watermark</p>
 
         <div class="input-group">
           <input id="linkInput" placeholder="Paste video link..." autocomplete="off" aria-label="Video URL">
+          <input id="linkInput" type="url" placeholder="Paste video link..." autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Video URL">
           <button type="button" class="paste-btn" id="pasteBtn">Paste</button>
         </div>
 
@@ -371,10 +402,29 @@
         <button type="button" id="cancelBtn">Cancel</button>
 
         <div class="progress-container" id="progressContainer">
+        <div class="progress-container" id="progressContainer" aria-hidden="true">
           <div class="progress-bar" id="progressBar"></div>
         </div>
 
         <p id="message" aria-live="polite"></p>
+      </section>
+
+      <section class="panel how-it-works" aria-labelledby="howItWorksTitle">
+        <h2 id="howItWorksTitle" class="how-it-works-title">How It Works</h2>
+        <ol class="steps">
+          <li class="step-item">
+            <span class="step-index" aria-hidden="true">1</span>
+            <p class="step-text">Paste your video link</p>
+          </li>
+          <li class="step-item">
+            <span class="step-index" aria-hidden="true">2</span>
+            <p class="step-text">Click the download button</p>
+          </li>
+          <li class="step-item">
+            <span class="step-index" aria-hidden="true">3</span>
+            <p class="step-text">Save the video to your device</p>
+          </li>
+        </ol>
       </section>
 
       <section id="panel-downloads" class="panel" role="tabpanel" aria-labelledby="tabDownloads" hidden>
@@ -402,54 +452,7 @@
 
     document.addEventListener('click', (event) => {
       if (!menuToggle.contains(event.target) && !menuPanel.contains(event.target)) {
-        menuPanel.classList.remove('active');
-        menuToggle.setAttribute('aria-expanded', 'false');
-      }
-    });
-
-    menuPanel.addEventListener('click', (event) => {
-      const actionBtn = event.target.closest('[data-menu-action]');
-      if (!actionBtn) return;
-
-      const action = actionBtn.getAttribute('data-menu-action');
-      const messages = {
-        history: 'Download History - Feature coming soon',
-        settings: 'Settings - Feature coming soon',
-        about: 'FlashVidz v1.0\nProfessional video downloader',
-        help: 'Help & Support\nContact: support@flashvidz.com'
-      };
-
-      alert(messages[action] || 'Action unavailable');
-      menuPanel.classList.remove('active');
-      menuToggle.setAttribute('aria-expanded', 'false');
-    });
-
-    tabButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        const target = button.getAttribute('data-tab-target');
-        tabButtons.forEach((btn) => {
-          const isActive = btn === button;
-          btn.classList.toggle('active', isActive);
-          btn.setAttribute('aria-selected', String(isActive));
-        });
-
-        Object.entries(tabPanels).forEach(([key, panel]) => {
-          panel.hidden = key !== target;
-        });
-
-        tabIndicator.classList.toggle('downloads', target === 'downloads');
-      });
-    });
-
-    const CONFIG = {
-      API_URL: window.location.hostname === 'localhost'
-        ? 'http://localhost:3000/download'
-        : 'https://flashvidz-backend.onrender.com/download',
-      MAX_FILE_SIZE: 500 * 1024 * 1024
-    };
-
-    let abortController = null;
-    let downloadUrl = null;
+@@ -453,50 +552,51 @@
     let isAborted = false;
 
     function detectPlatform(link) {
@@ -475,6 +478,7 @@
         document.getElementById('pasteBtn').disabled = false;
         document.getElementById('cancelBtn').style.display = 'none';
         document.getElementById('progressContainer').style.display = 'none';
+        document.getElementById('progressContainer').setAttribute('aria-hidden', 'true');
         document.getElementById('progressBar').style.width = '0%';
       }, delay);
     }
@@ -500,13 +504,7 @@
       }
       if (downloadUrl) {
         URL.revokeObjectURL(downloadUrl);
-        downloadUrl = null;
-      }
-      isAborted = true;
-      setMessage('Download cancelled', 'error');
-    }
-
-    async function handleDownload() {
+@@ -510,50 +610,51 @@
       const link = document.getElementById('linkInput').value.trim();
       const btn = document.getElementById('downloadBtn');
       const bar = document.getElementById('progressBar');
@@ -532,6 +530,7 @@
       document.getElementById('pasteBtn').disabled = true;
       document.getElementById('cancelBtn').style.display = 'block';
       container.style.display = 'block';
+      container.setAttribute('aria-hidden', 'false');
       bar.style.width = '0%';
       setMessage('Starting download...', 'loading');
 
@@ -557,106 +556,3 @@
         }
 
         const reader = response.body.getReader();
-        const stream = new ReadableStream({
-          start(controller) {
-            let received = 0;
-
-            function pump() {
-              return reader.read().then(({ done, value }) => {
-                if (done) {
-                  controller.close();
-                  return;
-                }
-
-                received += value.length;
-                controller.enqueue(value);
-
-                if (contentLength) {
-                  const percent = Math.min(100, Math.floor((received / contentLength) * 100));
-                  bar.style.width = `${percent}%`;
-                  setMessage(`Downloading... ${percent}%`, 'loading');
-                } else {
-                  const mb = (received / 1024 / 1024).toFixed(1);
-                  setMessage(`Downloading... ${mb} MB`, 'loading');
-                }
-
-                return pump();
-              }).catch((err) => {
-                controller.error(err);
-              });
-            }
-
-            return pump();
-          }
-        });
-
-        const blob = await new Response(stream).blob();
-
-        if (blob.size === 0) {
-          throw new Error('Downloaded file is empty');
-        }
-
-        if (downloadUrl) {
-          URL.revokeObjectURL(downloadUrl);
-        }
-
-        downloadUrl = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `flashvidz_${platform}_${Date.now()}.mp4`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        setMessage('Download complete!', 'success');
-
-        setTimeout(() => {
-          if (downloadUrl) {
-            URL.revokeObjectURL(downloadUrl);
-            downloadUrl = null;
-          }
-        }, 60000);
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          return;
-        }
-
-        console.error('Download error:', err);
-
-        let errorMsg = err.message || 'Download failed';
-        if (platform === 'instagram' || platform === 'facebook') {
-          if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
-            errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
-          } else if (errorMsg.includes('private')) {
-            errorMsg = `This ${platform} post is private.`;
-          }
-        } else if (platform === 'youtube') {
-          if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
-            errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
-          }
-        }
-
-        setMessage(errorMsg, 'error');
-      } finally {
-        abortController = null;
-        resetUI(isAborted ? 0 : 2000);
-        isAborted = false;
-      }
-    }
-
-    document.getElementById('pasteBtn').addEventListener('click', pasteLink);
-    document.getElementById('downloadBtn').addEventListener('click', handleDownload);
-    document.getElementById('cancelBtn').addEventListener('click', cancelDownload);
-
-    window.addEventListener('beforeunload', () => {
-      if (downloadUrl) {
-        URL.revokeObjectURL(downloadUrl);
-      }
-      if (abortController) {
-        abortController.abort();
-      }
-    });
-  </script>
-</body>
-</html>
