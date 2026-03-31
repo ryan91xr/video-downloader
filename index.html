@@ -19,6 +19,101 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
+/* ==================== KEBAB MENU ==================== */
+.kebab-menu-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.kebab-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.3s ease;
+}
+
+.kebab-btn:hover {
+  background: rgba(255,255,255,0.12);
+  transform: scale(1.05);
+}
+
+.kebab-dot {
+  width: 4px;
+  height: 4px;
+  background: #00d4aa;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.kebab-btn:hover .kebab-dot {
+  background: #fff;
+}
+
+.kebab-dropdown {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 8px;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.kebab-dropdown.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.kebab-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #e0e0e0;
+  font-size: 14px;
+  border: none;
+}
+
+.kebab-item:hover {
+  background: rgba(0,212,170,0.15);
+  color: #00d4aa;
+}
+
+.kebab-item svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.kebab-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 8px 0;
+  border: none;
+}
+
+/* ==================== HEADER ==================== */
 .header {
   margin-top: 20px;
   color: white;
@@ -176,21 +271,117 @@ body {
   transition: width 0.2s ease;
 }
 
+/* ==================== USER GUIDE SECTION ==================== */
+.user-guide {
+  margin-top: 30px;
+  width: 100%;
+  max-width: 360px;
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.guide-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #00d4aa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.guide-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.guide-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 13px;
+  color: #b0b8c1;
+  line-height: 1.5;
+}
+
+.guide-item:last-child {
+  border-bottom: none;
+}
+
+.guide-number {
+  width: 24px;
+  height: 24px;
+  background: rgba(0,212,170,0.15);
+  color: #00d4aa;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.guide-text strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ==================== FOOTER ==================== */
 .footer {
-  margin-top: 20px;
+  margin-top: 30px;
   font-size: 12px;
   color: #aaa;
+  text-align: center;
+  padding-bottom: 20px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- ==================== KEBAB MENU ==================== -->
+<div class="kebab-menu-container">
+  <button class="kebab-btn" onclick="toggleKebab()" aria-label="Menu">
+    <span class="kebab-dot"></span>
+    <span class="kebab-dot"></span>
+    <span class="kebab-dot"></span>
+  </button>
+  
+  <div class="kebab-dropdown" id="kebabDropdown">
+    <div class="kebab-item" onclick="showHistory()">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      <span>Download History</span>
+    </div>
+    <div class="kebab-item" onclick="showSettings()">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      <span>Settings</span>
+    </div>
+    <div class="kebab-divider"></div>
+    <div class="kebab-item" onclick="showAbout()">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      <span>About</span>
+    </div>
+    <div class="kebab-item" onclick="showHelp()">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+      <span>Help & Support</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== HEADER ==================== -->
 <div class="header">
   <h1 class="brand">Flash<span>Vidz</span></h1>
   <p class="tagline">Download videos instantly in HD • No watermark</p>
 </div>
 
+<!-- ==================== MAIN DOWNLOAD CARD ==================== -->
 <div class="card">
 
   <div class="input-group">
@@ -209,15 +400,72 @@ body {
 
 </div>
 
+<!-- ==================== USER GUIDE ==================== -->
+<div class="user-guide">
+  <div class="guide-title">Quick Guide</div>
+  <ul class="guide-list">
+    <li class="guide-item">
+      <span class="guide-number">1</span>
+      <span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span>
+    </li>
+    <li class="guide-item">
+      <span class="guide-number">2</span>
+      <span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span>
+    </li>
+    <li class="guide-item">
+      <span class="guide-number">3</span>
+      <span class="guide-text"><strong>Download</strong> — Press download and wait for processing to complete</span>
+    </li>
+    <li class="guide-item">
+      <span class="guide-number">4</span>
+      <span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span>
+    </li>
+  </ul>
+</div>
+
+<!-- ==================== FOOTER ==================== -->
 <div class="footer">FlashVidz</div>
 
 <script>
+// ==================== KEBAB MENU FUNCTIONS ====================
+function toggleKebab() {
+  const dropdown = document.getElementById('kebabDropdown');
+  dropdown.classList.toggle('active');
+}
+
+document.addEventListener('click', function(event) {
+  const container = document.querySelector('.kebab-menu-container');
+  if (!container.contains(event.target)) {
+    document.getElementById('kebabDropdown').classList.remove('active');
+  }
+});
+
+function showHistory() {
+  alert('Download History - Feature coming soon');
+  toggleKebab();
+}
+
+function showSettings() {
+  alert('Settings - Feature coming soon');
+  toggleKebab();
+}
+
+function showAbout() {
+  alert('FlashVidz v1.0\nProfessional video downloader');
+  toggleKebab();
+}
+
+function showHelp() {
+  alert('Help & Support\nContact: support@flashvidz.com');
+  toggleKebab();
+}
+
 // ==================== CONFIG ====================
 const CONFIG = {
   API_URL: window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/download'
     : 'https://flashvidz-backend.onrender.com/download',
-  MAX_FILE_SIZE: 500 * 1024 * 1024 // 500MB
+  MAX_FILE_SIZE: 500 * 1024 * 1024
 };
 
 // ==================== STATE ====================
@@ -231,7 +479,7 @@ function detectPlatform(link) {
   if (url.includes('tiktok.com')) return 'tiktok';
   if (url.includes('instagram.com')) return 'instagram';
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-  if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook'; // ✅ Added Facebook
+  if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
   return 'unknown';
 }
 
@@ -279,7 +527,6 @@ function cancelDownload() {
   }
   isAborted = true;
   setMessage('Download cancelled', 'error');
-  // resetUI handled by finally block
 }
 
 async function handleDownload() {
@@ -295,17 +542,13 @@ async function handleDownload() {
 
   const platform = detectPlatform(link);
   
-  // ✅ REMOVED YouTube redirect - now goes to backend directly
-  
   if (platform === 'unknown') {
-    setMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error'); // ✅ Updated
+    setMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
     return;
   }
 
-  // Reset state
   isAborted = false;
 
-  // Setup UI
   btn.disabled = true;
   btn.textContent = 'Downloading...';
   btn.classList.add('loading');
@@ -315,7 +558,6 @@ async function handleDownload() {
   bar.style.width = '0%';
   setMessage('Starting download...', 'loading');
 
-  // Create abort controller for cancellation
   abortController = new AbortController();
 
   try {
@@ -337,7 +579,6 @@ async function handleDownload() {
       throw new Error('File too large (max 500MB)');
     }
 
-    // Stream to file instead of buffering in memory
     const reader = response.body.getReader();
     const stream = new ReadableStream({
       start(controller) {
@@ -372,21 +613,18 @@ async function handleDownload() {
       }
     });
 
-    // Create blob from stream
     const blob = await new Response(stream).blob();
     
     if (blob.size === 0) {
       throw new Error('Downloaded file is empty');
     }
     
-    // Cleanup previous URL if exists
     if (downloadUrl) {
       URL.revokeObjectURL(downloadUrl);
     }
     
     downloadUrl = URL.createObjectURL(blob);
     
-    // Trigger download
     const a = document.createElement('a');
     a.href = downloadUrl;
     a.download = `flashvidz_${platform}_${Date.now()}.mp4`;
@@ -396,7 +634,6 @@ async function handleDownload() {
     
     setMessage('Download complete!', 'success');
     
-    // Auto cleanup after delay
     setTimeout(() => {
       if (downloadUrl) {
         URL.revokeObjectURL(downloadUrl);
@@ -410,7 +647,6 @@ async function handleDownload() {
     }
     console.error('Download error:', err);
     
-    // ✅ Updated platform-specific error messages
     let errorMsg = err.message || 'Download failed';
     if (platform === 'instagram' || platform === 'facebook') {
       if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
@@ -432,7 +668,6 @@ async function handleDownload() {
   }
 }
 
-// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
   if (downloadUrl) {
     URL.revokeObjectURL(downloadUrl);
