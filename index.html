@@ -241,13 +241,15 @@ function setMessage(text, type = '') {
 }
 
 function resetUI(delay = 2000) {
-  document.getElementById('downloadBtn').disabled = false;
-  document.getElementById('downloadBtn').textContent = 'Download';
-  document.getElementById('downloadBtn').classList.remove('loading');
-  document.getElementById('pasteBtn').disabled = false;
-  document.getElementById('cancelBtn').style.display = 'none';
-  document.getElementById('progressContainer').style.display = 'none';
-  document.getElementById('progressBar').style.width = '0%';
+  setTimeout(() => {
+    document.getElementById('downloadBtn').disabled = false;
+    document.getElementById('downloadBtn').textContent = 'Download';
+    document.getElementById('downloadBtn').classList.remove('loading');
+    document.getElementById('pasteBtn').disabled = false;
+    document.getElementById('cancelBtn').style.display = 'none';
+    document.getElementById('progressContainer').style.display = 'none';
+    document.getElementById('progressBar').style.width = '0%';
+  }, delay);
 }
 
 // ==================== ACTIONS ====================
@@ -276,7 +278,7 @@ function cancelDownload() {
   }
   isAborted = true;
   setMessage('Download cancelled', 'error');
-  resetUI(0);
+  // resetUI handled by finally block
 }
 
 async function handleDownload() {
@@ -293,7 +295,6 @@ async function handleDownload() {
   const platform = detectPlatform(link);
   
   if (platform === 'youtube') {
-    // External service fallback
     window.open(`https://y2mate.nu/en?q=${encodeURIComponent(link)}`, '_blank');
     return;
   }
@@ -302,6 +303,9 @@ async function handleDownload() {
     setMessage('Unsupported platform. Use TikTok, Instagram, or YouTube', 'error');
     return;
   }
+
+  // Reset state
+  isAborted = false;
 
   // Setup UI
   btn.disabled = true;
@@ -312,7 +316,6 @@ async function handleDownload() {
   container.style.display = 'block';
   bar.style.width = '0%';
   setMessage('Starting download...', 'loading');
-  isAborted = false;
 
   // Create abort controller for cancellation
   abortController = new AbortController();
@@ -321,7 +324,7 @@ async function handleDownload() {
     const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: link }),
+      body: JSON.stringify({ url: link, platform: platform }),
       signal: abortController.signal
     });
 
@@ -362,6 +365,8 @@ async function handleDownload() {
             }
             
             return pump();
+          }).catch(err => {
+            controller.error(err);
           });
         }
         
@@ -371,6 +376,10 @@ async function handleDownload() {
 
     // Create blob from stream
     const blob = await new Response(stream).blob();
+    
+    if (blob.size === 0) {
+      throw new Error('Downloaded file is empty');
+    }
     
     // Cleanup previous URL if exists
     if (downloadUrl) {
@@ -395,17 +404,28 @@ async function handleDownload() {
         URL.revokeObjectURL(downloadUrl);
         downloadUrl = null;
       }
-    }, 60000); // Keep for 1 minute in case user wants to retry
+    }, 60000);
 
   } catch (err) {
     if (err.name === 'AbortError') {
-      return; // Already handled in cancelDownload
+      return;
     }
     console.error('Download error:', err);
-    setMessage(err.message || 'Download failed', 'error');
+    
+    // Platform-specific error messages
+    let errorMsg = err.message || 'Download failed';
+    if (platform === 'instagram') {
+      if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
+        errorMsg = 'Instagram login required. Please try again later.';
+      } else if (errorMsg.includes('private')) {
+        errorMsg = 'This Instagram post is private.';
+      }
+    }
+    
+    setMessage(errorMsg, 'error');
   } finally {
     abortController = null;
-    setTimeout(() => resetUI(), isAborted ? 0 : 2000);
+    resetUI(isAborted ? 0 : 2000);
     isAborted = false;
   }
 }
