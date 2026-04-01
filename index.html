@@ -2,113 +2,161 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FlashVidz</title>
-
+<meta name="description" content="FlashVidz helps you download supported videos quickly and securely.">
 <style>
-* { box-sizing: border-box; }
+:root {
+  --bg-1: #0f2027;
+  --bg-2: #1c2b33;
+  --bg-3: #2c5364;
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-strong: rgba(255, 255, 255, 0.1);
+  --text: #ffffff;
+  --text-muted: #b0b8c1;
+  --text-subtle: #8f9ba7;
+  --accent: #00d4aa;
+  --accent-2: #00b894;
+  --error: #ff6464;
+  --focus: #6be8d4;
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
 
 body {
   margin: 0;
-  padding: 0;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: linear-gradient(135deg, #0f2027, #1c2b33, #2c5364);
-  font-family: 'Segoe UI', sans-serif;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* ==================== HEADER ==================== */
+.app {
+  width: min(100%, 720px);
+  padding: 0 clamp(14px, 3vw, 22px) 28px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* HEADER */
 .app-header {
   width: 100%;
-  max-width: 420px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  gap: 12px;
+  padding: 14px 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(15, 32, 39, 0.8);
+  background: linear-gradient(to bottom, rgba(15, 32, 39, 0.92), rgba(15, 32, 39, 0.76));
   backdrop-filter: blur(10px);
 }
 
-.hamburger-btn {
+.hamburger-btn,
+.close-menu-btn {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(10px);
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  color: #00d4aa;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.hamburger-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent);
   font-size: 20px;
 }
 
-.hamburger-btn:hover {
-  background: rgba(255,255,255,0.12);
-  transform: scale(1.05);
+.hamburger-btn:hover,
+.close-menu-btn:hover {
+  transform: translateY(-1px);
 }
 
 .app-title {
-  font-size: 22px;
+  font-size: clamp(1.2rem, 2.2vw, 1.45rem);
   font-weight: 700;
-  color: white;
   margin: 0;
   flex: 1;
   text-align: center;
 }
 
-.app-title span {
-  color: #00d4aa;
-}
+.app-title span { color: var(--accent); }
 
 .pro-badge {
-  background: linear-gradient(135deg, #00d4aa, #00b894);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #000;
-  font-size: 10px;
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 4px 9px;
+  border-radius: 99px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.45px;
 }
 
-/* ==================== HAMBURGER MENU ==================== */
+/* MENU */
 .hamburger-menu-container {
   position: fixed;
-  top: 0;
-  left: -280px;
-  width: 280px;
-  height: 100vh;
+  inset: 0 auto 0 0;
+  width: min(82vw, 300px);
+  transform: translateX(-101%);
+  height: 100dvh;
   background: rgba(15, 32, 39, 0.98);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(16px);
   z-index: 1001;
-  transition: left 0.3s ease;
+  transition: transform 0.25s ease;
   padding: 20px;
-  box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.5);
 }
 
 .hamburger-menu-container.active {
-  left: 0;
+  transform: translateX(0);
 }
 
 .menu-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: rgba(0,0,0,0.5);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.52);
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: opacity 0.25s ease;
 }
 
 .menu-overlay.active {
@@ -120,35 +168,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .menu-title {
-  font-size: 18px;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: white;
 }
 
 .close-menu-btn {
-  width: 32px;
-  height: 32px;
-  background: rgba(255,255,255,0.06);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #aaa;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d0d0d0;
   font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.close-menu-btn:hover {
-  background: rgba(255,100,100,0.2);
-  color: #ff6464;
 }
 
 .menu-list {
@@ -157,75 +190,77 @@ body {
   margin: 0;
 }
 
-.menu-item {
+.menu-item button {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
+  border: 0;
   border-radius: 12px;
+  background: transparent;
+  color: #e2e5e9;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #e0e0e0;
-  font-size: 14px;
-  margin-bottom: 4px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-align: left;
 }
 
-.menu-item:hover {
-  background: rgba(0,212,170,0.15);
-  color: #00d4aa;
+.menu-item button:hover {
+  background: rgba(0, 212, 170, 0.15);
+  color: var(--accent);
 }
 
 .menu-item svg {
   width: 20px;
   height: 20px;
   fill: currentColor;
+  flex-shrink: 0;
 }
 
 .menu-divider {
   height: 1px;
-  background: rgba(255,255,255,0.1);
-  margin: 16px 0;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 14px 0;
   border: none;
 }
 
-/* ==================== MATERIAL TABS ==================== */
+/* MAIN */
+.main-content {
+  margin-top: 12px;
+}
+
 .tabs-container {
   width: 100%;
-  max-width: 360px;
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin: 0 auto 18px;
 }
 
 .tabs-nav {
   display: flex;
-  background: transparent;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   position: relative;
 }
 
 .tab-btn {
   flex: 1;
-  padding: 14px 16px;
+  padding: 13px 16px;
   border: none;
   background: transparent;
-  color: #888;
-  font-size: 14px;
-  font-weight: 500;
+  color: #98a0a9;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
+  transition: color 0.2s ease, background-color 0.2s ease;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.55px;
 }
 
 .tab-btn:hover {
-  color: #ccc;
-  background: rgba(255,255,255,0.03);
+  color: #ced5dc;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .tab-btn.active {
-  color: #00d4aa;
-  font-weight: 600;
+  color: var(--accent);
 }
 
 .tab-indicator {
@@ -234,16 +269,13 @@ body {
   left: 0;
   height: 3px;
   width: 50%;
-  background: #00d4aa;
-  transition: transform 0.3s ease;
+  background: var(--accent);
+  transition: transform 0.25s ease;
   border-radius: 3px 3px 0 0;
 }
 
-.tab-indicator.downloads {
-  transform: translateX(100%);
-}
+.tab-indicator.downloads { transform: translateX(100%); }
 
-/* ==================== TAB CONTENT ==================== */
 .tab-content {
   display: none;
 }
@@ -252,157 +284,133 @@ body {
   display: block;
 }
 
-/* ==================== DOWNLOADS TAB ==================== */
-.downloads-list {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(18px);
-  border-radius: 20px;
-  padding: 20px;
-  min-height: 200px;
-}
-
-.empty-state {
-  text-align: center;
-  color: #888;
-  padding: 40px 20px;
-}
-
-.empty-state svg {
-  width: 48px;
-  height: 48px;
-  fill: rgba(255,255,255,0.2);
-  margin-bottom: 12px;
-}
-
-.empty-state p {
-  font-size: 14px;
-  margin: 0;
-}
-
-/* ==================== MAIN CARD ==================== */
-.card {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(18px);
-  padding: 22px;
-  border-radius: 20px;
+.card,
+.downloads-list,
+.user-guide {
   width: 100%;
-  max-width: 360px;
-  text-align: center;
-  color: white;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  max-width: 520px;
+  margin-inline: auto;
+}
+
+.card {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  padding: clamp(16px, 3vw, 24px);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  box-shadow: var(--shadow);
+}
+
+.form-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.form-subtitle {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
 }
 
 .input-group {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 8px;
-  margin-bottom: 12px;
 }
 
 .input-group input {
-  flex: 1;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: #0a0a0a;
-  color: white;
-  font-size: 14px;
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #0d1114;
+  color: var(--text);
 }
 
-.input-group input:focus {
-  outline: none;
-  border-color: #00d4aa;
+.input-group input::placeholder { color: #77808a; }
+
+.paste-btn,
+#downloadBtn,
+#cancelBtn {
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-weight: 600;
 }
 
 .paste-btn {
   padding: 0 14px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border: 1px solid rgba(0,212,170,0.3);
-  cursor: pointer;
-  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  border-color: rgba(0, 212, 170, 0.35);
 }
 
 .paste-btn:hover {
-  background: rgba(0,212,170,0.2);
+  background: rgba(0, 212, 170, 0.16);
 }
 
-.paste-btn:disabled {
-  opacity: 0.5;
+button:disabled {
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
 #downloadBtn {
   width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #00d4aa, #00b894);
-  color: black;
-  font-weight: bold;
-  margin-top: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin-top: 12px;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #05120f;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
 }
 
 #downloadBtn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0,212,170,0.4);
-}
-
-#downloadBtn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 212, 170, 0.35);
 }
 
 #downloadBtn.loading::after {
   content: "";
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top-color: #000;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 8px;
   border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #03261f;
   animation: spin 0.8s linear infinite;
-  margin-left: 10px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  vertical-align: text-bottom;
 }
 
 #cancelBtn {
   width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,100,100,0.5);
-  background: rgba(255,100,100,0.1);
-  color: #ff6464;
   margin-top: 8px;
-  cursor: pointer;
+  padding: 12px;
+  border-color: rgba(255, 100, 100, 0.6);
+  background: rgba(255, 100, 100, 0.1);
+  color: var(--error);
   display: none;
 }
 
 #cancelBtn:hover {
-  background: rgba(255,100,100,0.2);
+  background: rgba(255, 100, 100, 0.2);
 }
 
 #message {
   margin-top: 12px;
-  font-size: 13px;
-  min-height: 20px;
+  min-height: 1.5em;
+  font-size: 0.88rem;
 }
 
-#message.error { color: #ff6464; }
-#message.success { color: #00d4aa; }
-#message.loading { color: #ccc; }
+#message.error { color: var(--error); }
+#message.success { color: var(--accent); }
+#message.loading { color: #d4dde7; }
 
 .progress-container {
   width: 100%;
-  height: 6px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 10px;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.13);
+  border-radius: 99px;
   margin-top: 10px;
   overflow: hidden;
   display: none;
@@ -411,492 +419,556 @@ body {
 .progress-bar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #00d4aa, #00b894);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
   transition: width 0.2s ease;
 }
 
-/* ==================== USER GUIDE SECTION ==================== */
+.downloads-list,
 .user-guide {
-  margin-top: 30px;
-  width: 100%;
-  max-width: 360px;
-  background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(10px);
+  margin-top: 20px;
   border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.downloads-list {
+  background: var(--surface);
   padding: 20px;
-  border: 1px solid rgba(255,255,255,0.08);
+  min-height: 200px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-subtle);
+  padding: 34px 16px;
+}
+
+.empty-state svg {
+  width: 46px;
+  height: 46px;
+  fill: rgba(255, 255, 255, 0.25);
+  margin-bottom: 10px;
+}
+
+.user-guide {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  padding: 18px;
 }
 
 .guide-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #00d4aa;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   text-align: center;
 }
 
 .guide-list {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 .guide-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  font-size: 13px;
-  color: #b0b8c1;
-  line-height: 1.5;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-muted);
+  font-size: 0.86rem;
 }
 
-.guide-item:last-child {
-  border-bottom: none;
-}
+.guide-item:last-child { border-bottom: 0; }
 
 .guide-number {
   width: 24px;
   height: 24px;
-  background: rgba(0,212,170,0.15);
-  color: #00d4aa;
+  background: rgba(0, 212, 170, 0.15);
+  color: var(--accent);
   border-radius: 6px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 0.76rem;
   font-weight: 700;
   flex-shrink: 0;
 }
 
-.guide-text strong {
-  color: #fff;
-  font-weight: 600;
+.guide-text strong { color: var(--text); }
+
+.footer {
+  margin-top: 24px;
+  font-size: 0.75rem;
+  color: #adb6bf;
+  text-align: center;
 }
 
-/* ==================== FOOTER ==================== */
-.footer {
-  margin-top: 30px;
-  font-size: 12px;
-  color: #aaa;
-  text-align: center;
-  padding-bottom: 20px;
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 520px) {
+  .app {
+    padding-inline: 12px;
+  }
+
+  .input-group {
+    grid-template-columns: 1fr;
+  }
+
+  .paste-btn {
+    min-height: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 </style>
 </head>
-
 <body>
-
-<!-- ==================== HAMBURGER MENU ==================== -->
-<div class="menu-overlay" id="menuOverlay"></div>
-<nav class="hamburger-menu-container" id="hamburgerMenu" aria-label="Main navigation">
-  <div class="menu-header">
-    <span class="menu-title">Menu</span>
-    <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">×</button>
-  </div>
-  <ul class="menu-list">
-    <li class="menu-item" id="menuHistory">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-      <span>History</span>
-    </li>
-    <li class="menu-item" id="menuSettings">
-      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-      <span>Settings</span>
-    </li>
-    <li class="menu-divider"></li>
-    <li class="menu-item" id="menuAbout">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-      <span>About</span>
-    </li>
-    <li class="menu-item" id="menuHelp">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
-      <span>Help & Support</span>
-    </li>
-  </ul>
-</nav>
-
-<!-- ==================== HEADER ==================== -->
-<header class="app-header">
-  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">☰</button>
-  <h1 class="app-title">Flash<span>Vidz</span></h1>
-  <span class="pro-badge">PRO</span>
-</header>
-
-<!-- ==================== TABS ==================== -->
-<div class="tabs-container">
-  <nav class="tabs-nav" role="tablist">
-    <button class="tab-btn active" data-tab="enter-url" role="tab" aria-selected="true">Enter URL</button>
-    <button class="tab-btn" data-tab="downloads" role="tab" aria-selected="false">Downloads</button>
-    <div class="tab-indicator" id="tabIndicator"></div>
-  </nav>
-</div>
-
-<!-- ==================== TAB CONTENT: ENTER URL ==================== -->
-<section class="tab-content active" id="tab-enter-url" role="tabpanel">
-  <!-- ==================== MAIN DOWNLOAD CARD ==================== -->
-  <div class="card">
-    <div class="input-group">
-      <input id="linkInput" placeholder="Paste video link..." autocomplete="off">
-      <button class="paste-btn" id="pasteBtn">Paste</button>
+<div class="app">
+  <div class="menu-overlay" id="menuOverlay" hidden></div>
+  <nav class="hamburger-menu-container" id="hamburgerMenu" aria-label="Main navigation" aria-hidden="true">
+    <div class="menu-header">
+      <span class="menu-title">Menu</span>
+      <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu" type="button">×</button>
     </div>
-
-    <button id="downloadBtn">Download</button>
-    <button id="cancelBtn">Cancel</button>
-
-    <div class="progress-container" id="progressContainer">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-
-    <p id="message"></p>
-  </div>
-
-  <!-- ==================== USER GUIDE ==================== -->
-  <div class="user-guide">
-    <div class="guide-title">Quick Guide</div>
-    <ul class="guide-list">
-      <li class="guide-item">
-        <span class="guide-number">1</span>
-        <span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span>
+    <ul class="menu-list">
+      <li class="menu-item">
+        <button id="menuHistory" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          <span>History</span>
+        </button>
       </li>
-      <li class="guide-item">
-        <span class="guide-number">2</span>
-        <span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span>
+      <li class="menu-item">
+        <button id="menuSettings" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span>Settings</span>
+        </button>
       </li>
-      <li class="guide-item">
-        <span class="guide-number">3</span>
-        <span class="guide-text"><strong>Download</strong> — Press download and wait for processing to complete</span>
+      <li class="menu-divider" role="separator" aria-hidden="true"></li>
+      <li class="menu-item">
+        <button id="menuAbout" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span>About</span>
+        </button>
       </li>
-      <li class="guide-item">
-        <span class="guide-number">4</span>
-        <span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span>
+      <li class="menu-item">
+        <button id="menuHelp" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+          <span>Help &amp; Support</span>
+        </button>
       </li>
     </ul>
-  </div>
-</section>
+  </nav>
 
-<!-- ==================== TAB CONTENT: DOWNLOADS ==================== -->
-<section class="tab-content" id="tab-downloads" role="tabpanel">
-  <div class="downloads-list">
-    <div class="empty-state">
-      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-      <p>No downloads yet</p>
+  <header class="app-header">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="hamburgerMenu" type="button">☰</button>
+    <h1 class="app-title">Flash<span>Vidz</span></h1>
+    <span class="pro-badge" aria-label="Pro plan">PRO</span>
+  </header>
+
+  <main class="main-content" id="mainContent">
+    <div class="tabs-container">
+      <nav class="tabs-nav" role="tablist" aria-label="Sections">
+        <button class="tab-btn active" id="tab-btn-enter" data-tab="enter-url" role="tab" aria-selected="true" aria-controls="tab-enter-url" type="button">Enter URL</button>
+        <button class="tab-btn" id="tab-btn-downloads" data-tab="downloads" role="tab" aria-selected="false" aria-controls="tab-downloads" tabindex="-1" type="button">Downloads</button>
+        <div class="tab-indicator" id="tabIndicator" aria-hidden="true"></div>
+      </nav>
     </div>
-  </div>
-</section>
 
-<!-- ==================== FOOTER ==================== -->
-<footer class="footer">FlashVidz</footer>
+    <section class="tab-content active" id="tab-enter-url" role="tabpanel" aria-labelledby="tab-btn-enter">
+      <div class="card">
+        <h2 class="form-title">Download a video</h2>
+        <p class="form-subtitle">Paste a supported link from TikTok, Instagram, YouTube, or Facebook.</p>
+
+        <label class="sr-only" for="linkInput">Video URL</label>
+        <div class="input-group">
+          <input id="linkInput" inputmode="url" type="url" placeholder="https://example.com/video" autocomplete="off" spellcheck="false" aria-describedby="message" required>
+          <button class="paste-btn" id="pasteBtn" type="button">Paste</button>
+        </div>
+
+        <button id="downloadBtn" type="button">Download</button>
+        <button id="cancelBtn" type="button">Cancel</button>
+
+        <div class="progress-container" id="progressContainer" role="progressbar" aria-label="Download progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <p id="message" role="status" aria-live="polite"></p>
+      </div>
+
+      <aside class="user-guide" aria-labelledby="guideTitle">
+        <div class="guide-title" id="guideTitle">Quick Guide</div>
+        <ul class="guide-list">
+          <li class="guide-item"><span class="guide-number">1</span><span class="guide-text"><strong>Copy URL</strong> — Navigate to a video and copy its link.</span></li>
+          <li class="guide-item"><span class="guide-number">2</span><span class="guide-text"><strong>Paste Link</strong> — Use the Paste button or type the URL manually.</span></li>
+          <li class="guide-item"><span class="guide-number">3</span><span class="guide-text"><strong>Download</strong> — Press Download and wait for processing.</span></li>
+          <li class="guide-item"><span class="guide-number">4</span><span class="guide-text"><strong>Save File</strong> — Your file is saved to your downloads folder.</span></li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="tab-content" id="tab-downloads" role="tabpanel" aria-labelledby="tab-btn-downloads" hidden>
+      <div class="downloads-list">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <p>No downloads yet</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">FlashVidz</footer>
+</div>
 
 <script>
-// ==================== HAMBURGER MENU ====================
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-const closeMenuBtn = document.getElementById('closeMenuBtn');
-const hamburgerMenu = document.getElementById('hamburgerMenu');
-const menuOverlay = document.getElementById('menuOverlay');
+(() => {
+  'use strict';
 
-function openMenu() {
-  hamburgerMenu.classList.add('active');
-  menuOverlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
+  const CONFIG = {
+    API_URL: window.location.hostname === 'localhost'
+      ? 'http://localhost:3000/download'
+      : 'https://flashvidz-backend.onrender.com/download',
+    MAX_FILE_SIZE: 500 * 1024 * 1024
+  };
 
-function closeMenu() {
-  hamburgerMenu.classList.remove('active');
-  menuOverlay.classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-hamburgerBtn.addEventListener('click', openMenu);
-closeMenuBtn.addEventListener('click', closeMenu);
-menuOverlay.addEventListener('click', closeMenu);
-
-// Menu items
-document.getElementById('menuHistory').addEventListener('click', function() {
-  alert('History - Feature coming soon');
-  closeMenu();
-});
-
-document.getElementById('menuSettings').addEventListener('click', function() {
-  alert('Settings - Feature coming soon');
-  closeMenu();
-});
-
-document.getElementById('menuAbout').addEventListener('click', function() {
-  alert('FlashVidz v1.0\nProfessional video downloader');
-  closeMenu();
-});
-
-document.getElementById('menuHelp').addEventListener('click', function() {
-  alert('Help & Support\nContact: support@flashvidz.com');
-  closeMenu();
-});
-
-// ==================== TABS ====================
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
-const tabIndicator = document.getElementById('tabIndicator');
-
-function switchTab(tabId) {
-  // Update buttons
-  tabBtns.forEach(btn => {
-    if (btn.dataset.tab === tabId) {
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-    } else {
-      btn.classList.remove('active');
-      btn.setAttribute('aria-selected', 'false');
+  const els = {
+    body: document.body,
+    linkInput: document.getElementById('linkInput'),
+    pasteBtn: document.getElementById('pasteBtn'),
+    downloadBtn: document.getElementById('downloadBtn'),
+    cancelBtn: document.getElementById('cancelBtn'),
+    message: document.getElementById('message'),
+    progressContainer: document.getElementById('progressContainer'),
+    progressBar: document.getElementById('progressBar'),
+    tabBtns: Array.from(document.querySelectorAll('.tab-btn')),
+    tabContents: Array.from(document.querySelectorAll('.tab-content')),
+    tabIndicator: document.getElementById('tabIndicator'),
+    hamburgerBtn: document.getElementById('hamburgerBtn'),
+    closeMenuBtn: document.getElementById('closeMenuBtn'),
+    hamburgerMenu: document.getElementById('hamburgerMenu'),
+    menuOverlay: document.getElementById('menuOverlay'),
+    menuItems: {
+      menuHistory: document.getElementById('menuHistory'),
+      menuSettings: document.getElementById('menuSettings'),
+      menuAbout: document.getElementById('menuAbout'),
+      menuHelp: document.getElementById('menuHelp')
     }
-  });
+  };
 
-  // Update indicator
-  if (tabId === 'downloads') {
-    tabIndicator.classList.add('downloads');
-  } else {
-    tabIndicator.classList.remove('downloads');
+  const state = {
+    abortController: null,
+    downloadUrl: null,
+    isAborted: false,
+    previousFocus: null
+  };
+
+  function setMessage(text, type = '') {
+    els.message.textContent = text;
+    els.message.className = type;
   }
 
-  // Update content
-  tabContents.forEach(content => {
-    if (content.id === 'tab-' + tabId) {
-      content.classList.add('active');
-    } else {
-      content.classList.remove('active');
+  function detectPlatform(link) {
+    const url = link.toLowerCase();
+    if (url.includes('tiktok.com')) return 'tiktok';
+    if (url.includes('instagram.com')) return 'instagram';
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+    if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
+    return 'unknown';
+  }
+
+  function updateProgress(percent) {
+    const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    els.progressBar.style.width = safePercent + '%';
+    els.progressContainer.setAttribute('aria-valuenow', String(safePercent));
+  }
+
+  function resetUI(delay = 2000) {
+    window.setTimeout(() => {
+      els.downloadBtn.disabled = false;
+      els.downloadBtn.textContent = 'Download';
+      els.downloadBtn.classList.remove('loading');
+      els.pasteBtn.disabled = false;
+      els.cancelBtn.style.display = 'none';
+      els.progressContainer.style.display = 'none';
+      updateProgress(0);
+    }, delay);
+  }
+
+  function showMenu() {
+    state.previousFocus = document.activeElement;
+    els.hamburgerMenu.classList.add('active');
+    els.menuOverlay.classList.add('active');
+    els.menuOverlay.hidden = false;
+    els.hamburgerMenu.setAttribute('aria-hidden', 'false');
+    els.hamburgerBtn.setAttribute('aria-expanded', 'true');
+    els.body.style.overflow = 'hidden';
+    els.closeMenuBtn.focus();
+  }
+
+  function hideMenu() {
+    els.hamburgerMenu.classList.remove('active');
+    els.menuOverlay.classList.remove('active');
+    els.hamburgerMenu.setAttribute('aria-hidden', 'true');
+    els.hamburgerBtn.setAttribute('aria-expanded', 'false');
+    els.body.style.overflow = '';
+    window.setTimeout(() => {
+      if (!els.menuOverlay.classList.contains('active')) {
+        els.menuOverlay.hidden = true;
+      }
+    }, 260);
+    if (state.previousFocus && typeof state.previousFocus.focus === 'function') {
+      state.previousFocus.focus();
     }
-  });
-}
-
-tabBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    switchTab(btn.dataset.tab);
-  });
-});
-
-// ==================== CONFIG ====================
-const CONFIG = {
-  API_URL: window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/download'
-    : 'https://flashvidz-backend.onrender.com/download',
-  MAX_FILE_SIZE: 500 * 1024 * 1024
-};
-
-// ==================== STATE ====================
-let abortController = null;
-let downloadUrl = null;
-let isAborted = false;
-
-// ==================== UTILS ====================
-function detectPlatform(link) {
-  const url = link.toLowerCase();
-  if (url.includes('tiktok.com')) return 'tiktok';
-  if (url.includes('instagram.com')) return 'instagram';
-  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-  if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
-  return 'unknown';
-}
-
-function setMessage(text, type = '') {
-  const msg = document.getElementById('message');
-  msg.textContent = text;
-  msg.className = type;
-}
-
-function resetUI(delay = 2000) {
-  setTimeout(() => {
-    document.getElementById('downloadBtn').disabled = false;
-    document.getElementById('downloadBtn').textContent = 'Download';
-    document.getElementById('downloadBtn').classList.remove('loading');
-    document.getElementById('pasteBtn').disabled = false;
-    document.getElementById('cancelBtn').style.display = 'none';
-    document.getElementById('progressContainer').style.display = 'none';
-    document.getElementById('progressBar').style.width = '0%';
-  }, delay);
-}
-
-// ==================== ACTIONS ====================
-async function pasteLink() {
-  const btn = document.getElementById('pasteBtn');
-  btn.disabled = true;
-  
-  try {
-    const text = await navigator.clipboard.readText();
-    document.getElementById('linkInput').value = text.trim();
-  } catch {
-    setMessage('Clipboard access denied', 'error');
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-document.getElementById('pasteBtn').addEventListener('click', pasteLink);
-
-function cancelDownload() {
-  if (abortController) {
-    abortController.abort();
-    abortController = null;
-  }
-  if (downloadUrl) {
-    URL.revokeObjectURL(downloadUrl);
-    downloadUrl = null;
-  }
-  isAborted = true;
-  setMessage('Download cancelled', 'error');
-}
-
-document.getElementById('cancelBtn').addEventListener('click', cancelDownload);
-
-async function handleDownload() {
-  const link = document.getElementById('linkInput').value.trim();
-  const btn = document.getElementById('downloadBtn');
-  const bar = document.getElementById('progressBar');
-  const container = document.getElementById('progressContainer');
-  
-  if (!link) {
-    setMessage('Enter a video link', 'error');
-    return;
   }
 
-  const platform = detectPlatform(link);
-  
-  if (platform === 'unknown') {
-    setMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
-    return;
-  }
-
-  isAborted = false;
-
-  btn.disabled = true;
-  btn.textContent = 'Downloading...';
-  btn.classList.add('loading');
-  document.getElementById('pasteBtn').disabled = true;
-  document.getElementById('cancelBtn').style.display = 'block';
-  container.style.display = 'block';
-  bar.style.width = '0%';
-  setMessage('Starting download...', 'loading');
-
-  abortController = new AbortController();
-
-  try {
-    const response = await fetch(CONFIG.API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: link, platform: platform }),
-      signal: abortController.signal
+  function switchTab(tabId) {
+    els.tabBtns.forEach((btn) => {
+      const isActive = btn.dataset.tab === tabId;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
+      btn.tabIndex = isActive ? 0 : -1;
     });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Download failed' }));
-      throw new Error(error.error || `Server error: ${response.status}`);
-    }
+    els.tabIndicator.classList.toggle('downloads', tabId === 'downloads');
 
-    const contentLength = parseInt(response.headers.get('Content-Length')) || 0;
-    
-    if (contentLength > CONFIG.MAX_FILE_SIZE) {
-      throw new Error('File too large (max 500MB)');
-    }
-
-    const reader = response.body.getReader();
-    const stream = new ReadableStream({
-      start(controller) {
-        let received = 0;
-        
-        function pump() {
-          return reader.read().then(({ done, value }) => {
-            if (done) {
-              controller.close();
-              return;
-            }
-            
-            received += value.length;
-            controller.enqueue(value);
-            
-            if (contentLength) {
-              const percent = Math.min(100, Math.floor((received / contentLength) * 100));
-              bar.style.width = percent + '%';
-              setMessage(`Downloading... ${percent}%`, 'loading');
-            } else {
-              const mb = (received / 1024 / 1024).toFixed(1);
-              setMessage(`Downloading... ${mb} MB`, 'loading');
-            }
-            
-            return pump();
-          }).catch(err => {
-            controller.error(err);
-          });
-        }
-        
-        return pump();
-      }
+    els.tabContents.forEach((content) => {
+      const isActive = content.id === 'tab-' + tabId;
+      content.classList.toggle('active', isActive);
+      content.hidden = !isActive;
     });
+  }
 
-    const blob = await new Response(stream).blob();
-    
-    if (blob.size === 0) {
-      throw new Error('Downloaded file is empty');
-    }
-    
-    if (downloadUrl) {
-      URL.revokeObjectURL(downloadUrl);
-    }
-    
-    downloadUrl = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.download = `flashvidz_${platform}_${Date.now()}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    setMessage('Download complete!', 'success');
-    
-    setTimeout(() => {
-      if (downloadUrl) {
-        URL.revokeObjectURL(downloadUrl);
-        downloadUrl = null;
-      }
-    }, 60000);
-
-  } catch (err) {
-    if (err.name === 'AbortError') {
+  async function pasteLink() {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      setMessage('Clipboard is not available in this browser.', 'error');
       return;
     }
-    console.error('Download error:', err);
-    
-    let errorMsg = err.message || 'Download failed';
-    if (platform === 'instagram' || platform === 'facebook') {
-      if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
-        errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
-      } else if (errorMsg.includes('private')) {
-        errorMsg = `This ${platform} post is private.`;
-      }
-    } else if (platform === 'youtube') {
-      if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
-        errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
-      }
+
+    els.pasteBtn.disabled = true;
+    try {
+      const text = await navigator.clipboard.readText();
+      els.linkInput.value = text.trim();
+      setMessage('Link pasted. Ready to download.', 'success');
+    } catch {
+      setMessage('Clipboard access denied. Paste manually.', 'error');
+    } finally {
+      els.pasteBtn.disabled = false;
     }
-    
-    setMessage(errorMsg, 'error');
-  } finally {
-    abortController = null;
-    resetUI(isAborted ? 0 : 2000);
-    isAborted = false;
   }
-}
 
-document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+  function cancelDownload() {
+    if (state.abortController) {
+      state.abortController.abort();
+      state.abortController = null;
+    }
+    if (state.downloadUrl) {
+      URL.revokeObjectURL(state.downloadUrl);
+      state.downloadUrl = null;
+    }
+    state.isAborted = true;
+    setMessage('Download cancelled.', 'error');
+  }
 
-window.addEventListener('beforeunload', () => {
-  if (downloadUrl) {
-    URL.revokeObjectURL(downloadUrl);
+  async function handleDownload() {
+    const link = els.linkInput.value.trim();
+    if (!link) {
+      setMessage('Enter a video link.', 'error');
+      els.linkInput.focus();
+      return;
+    }
+
+    let parsed;
+    try {
+      parsed = new URL(link);
+      if (!/^https?:$/.test(parsed.protocol)) throw new Error('invalid');
+    } catch {
+      setMessage('Please enter a valid http(s) URL.', 'error');
+      els.linkInput.focus();
+      return;
+    }
+
+    const platform = detectPlatform(parsed.href);
+    if (platform === 'unknown') {
+      setMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook.', 'error');
+      return;
+    }
+
+    state.isAborted = false;
+    els.downloadBtn.disabled = true;
+    els.downloadBtn.textContent = 'Downloading...';
+    els.downloadBtn.classList.add('loading');
+    els.pasteBtn.disabled = true;
+    els.cancelBtn.style.display = 'block';
+    els.progressContainer.style.display = 'block';
+    updateProgress(0);
+    setMessage('Starting download...', 'loading');
+
+    state.abortController = new AbortController();
+
+    try {
+      const response = await fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: parsed.href, platform }),
+        signal: state.abortController.signal
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Download failed' }));
+        throw new Error(error.error || `Server error: ${response.status}`);
+      }
+
+      const contentLength = Number.parseInt(response.headers.get('Content-Length') || '0', 10);
+      if (contentLength > CONFIG.MAX_FILE_SIZE) {
+        throw new Error('File too large (max 500MB).');
+      }
+      if (!response.body) {
+        throw new Error('Stream unavailable in this browser.');
+      }
+
+      const reader = response.body.getReader();
+      let received = 0;
+      const chunks = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+
+        if (contentLength > 0) {
+          const percent = Math.floor((received / contentLength) * 100);
+          updateProgress(percent);
+          setMessage(`Downloading... ${percent}%`, 'loading');
+        } else {
+          const mb = (received / 1024 / 1024).toFixed(1);
+          setMessage(`Downloading... ${mb} MB`, 'loading');
+        }
+      }
+
+      const blob = new Blob(chunks, { type: response.headers.get('Content-Type') || 'video/mp4' });
+
+      if (blob.size === 0) {
+        throw new Error('Downloaded file is empty.');
+      }
+
+      if (state.downloadUrl) URL.revokeObjectURL(state.downloadUrl);
+      state.downloadUrl = URL.createObjectURL(blob);
+
+      const anchor = document.createElement('a');
+      anchor.href = state.downloadUrl;
+      anchor.download = `flashvidz_${platform}_${Date.now()}.mp4`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+
+      updateProgress(100);
+      setMessage('Download complete!', 'success');
+
+      window.setTimeout(() => {
+        if (state.downloadUrl) {
+          URL.revokeObjectURL(state.downloadUrl);
+          state.downloadUrl = null;
+        }
+      }, 60000);
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+
+      let errorMsg = (err && err.message) ? err.message : 'Download failed.';
+      const lower = errorMsg.toLowerCase();
+      if ((platform === 'instagram' || platform === 'facebook') && (lower.includes('login') || lower.includes('cookie'))) {
+        errorMsg = `${platform[0].toUpperCase() + platform.slice(1)} login required. Please try again later.`;
+      } else if ((platform === 'instagram' || platform === 'facebook') && lower.includes('private')) {
+        errorMsg = `This ${platform} post is private.`;
+      } else if (platform === 'youtube' && (lower.includes('unavailable') || lower.includes('bot') || lower.includes('sign in'))) {
+        errorMsg = 'YouTube download failed. The video may be age-restricted or blocked.';
+      }
+
+      setMessage(errorMsg, 'error');
+      console.error('Download error:', err);
+    } finally {
+      state.abortController = null;
+      resetUI(state.isAborted ? 0 : 2000);
+      state.isAborted = false;
+    }
   }
-  if (abortController) {
-    abortController.abort();
-  }
-});
+
+  els.hamburgerBtn.addEventListener('click', showMenu);
+  els.closeMenuBtn.addEventListener('click', hideMenu);
+  els.menuOverlay.addEventListener('click', hideMenu);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && els.hamburgerMenu.classList.contains('active')) {
+      hideMenu();
+    }
+  });
+
+  els.tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  document.querySelector('.tabs-nav').addEventListener('keydown', (event) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (!keys.includes(event.key)) return;
+
+    event.preventDefault();
+    const currentIndex = els.tabBtns.findIndex((btn) => btn.classList.contains('active'));
+    let nextIndex = currentIndex;
+
+    if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % els.tabBtns.length;
+    if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + els.tabBtns.length) % els.tabBtns.length;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = els.tabBtns.length - 1;
+
+    const nextBtn = els.tabBtns[nextIndex];
+    switchTab(nextBtn.dataset.tab);
+    nextBtn.focus();
+  });
+
+  els.pasteBtn.addEventListener('click', pasteLink);
+  els.cancelBtn.addEventListener('click', cancelDownload);
+  els.downloadBtn.addEventListener('click', handleDownload);
+  els.linkInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleDownload();
+    }
+  });
+
+  els.menuItems.menuHistory.addEventListener('click', () => {
+    alert('History — Feature coming soon');
+    hideMenu();
+  });
+
+  els.menuItems.menuSettings.addEventListener('click', () => {
+    alert('Settings — Feature coming soon');
+    hideMenu();
+  });
+
+  els.menuItems.menuAbout.addEventListener('click', () => {
+    alert('FlashVidz v1.1\nProfessional video downloader');
+    hideMenu();
+  });
+
+  els.menuItems.menuHelp.addEventListener('click', () => {
+    alert('Help & Support\nContact: support@flashvidz.com');
+    hideMenu();
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (state.downloadUrl) URL.revokeObjectURL(state.downloadUrl);
+    if (state.abortController) state.abortController.abort();
+  });
+})();
 </script>
-
 </body>
 </html>
