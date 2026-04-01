@@ -19,10 +19,15 @@ body {
   font-family: 'Segoe UI', sans-serif;
 }
 
+.app-shell {
+  width: 100%;
+  max-width: 420px;
+  min-height: 100vh;
+}
+
 /* ==================== HEADER ==================== */
 .app-header {
   width: 100%;
-  max-width: 420px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -34,7 +39,7 @@ body {
   backdrop-filter: blur(10px);
 }
 
-.hamburger-btn {
+.settings-open-btn {
   width: 40px;
   height: 40px;
   background: rgba(255,255,255,0.06);
@@ -47,12 +52,18 @@ body {
   justify-content: center;
   transition: all 0.3s ease;
   color: #00d4aa;
-  font-size: 20px;
+  font-size: 0;
 }
 
-.hamburger-btn:hover {
+.settings-open-btn:hover {
   background: rgba(255,255,255,0.12);
   transform: scale(1.05);
+}
+
+.settings-open-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
 }
 
 .app-title {
@@ -79,113 +90,108 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* ==================== HAMBURGER MENU ==================== */
-.hamburger-menu-container {
-  position: fixed;
-  top: 0;
-  left: -280px;
-  width: 280px;
-  height: 100vh;
-  background: rgba(15, 32, 39, 0.98);
-  backdrop-filter: blur(20px);
-  z-index: 1001;
-  transition: left 0.3s ease;
-  padding: 20px;
-  box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+/* ==================== SCREENS ==================== */
+.screen {
+  display: none;
 }
 
-.hamburger-menu-container.active {
-  left: 0;
+.screen.active {
+  display: block;
 }
 
-.menu-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
+/* ==================== SETTINGS PAGE ==================== */
+.settings-screen {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eef3f6 0%, #f8fafb 100%);
+}
+
+.settings-header {
   width: 100%;
-  height: 100vh;
-  background: rgba(0,0,0,0.5);
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
-
-.menu-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.menu-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(248, 250, 251, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(29, 53, 87, 0.12);
 }
 
-.menu-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: white;
-}
-
-.close-menu-btn {
-  width: 32px;
-  height: 32px;
-  background: rgba(255,255,255,0.06);
+.back-btn {
+  width: 40px;
+  height: 40px;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #aaa;
-  font-size: 18px;
+  border-radius: 12px;
+  background: #fff;
+  color: #1d3557;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-}
-
-.close-menu-btn:hover {
-  background: rgba(255,100,100,0.2);
-  color: #ff6464;
-}
-
-.menu-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #e0e0e0;
-  font-size: 14px;
-  margin-bottom: 4px;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
 }
 
-.menu-item:hover {
-  background: rgba(0,212,170,0.15);
-  color: #00d4aa;
-}
-
-.menu-item svg {
+.back-btn svg {
   width: 20px;
   height: 20px;
   fill: currentColor;
 }
 
-.menu-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.1);
-  margin: 16px 0;
+.settings-title {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+  color: #152238;
+}
+
+.settings-content {
+  padding: 16px 16px 30px;
+}
+
+.settings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(16, 24, 40, 0.08);
+}
+
+.settings-item-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
   border: none;
+  border-bottom: 1px solid #eef2f4;
+  background: #fff;
+  text-align: left;
+  font-size: 16px;
+  color: #243447;
+  cursor: pointer;
+}
+
+.settings-list li:last-child .settings-item-btn {
+  border-bottom: none;
+}
+
+.settings-item-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: #4b6278;
+  flex-shrink: 0;
+}
+
+.settings-item-btn:hover {
+  background: #f7fafc;
+}
+
+.settings-item-btn:active {
+  background: #edf3f8;
 }
 
 /* ==================== MATERIAL TABS ==================== */
@@ -597,42 +603,23 @@ body {
   position: relative;
   z-index: 20;
 }
+
+@media (max-width: 480px) {
+  .settings-content {
+    padding: 12px;
+  }
+}
 </style>
 </head>
 
 <body>
-
-<!-- ==================== HAMBURGER MENU ==================== -->
-<div class="menu-overlay" id="menuOverlay"></div>
-<nav class="hamburger-menu-container" id="hamburgerMenu" aria-label="Main navigation">
-  <div class="menu-header">
-    <span class="menu-title">Menu</span>
-    <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">×</button>
-  </div>
-  <ul class="menu-list">
-    <li class="menu-item" id="menuHistory">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-      <span>History</span>
-    </li>
-    <li class="menu-item" id="menuSettings">
-      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-      <span>Settings</span>
-    </li>
-    <li class="menu-divider"></li>
-    <li class="menu-item" id="menuAbout">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-      <span>About</span>
-    </li>
-    <li class="menu-item" id="menuHelp">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
-      <span>Help & Support</span>
-    </li>
-  </ul>
-</nav>
-
+<div class="app-shell">
+<main class="screen active" id="mainScreen">
 <!-- ==================== HEADER ==================== -->
 <header class="app-header">
-  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">☰</button>
+  <button class="settings-open-btn" id="openSettingsBtn" aria-label="Open settings">
+    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+  </button>
   <h1 class="app-title">Flash<span>Vidz</span></h1>
   <span class="pro-badge">PRO</span>
 </header>
@@ -729,6 +716,27 @@ body {
 
 <!-- ==================== FOOTER ==================== -->
 <footer class="footer">FlashVidz</footer>
+</main>
+
+<section class="screen settings-screen" id="settingsScreen" aria-label="Settings page">
+  <header class="settings-header">
+    <button class="back-btn" id="settingsBackBtn" aria-label="Back to main screen">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </button>
+    <h2 class="settings-title">Settings</h2>
+    <span aria-hidden="true"></span>
+  </header>
+  <div class="settings-content">
+    <ul class="settings-list">
+      <li><button class="settings-item-btn" type="button"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg><span>All Videos</span></button></li>
+      <li><button class="settings-item-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12.87 15.07l-.95.95A8.95 8.95 0 0 1 3.98 12h1.35c.2 0 .37-.13.43-.31a12.09 12.09 0 0 1 .85-2.04.45.45 0 0 0-.1-.52l-.81-.81A8.96 8.96 0 0 1 12 3.98v1.35c0 .2.13.37.31.43 1.08.35 2.05.84 2.93 1.46l.95-.95A10.94 10.94 0 0 0 12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c2.64 0 5.04-1.03 6.82-2.71l-.95-.95A8.95 8.95 0 0 1 12.87 15.07zM23 12l-4-4v3h-7v2h7v3z"/></svg><span>Language</span></button></li>
+      <li><button class="settings-item-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21 16.54 13.97 22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>Rate</span></button></li>
+      <li><button class="settings-item-btn" type="button"><svg viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zM17 12V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg><span>Feedback</span></button></li>
+      <li><button class="settings-item-btn" type="button"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span>Privacy</span></button></li>
+    </ul>
+  </div>
+</section>
+</div>
 
 <script>
 // ==================== FORMAT SELECTOR ====================
@@ -789,48 +797,24 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// ==================== HAMBURGER MENU ====================
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-const closeMenuBtn = document.getElementById('closeMenuBtn');
-const hamburgerMenu = document.getElementById('hamburgerMenu');
-const menuOverlay = document.getElementById('menuOverlay');
+// ==================== SETTINGS PAGE ====================
+const mainScreen = document.getElementById('mainScreen');
+const settingsScreen = document.getElementById('settingsScreen');
+const openSettingsBtn = document.getElementById('openSettingsBtn');
+const settingsBackBtn = document.getElementById('settingsBackBtn');
 
-function openMenu() {
-  hamburgerMenu.classList.add('active');
-  menuOverlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
+function openSettings() {
+  mainScreen.classList.remove('active');
+  settingsScreen.classList.add('active');
 }
 
-function closeMenu() {
-  hamburgerMenu.classList.remove('active');
-  menuOverlay.classList.remove('active');
-  document.body.style.overflow = '';
+function closeSettings() {
+  settingsScreen.classList.remove('active');
+  mainScreen.classList.add('active');
 }
 
-hamburgerBtn.addEventListener('click', openMenu);
-closeMenuBtn.addEventListener('click', closeMenu);
-menuOverlay.addEventListener('click', closeMenu);
-
-// Menu items
-document.getElementById('menuHistory').addEventListener('click', function() {
-  alert('History - Feature coming soon');
-  closeMenu();
-});
-
-document.getElementById('menuSettings').addEventListener('click', function() {
-  alert('Settings - Feature coming soon');
-  closeMenu();
-});
-
-document.getElementById('menuAbout').addEventListener('click', function() {
-  alert('FlashVidz v1.0\nProfessional video downloader');
-  closeMenu();
-});
-
-document.getElementById('menuHelp').addEventListener('click', function() {
-  alert('Help & Support\nContact: support@flashvidz.com');
-  closeMenu();
-});
+openSettingsBtn.addEventListener('click', openSettings);
+settingsBackBtn.addEventListener('click', closeSettings);
 
 // ==================== TABS ====================
 const tabBtns = document.querySelectorAll('.tab-btn');
