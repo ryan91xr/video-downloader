@@ -281,6 +281,42 @@ body {
  margin: 0;
 }
 
+.download-item {
+ background: rgba(255,255,255,0.04);
+ border: 1px solid rgba(255,255,255,0.08);
+ border-radius: 12px;
+ padding: 12px;
+ margin-bottom: 10px;
+}
+
+.download-item:last-child {
+ margin-bottom: 0;
+}
+
+.download-item-format {
+ display: inline-block;
+ font-size: 11px;
+ font-weight: 700;
+ color: #00d4aa;
+ letter-spacing: 0.5px;
+ margin-bottom: 8px;
+}
+
+.download-item-url {
+ display: block;
+ color: #d5dbe3;
+ font-size: 13px;
+ word-break: break-word;
+ line-height: 1.4;
+ margin-bottom: 8px;
+ text-decoration: none;
+}
+
+.download-item-date {
+ font-size: 12px;
+ color: #8e9aa6;
+}
+
 /* ==================== UNIFIED INPUT BAR ==================== */
 .input-bar-container {
  width: 100%;
@@ -723,7 +759,7 @@ body {
 
 <!-- ==================== TAB CONTENT: DOWNLOADS ==================== -->
 <section class="tab-content" id="tab-downloads" role="tabpanel">
- <div class="downloads-list">
+ <div class="downloads-list" id="downloadsList">
    <div class="empty-state">
      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
      <p>No downloads yet</p>
@@ -873,6 +909,10 @@ function switchTab(tabId) {
      content.classList.remove('active');
    }
  });
+
+ if (tabId === 'downloads') {
+   renderDownloadHistory();
+ }
 }
 
 tabBtns.forEach(btn => {
@@ -893,6 +933,7 @@ const CONFIG = {
 let abortController = null;
 let downloadUrl = null;
 let isAborted = false;
+const DOWNLOADS_STORAGE_KEY = 'downloads';
 
 // ==================== UTILS ====================
 function detectPlatform(link) {
@@ -916,6 +957,49 @@ function resetUI(delay = 2000) {
    document.getElementById('submitBtn').classList.remove('loading');
    document.getElementById('pasteBtn').disabled = false;
  }, delay);
+}
+
+function getDownloadHistory() {
+ try {
+   const historyRaw = localStorage.getItem(DOWNLOADS_STORAGE_KEY);
+   const history = JSON.parse(historyRaw || '[]');
+   return Array.isArray(history) ? history : [];
+ } catch {
+   return [];
+ }
+}
+
+function saveDownloadHistory(url, format) {
+ const history = getDownloadHistory();
+ history.unshift({
+   url,
+   format,
+   timestamp: new Date().toISOString()
+ });
+ localStorage.setItem(DOWNLOADS_STORAGE_KEY, JSON.stringify(history));
+}
+
+function renderDownloadHistory() {
+ const downloadsList = document.getElementById('downloadsList');
+ const history = getDownloadHistory();
+ 
+ if (!history.length) {
+   downloadsList.innerHTML = `
+     <div class="empty-state">
+       <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+       <p>No downloads yet</p>
+     </div>
+   `;
+   return;
+ }
+ 
+ downloadsList.innerHTML = history.map(item => `
+   <div class="download-item">
+     <span class="download-item-format">${item.format === 'audio' ? 'AUDIO' : 'VIDEO'}</span>
+     <a class="download-item-url" href="${item.url}" target="_blank" rel="noopener noreferrer">${item.url}</a>
+     <div class="download-item-date">${new Date(item.timestamp).toLocaleString()}</div>
+   </div>
+ `).join('');
 }
 
 // ==================== ACTIONS ====================
@@ -1034,6 +1118,7 @@ async function handleDownload() {
    document.body.appendChild(a);
    a.click();
    document.body.removeChild(a);
+   saveDownloadHistory(link, selectedFormat);
    
    setMessage('Download complete!', 'success');
    
