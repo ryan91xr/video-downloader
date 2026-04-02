@@ -1052,7 +1052,6 @@ const CONFIG = {
 
 // ==================== STATE ====================
 let abortController = null;
-let downloadUrl = null;
 let isAborted = false;
 
 // ==================== LOCAL STORAGE ====================
@@ -1097,8 +1096,6 @@ function removeDownload(id) {
  const downloads = loadDownloads();
  const index = downloads.findIndex(d => d.id === id);
  if (index > -1) {
-   // Revoke object URL to free memory
-   URL.revokeObjectURL(downloads[index].fileUrl);
    downloads.splice(index, 1);
    saveDownloads(downloads);
    renderDownloads();
@@ -1276,61 +1273,21 @@ async function handleDownload() {
      throw new Error(errorData.error || `Server error: ${response.status}`);
    }
 
-   const contentLength = parseInt(response.headers.get('Content-Length')) || 0;
-   
-   if (contentLength > CONFIG.MAX_FILE_SIZE) {
-     throw new Error('File too large (max 500MB)');
+   const data = await response.json();
+
+   if (!data?.success || !data?.url) {
+     throw new Error(data?.error || 'Invalid response from server');
    }
 
-   const reader = response.body.getReader();
-   const chunks = [];
-   let received = 0;
-   
-   function pump() {
-     return reader.read().then(({ done, value }) => {
-       if (done) {
-         return;
-       }
-       
-       chunks.push(value);
-       received += value.length;
-       
-       if (contentLength) {
-         const percent = Math.min(100, Math.floor((received / contentLength) * 100));
-         setMessage(`Downloading... ${percent}%`, 'loading');
-       } else {
-         const mb = (received / 1024 / 1024).toFixed(1);
-         setMessage(`Downloading... ${mb} MB`, 'loading');
-       }
-       
-       return pump();
-     });
-   }
-   
-   await pump();
-
-   const blob = new Blob(chunks);
-   
-   if (blob.size === 0) {
-     throw new Error('Downloaded file is empty');
-   }
-   
-   // Create persistent object URL
-   const fileUrl = URL.createObjectURL(blob);
-   
-   const a = document.createElement('a');
-   const extension = selectedFormat === 'audio' ? 'mp3' : 'mp4';
+   const fileUrl = data.url;
+   const responseFormat = data.format || selectedFormat;
+   const extension = responseFormat === 'audio' ? 'mp3' : 'mp4';
    const timestamp = Date.now();
    const filename = `flashvidz_${platform}_${timestamp}.${extension}`;
-   a.href = fileUrl;
-   a.download = filename;
-   document.body.appendChild(a);
-   a.click();
-   document.body.removeChild(a);
-   
+
    // Save to localStorage
-   addDownload(fileUrl, selectedFormat, filename, blob.size);
-   
+   addDownload(fileUrl, responseFormat, filename, 0);
+
    setMessage('Download complete!', 'success');
    
    // Clear input
