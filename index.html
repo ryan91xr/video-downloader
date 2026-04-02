@@ -306,32 +306,26 @@ body {
 
 .download-media {
  width: 100%;
+ height: 150px;
  border-radius: 12px;
  overflow: hidden;
- background: #0a0a0a;
+ background: linear-gradient(135deg, #13222b, #274656);
  position: relative;
+ display: flex;
+ align-items: center;
+ justify-content: center;
 }
 
-.download-media video,
-.download-media audio {
+.download-media img {
  width: 100%;
- display: block;
-}
-
-.download-media video {
- max-height: 200px;
+ height: 100%;
  object-fit: cover;
-}
-
-.download-media audio {
- border-top: 1px solid rgba(255,255,255,0.08);
- background: rgba(0,0,0,0.3);
+ display: block;
 }
 
 .download-media-fallback {
  width: 100%;
- height: 190px;
- background: linear-gradient(135deg, #13222b, #274656);
+ height: 100%;
  display: flex;
  align-items: center;
  justify-content: center;
@@ -474,6 +468,32 @@ body {
 }
 
 .download-menu-btn svg {
+ width: 18px;
+ height: 18px;
+ fill: currentColor;
+}
+
+.download-action-btn {
+ width: 36px;
+ height: 36px;
+ border-radius: 50%;
+ border: none;
+ background: rgba(0,212,170,0.16);
+ color: #00d4aa;
+ cursor: pointer;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ transition: all 0.2s;
+ flex-shrink: 0;
+}
+
+.download-action-btn:hover {
+ background: rgba(0,212,170,0.28);
+ color: #7dffe2;
+}
+
+.download-action-btn svg {
  width: 18px;
  height: 18px;
  fill: currentColor;
@@ -1143,16 +1163,16 @@ function saveDownloads(downloads) {
  }
 }
 
-function addDownload(fileUrl, format, filename, size) {
+function addDownload(fileUrl, format, fileName, fileSize) {
  const downloads = loadDownloads();
+ const now = Date.now();
  const download = {
-   id: Date.now().toString(),
-   fileUrl: fileUrl,
-   format: format,
-   filename: filename,
-   size: size,
-   timestamp: Date.now(),
-   date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+   id: now.toString(),
+   fileUrl,
+   format,
+   fileName,
+   fileSize: Number(fileSize) || 0,
+   timestamp: now
  };
  downloads.unshift(download);
  // Keep only last 50 downloads to avoid storage limits
@@ -1175,11 +1195,28 @@ function removeDownload(id) {
 
 // ==================== DOWNLOADS UI ====================
 function formatFileSize(bytes) {
- if (bytes === 0) return '0 B';
+ const num = Number(bytes);
+ if (!Number.isFinite(num) || num <= 0) return '0 B';
  const k = 1024;
  const sizes = ['B', 'KB', 'MB', 'GB'];
- const i = Math.floor(Math.log(bytes) / Math.log(k));
- return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+ const i = Math.floor(Math.log(num) / Math.log(k));
+ return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function triggerDownload(fileUrl, fileName) {
+ const anchor = document.createElement('a');
+ anchor.href = fileUrl;
+ anchor.download = fileName || 'flashvidz-download';
+ anchor.rel = 'noopener';
+ document.body.appendChild(anchor);
+ anchor.click();
+ anchor.remove();
+}
+
+function formatDownloadDate(timestamp) {
+ const parsed = Number(timestamp);
+ const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
+ return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function renderDownloads() {
@@ -1214,31 +1251,21 @@ function createDownloadCard(item) {
  const card = document.createElement('div');
  card.className = 'download-card';
  
- const isVideo = item.format === 'video';
+ const normalizedFormat = (item.format || 'video').toLowerCase();
+ const isVideo = normalizedFormat === 'video';
  const formatLabel = isVideo ? 'VIDEO' : 'AUDIO';
+ const fileName = item.fileName || item.filename || 'flashvidz_download';
+ const fileSize = Number(item.fileSize ?? item.size ?? 0);
+ const displayDate = formatDownloadDate(item.timestamp);
  const mediaIconPath = isVideo
    ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
    : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
- const posterPlaceholder = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
-    <defs>
-      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#13222b"/>
-        <stop offset="100%" stop-color="#274656"/>
-      </linearGradient>
-    </defs>
-    <rect width="320" height="180" fill="url(#g)"/>
-    <path d="M145 68l44 22-44 22z" fill="rgba(255,255,255,0.78)"/>
-    <text x="160" y="148" fill="rgba(255,255,255,0.65)" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif">Video preview</text>
-  </svg>
- `);
  
  card.innerHTML = `
    <div class="download-media">
-     ${isVideo 
-       ? `<video controls preload="metadata" poster="${posterPlaceholder}" src="${item.fileUrl}"></video>`
-       : `<div class="download-media-fallback"><svg viewBox="0 0 24 24"><path d="${mediaIconPath}"/></svg></div><audio controls preload="metadata" src="${item.fileUrl}"></audio>`
-     }
+     <div class="download-media-fallback">
+       <svg viewBox="0 0 24 24"><path d="${mediaIconPath}"/></svg>
+     </div>
      <span class="format-badge-overlay">${formatLabel}</span>
    </div>
    <div class="download-info-row">
@@ -1252,24 +1279,32 @@ function createDownloadCard(item) {
          <span class="download-file-label">Filename</span>
          <span class="format-badge ${isVideo ? 'video' : 'audio'}">${formatLabel}</span>
        </div>
-       <div class="download-filename" title="${item.filename}">${item.filename}</div>
+       <div class="download-filename" title="${fileName}">${fileName}</div>
        <div class="download-meta">
          <span>
            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
-           ${item.date}
+           ${displayDate}
          </span>
          <span>•</span>
-          <span>${formatFileSize(item.size)}</span>
+          <span>${formatFileSize(fileSize)}</span>
        </div>
      </div>
-     <button class="download-menu-btn" data-id="${item.id}" title="Remove">
+     <button class="download-action-btn" data-action="download" title="Download">
+       <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
+     </button>
+     <button class="download-menu-btn" data-action="remove" data-id="${item.id}" title="Remove">
        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
      </button>
    </div>
  `;
  
+ const redownloadBtn = card.querySelector('[data-action="download"]');
+ redownloadBtn.addEventListener('click', () => {
+   triggerDownload(item.fileUrl, fileName);
+ });
+
  // Add delete handler
- const deleteBtn = card.querySelector('.download-menu-btn');
+ const deleteBtn = card.querySelector('[data-action="remove"]');
  deleteBtn.addEventListener('click', () => {
    if (confirm('Remove this download from history?')) {
      removeDownload(item.id);
@@ -1369,12 +1404,14 @@ async function handleDownload() {
 
    const fileUrl = data.url;
    const responseFormat = data.format || selectedFormat;
-   const extension = responseFormat === 'audio' ? 'mp3' : 'mp4';
-   const timestamp = Date.now();
-   const filename = `flashvidz_${platform}_${timestamp}.${extension}`;
+   const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
+   const backendFileSize = Number(data.fileSize) || 0;
 
-   // Save to localStorage
-   addDownload(fileUrl, responseFormat, filename, 0);
+   // Save to localStorage using backend metadata
+   addDownload(fileUrl, responseFormat, backendFileName, backendFileSize);
+
+   // Trigger real download
+   triggerDownload(fileUrl, backendFileName);
 
    setMessage('Download complete!', 'success');
    
