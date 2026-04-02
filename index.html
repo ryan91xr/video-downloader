@@ -1203,14 +1203,53 @@ function formatFileSize(bytes) {
  return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-function triggerDownload(fileUrl, fileName) {
+function downloadBlobToFile(blob, fileName) {
+ const blobUrl = URL.createObjectURL(blob);
  const anchor = document.createElement('a');
- anchor.href = fileUrl;
+ anchor.href = blobUrl;
  anchor.download = fileName || 'flashvidz-download';
  anchor.rel = 'noopener';
  document.body.appendChild(anchor);
  anchor.click();
  anchor.remove();
+ URL.revokeObjectURL(blobUrl);
+}
+
+async function triggerDownload(fileUrl, fileName, onProgress) {
+ const response = await fetch(fileUrl);
+ if (!response.ok) {
+   throw new Error(`File download failed: ${response.status}`);
+ }
+
+ const totalBytes = Number(response.headers.get('content-length')) || 0;
+ const reader = response.body?.getReader();
+
+ if (!reader) {
+   const blob = await response.blob();
+   onProgress?.(100);
+   downloadBlobToFile(blob, fileName);
+   return blob.size;
+ }
+
+ let receivedBytes = 0;
+ const chunks = [];
+
+ while (true) {
+   const { done, value } = await reader.read();
+   if (done) break;
+   chunks.push(value);
+   receivedBytes += value.length;
+
+   if (totalBytes > 0) {
+     const progress = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
+     onProgress?.(progress);
+   }
+ }
+
+ const blob = new Blob(chunks);
+ onProgress?.(100);
+ downloadBlobToFile(blob, fileName);
+ return blob.size;
 }
 
 function formatDownloadDate(timestamp) {
@@ -1299,8 +1338,15 @@ function createDownloadCard(item) {
  `;
  
  const redownloadBtn = card.querySelector('[data-action="download"]');
- redownloadBtn.addEventListener('click', () => {
-   triggerDownload(item.fileUrl, fileName);
+ redownloadBtn.addEventListener('click', async () => {
+   try {
+     await triggerDownload(item.fileUrl, fileName, (progress) => {
+       setMessage(`Downloading... ${progress}%`, 'loading');
+     });
+     setMessage('Download complete!', 'success');
+   } catch (error) {
+     setMessage(error.message || 'Download failed', 'error');
+   }
  });
 
  // Add delete handler
@@ -1407,13 +1453,20 @@ async function handleDownload() {
    const fileUrl = resolvedDownloadUrl;
    const responseFormat = data.format || selectedFormat;
    const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
-   const backendFileSize = Number(data.fileSizeBytes) || 0;
+   const backendFileSize = Number(data.fileSize) || 0;
+
+   setMessage('Downloading... 0%', 'loading');
+   const downloadedFileSize = await triggerDownload(fileUrl, backendFileName, (progress) => {
+     setMessage(`Downloading... ${progress}%`, 'loading');
+   });
 
    // Save to localStorage using backend metadata
-   addDownload(fileUrl, responseFormat, backendFileName, backendFileSize);
-
-   // Trigger real download
-   triggerDownload(fileUrl, backendFileName);
+   addDownload(
+     fileUrl,
+     responseFormat,
+     backendFileName,
+     backendFileSize > 0 ? backendFileSize : downloadedFileSize
+   );
 
    setMessage('Download complete!', 'success');
    
