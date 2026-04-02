@@ -906,3 +906,474 @@ const optionAudio = document.getElementById('optionAudio');
 
 function toggleFormatDropdown() {
  formatDropdown.classList.toggle('active');
+ formatBtn.classList.toggle('active');
+}
+
+function closeFormatDropdown() {
+ formatDropdown.classList.remove('active');
+ formatBtn.classList.remove('active');
+}
+
+function selectFormat(format) {
+ selectedFormat = format;
+ 
+ if (format === 'video') {
+   formatIconVideo.style.display = 'block';
+   formatIconAudio.style.display = 'none';
+   optionVideo.classList.add('selected');
+   optionAudio.classList.remove('selected');
+ } else {
+   formatIconVideo.style.display = 'none';
+   formatIconAudio.style.display = 'block';
+   optionAudio.classList.add('selected');
+   optionVideo.classList.remove('selected');
+ }
+ 
+ closeFormatDropdown();
+}
+
+formatBtn.addEventListener('click', function(e) {
+ e.stopPropagation();
+ toggleFormatDropdown();
+});
+
+optionVideo.addEventListener('click', function(e) {
+ e.stopPropagation();
+ selectFormat('video');
+});
+
+optionAudio.addEventListener('click', function(e) {
+ e.stopPropagation();
+ selectFormat('audio');
+});
+
+document.addEventListener('click', function(e) {
+ if (!formatBtn.contains(e.target) && !formatDropdown.contains(e.target)) {
+   closeFormatDropdown();
+ }
+});
+
+// ==================== HAMBURGER MENU ====================
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const closeMenuBtn = document.getElementById('closeMenuBtn');
+const hamburgerMenu = document.getElementById('hamburgerMenu');
+const menuOverlay = document.getElementById('menuOverlay');
+
+function openMenu() {
+ hamburgerMenu.classList.add('active');
+ menuOverlay.classList.add('active');
+ document.body.style.overflow = 'hidden';
+}
+
+function closeMenu() {
+ hamburgerMenu.classList.remove('active');
+ menuOverlay.classList.remove('active');
+ document.body.style.overflow = '';
+}
+
+hamburgerBtn.addEventListener('click', openMenu);
+closeMenuBtn.addEventListener('click', closeMenu);
+menuOverlay.addEventListener('click', closeMenu);
+
+// Menu items
+document.getElementById('menuHistory').addEventListener('click', function() {
+ alert('History - Feature coming soon');
+ closeMenu();
+});
+
+document.getElementById('menuSettings').addEventListener('click', function() {
+ alert('Settings - Feature coming soon');
+ closeMenu();
+});
+
+document.getElementById('menuAbout').addEventListener('click', function() {
+ alert('FlashVidz v1.0\nProfessional video downloader');
+ closeMenu();
+});
+
+document.getElementById('menuHelp').addEventListener('click', function() {
+ alert('Help & Support\nContact: support@flashvidz.com');
+ closeMenu();
+});
+
+// ==================== TABS ====================
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+const tabIndicator = document.getElementById('tabIndicator');
+
+function switchTab(tabId) {
+ // Update buttons
+ tabBtns.forEach(btn => {
+   if (btn.dataset.tab === tabId) {
+     btn.classList.add('active');
+     btn.setAttribute('aria-selected', 'true');
+   } else {
+     btn.classList.remove('active');
+     btn.setAttribute('aria-selected', 'false');
+   }
+ });
+
+ // Update indicator
+ if (tabId === 'downloads') {
+   tabIndicator.classList.add('downloads');
+ } else {
+   tabIndicator.classList.remove('downloads');
+ }
+
+ // Update content
+ tabContents.forEach(content => {
+   if (content.id === 'tab-' + tabId) {
+     content.classList.add('active');
+   } else {
+     content.classList.remove('active');
+   }
+ });
+
+ // Render downloads when switching to downloads tab
+ if (tabId === 'downloads') {
+   renderDownloads();
+ }
+}
+
+tabBtns.forEach(btn => {
+ btn.addEventListener('click', () => {
+   switchTab(btn.dataset.tab);
+ });
+});
+
+// ==================== CONFIG ====================
+const CONFIG = {
+ API_URL: window.location.hostname === 'localhost' 
+   ? 'http://localhost:3000/download'
+   : 'https://flashvidz-backend.onrender.com/download',
+ MAX_FILE_SIZE: 500 * 1024 * 1024,
+ STORAGE_KEY: 'flashvidz_downloads'
+};
+
+// ==================== STATE ====================
+let abortController = null;
+let downloadUrl = null;
+let isAborted = false;
+
+// ==================== LOCAL STORAGE ====================
+function loadDownloads() {
+ try {
+   const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+   return stored ? JSON.parse(stored) : [];
+ } catch {
+   return [];
+ }
+}
+
+function saveDownloads(downloads) {
+ try {
+   localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(downloads));
+ } catch (e) {
+   console.error('Failed to save downloads:', e);
+ }
+}
+
+function addDownload(fileUrl, format, filename, size) {
+ const downloads = loadDownloads();
+ const download = {
+   id: Date.now().toString(),
+   fileUrl: fileUrl,
+   format: format,
+   filename: filename,
+   size: size,
+   timestamp: Date.now(),
+   date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+ };
+ downloads.unshift(download);
+ // Keep only last 50 downloads to avoid storage limits
+ if (downloads.length > 50) {
+   downloads.pop();
+ }
+ saveDownloads(downloads);
+ return download;
+}
+
+function removeDownload(id) {
+ const downloads = loadDownloads();
+ const index = downloads.findIndex(d => d.id === id);
+ if (index > -1) {
+   // Revoke object URL to free memory
+   URL.revokeObjectURL(downloads[index].fileUrl);
+   downloads.splice(index, 1);
+   saveDownloads(downloads);
+   renderDownloads();
+ }
+}
+
+// ==================== DOWNLOADS UI ====================
+function formatFileSize(bytes) {
+ if (bytes === 0) return '0 B';
+ const k = 1024;
+ const sizes = ['B', 'KB', 'MB', 'GB'];
+ const i = Math.floor(Math.log(bytes) / Math.log(k));
+ return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function renderDownloads() {
+ const listContainer = document.getElementById('downloadsList');
+ const countBadge = document.getElementById('downloadsCount');
+ const downloads = loadDownloads();
+ 
+ // Clear existing content except empty state template
+ listContainer.innerHTML = '';
+ 
+ if (downloads.length === 0) {
+   listContainer.innerHTML = `
+     <div class="empty-state">
+       <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+       <h3>No downloads yet</h3>
+       <p>Your downloaded videos will appear here</p>
+     </div>
+   `;
+   countBadge.textContent = '0 items';
+   return;
+ }
+ 
+ countBadge.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
+ 
+ downloads.forEach(item => {
+   const card = createDownloadCard(item);
+   listContainer.appendChild(card);
+ });
+}
+
+function createDownloadCard(item) {
+ const card = document.createElement('div');
+ card.className = 'download-card';
+ 
+ const isVideo = item.format === 'video';
+ 
+ card.innerHTML = `
+   <div class="download-media">
+     ${isVideo 
+       ? `<video controls preload="metadata" src="${item.fileUrl}"></video>`
+       : `<audio controls preload="metadata" src="${item.fileUrl}"></audio>`
+     }
+   </div>
+   <div class="download-info-row">
+     <div class="download-thumbnail-small">
+       <svg viewBox="0 0 24 24">
+         ${isVideo 
+           ? '<path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>'
+           : '<path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>'
+         }
+       </svg>
+     </div>
+     <div class="download-info">
+       <div class="download-filename">${item.filename}</div>
+       <div class="download-meta">
+         <span>
+           <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+           ${item.date}
+         </span>
+         <span>•</span>
+         <span>${formatFileSize(item.size)}</span>
+         <span>•</span>
+         <span>${isVideo ? 'Video' : 'Audio'}</span>
+       </div>
+     </div>
+     <button class="download-menu-btn" data-id="${item.id}" title="Remove">
+       <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+     </button>
+   </div>
+ `;
+ 
+ // Add delete handler
+ const deleteBtn = card.querySelector('.download-menu-btn');
+ deleteBtn.addEventListener('click', () => {
+   if (confirm('Remove this download from history?')) {
+     removeDownload(item.id);
+   }
+ });
+ 
+ return card;
+}
+
+// ==================== UTILS ====================
+function detectPlatform(link) {
+ const url = link.toLowerCase();
+ if (url.includes('tiktok.com')) return 'tiktok';
+ if (url.includes('instagram.com')) return 'instagram';
+ if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+ if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
+ return 'unknown';
+}
+
+function setMessage(text, type = '') {
+ const msg = document.getElementById('message');
+ msg.textContent = text;
+ msg.className = type;
+}
+
+function resetUI(delay = 2000) {
+ setTimeout(() => {
+   document.getElementById('submitBtn').disabled = false;
+   document.getElementById('submitBtn').classList.remove('loading');
+   document.getElementById('pasteBtn').disabled = false;
+ }, delay);
+}
+
+// ==================== ACTIONS ====================
+async function pasteLink() {
+ const btn = document.getElementById('pasteBtn');
+ btn.disabled = true;
+ 
+ try {
+   const text = await navigator.clipboard.readText();
+   document.getElementById('linkInput').value = text.trim();
+ } catch {
+   setMessage('Clipboard access denied', 'error');
+ } finally {
+   btn.disabled = false;
+ }
+}
+
+document.getElementById('pasteBtn').addEventListener('click', pasteLink);
+
+async function handleDownload() {
+ const link = document.getElementById('linkInput').value.trim();
+ const btn = document.getElementById('submitBtn');
+ 
+ if (!link) {
+   setMessage('Enter a video link', 'error');
+   return;
+ }
+
+ const platform = detectPlatform(link);
+ 
+ if (platform === 'unknown') {
+   setMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
+   return;
+ }
+
+ isAborted = false;
+
+ btn.disabled = true;
+ btn.classList.add('loading');
+ document.getElementById('pasteBtn').disabled = true;
+ setMessage('Starting download...', 'loading');
+
+ abortController = new AbortController();
+
+ try {
+   const response = await fetch(CONFIG.API_URL, {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({ 
+       url: link, 
+       format: selectedFormat 
+     }),
+     signal: abortController.signal
+   });
+
+   if (!response.ok) {
+     const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
+     throw new Error(errorData.error || `Server error: ${response.status}`);
+   }
+
+   const contentLength = parseInt(response.headers.get('Content-Length')) || 0;
+   
+   if (contentLength > CONFIG.MAX_FILE_SIZE) {
+     throw new Error('File too large (max 500MB)');
+   }
+
+   const reader = response.body.getReader();
+   const chunks = [];
+   let received = 0;
+   
+   function pump() {
+     return reader.read().then(({ done, value }) => {
+       if (done) {
+         return;
+       }
+       
+       chunks.push(value);
+       received += value.length;
+       
+       if (contentLength) {
+         const percent = Math.min(100, Math.floor((received / contentLength) * 100));
+         setMessage(`Downloading... ${percent}%`, 'loading');
+       } else {
+         const mb = (received / 1024 / 1024).toFixed(1);
+         setMessage(`Downloading... ${mb} MB`, 'loading');
+       }
+       
+       return pump();
+     });
+   }
+   
+   await pump();
+
+   const blob = new Blob(chunks);
+   
+   if (blob.size === 0) {
+     throw new Error('Downloaded file is empty');
+   }
+   
+   // Create persistent object URL
+   const fileUrl = URL.createObjectURL(blob);
+   
+   const a = document.createElement('a');
+   const extension = selectedFormat === 'audio' ? 'mp3' : 'mp4';
+   const timestamp = Date.now();
+   const filename = `flashvidz_${platform}_${timestamp}.${extension}`;
+   a.href = fileUrl;
+   a.download = filename;
+   document.body.appendChild(a);
+   a.click();
+   document.body.removeChild(a);
+   
+   // Save to localStorage
+   addDownload(fileUrl, selectedFormat, filename, blob.size);
+   
+   setMessage('Download complete!', 'success');
+   
+   // Clear input
+   document.getElementById('linkInput').value = '';
+
+ } catch (err) {
+   if (err.name === 'AbortError') {
+     return;
+   }
+   console.error('Download error:', err);
+   
+   let errorMsg = err.message || 'Download failed';
+   if (platform === 'instagram' || platform === 'facebook') {
+     if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
+       errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
+     } else if (errorMsg.includes('private')) {
+       errorMsg = `This ${platform} post is private.`;
+     }
+   } else if (platform === 'youtube') {
+     if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
+       errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
+     }
+   }
+   
+   setMessage(errorMsg, 'error');
+ } finally {
+   abortController = null;
+   resetUI(isAborted ? 0 : 2000);
+   isAborted = false;
+ }
+}
+
+document.getElementById('submitBtn').addEventListener('click', handleDownload);
+
+window.addEventListener('beforeunload', () => {
+ if (abortController) {
+   abortController.abort();
+ }
+});
+
+// Initial render of downloads (in case we're on that tab or for count)
+renderDownloads();
+</script>
+
+</body>
+</html>
