@@ -1511,11 +1511,11 @@ function createDownloadCard(item) {
  });
 
  card.addEventListener('click', () => {
-   const itemDownloadUrl = item.downloadUrl || item.fileUrl;
+   const previewUrl = item.fileUrl || item.downloadUrl;
    if (!isVideo) {
      return;
    }
-   openVideoModal(itemDownloadUrl);
+   openVideoModal(previewUrl);
  });
  
  return card;
