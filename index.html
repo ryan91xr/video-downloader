@@ -1203,53 +1203,16 @@ function formatFileSize(bytes) {
  return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-function downloadBlobToFile(blob, fileName) {
- const blobUrl = URL.createObjectURL(blob);
+async function triggerDownload(fileUrl, fileName, onProgress) {
+ onProgress?.(100);
  const anchor = document.createElement('a');
- anchor.href = blobUrl;
+ anchor.href = fileUrl;
  anchor.download = fileName || 'flashvidz-download';
  anchor.rel = 'noopener';
  document.body.appendChild(anchor);
  anchor.click();
  anchor.remove();
- URL.revokeObjectURL(blobUrl);
-}
-
-async function triggerDownload(fileUrl, fileName, onProgress) {
- const response = await fetch(fileUrl);
- if (!response.ok) {
-   throw new Error(`File download failed: ${response.status}`);
- }
-
- const totalBytes = Number(response.headers.get('content-length')) || 0;
- const reader = response.body?.getReader();
-
- if (!reader) {
-   const blob = await response.blob();
-   onProgress?.(100);
-   downloadBlobToFile(blob, fileName);
-   return blob.size;
- }
-
- let receivedBytes = 0;
- const chunks = [];
-
- while (true) {
-   const { done, value } = await reader.read();
-   if (done) break;
-   chunks.push(value);
-   receivedBytes += value.length;
-
-   if (totalBytes > 0) {
-     const progress = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
-     onProgress?.(progress);
-   }
- }
-
- const blob = new Blob(chunks);
- onProgress?.(100);
- downloadBlobToFile(blob, fileName);
- return blob.size;
+ return 0;
 }
 
 function formatDownloadDate(timestamp) {
@@ -1444,7 +1407,7 @@ async function handleDownload() {
 
    const data = await response.json();
 
-   const resolvedDownloadUrl = data?.downloadUrl || data?.url;
+   const resolvedDownloadUrl = data?.downloadUrl;
 
    if (!data?.success || !resolvedDownloadUrl) {
      throw new Error(data?.error || 'Invalid response from server');
