@@ -1199,12 +1199,13 @@ function saveDownloads(downloads) {
  }
 }
 
-function addDownload(downloadUrl, format, fileName, fileSize) {
+function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
  const downloads = loadDownloads();
  const now = Date.now();
  const download = {
    id: now.toString(),
    downloadUrl,
+   fileUrl,
    format,
    fileName,
    fileSize: Number(fileSize) || 0,
@@ -1624,6 +1625,7 @@ async function handleDownload() {
    // Save to localStorage using backend metadata
    addDownload(
      downloadUrl,
+     data.fileUrl,
      responseFormat,
      backendFileName,
      backendFileSize > 0 ? backendFileSize : downloadedFileSize
