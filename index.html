@@ -1188,6 +1188,8 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
    };
 
    const startFakeProgress = () => {
+     fakeProgress = 0;
+     onProgress?.(0);
      fakeInterval = setInterval(() => {
        if (fakeProgress < 90) {
          fakeProgress += Math.random() * 4;
