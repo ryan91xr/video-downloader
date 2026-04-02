@@ -284,85 +284,49 @@ body {
 .downloads-list {
  display: flex;
  flex-direction: column;
- gap: 16px;
+ gap: 10px;
+ max-height: min(60vh, 520px);
+ overflow-y: auto;
+ padding-right: 2px;
+}
+
+.downloads-list::-webkit-scrollbar {
+ width: 6px;
+}
+
+.downloads-list::-webkit-scrollbar-thumb {
+ background: rgba(255,255,255,0.18);
+ border-radius: 999px;
 }
 
 .download-card {
  display: flex;
- flex-direction: column;
- gap: 14px;
+ align-items: center;
+ gap: 10px;
  background: rgba(255,255,255,0.06);
  backdrop-filter: blur(18px);
- border-radius: 16px;
- padding: 12px;
+ border-radius: 14px;
+ padding: 10px;
  border: 1px solid rgba(255,255,255,0.08);
  transition: all 0.2s ease;
 }
 
 .download-card:hover {
  background: rgba(255,255,255,0.1);
- transform: translateY(-2px);
-}
-
-.download-media {
- width: 100%;
- height: 150px;
- border-radius: 12px;
- overflow: hidden;
- background: linear-gradient(135deg, #13222b, #274656);
- position: relative;
- display: flex;
- align-items: center;
- justify-content: center;
-}
-
-.download-media img {
- width: 100%;
- height: 100%;
- object-fit: cover;
- display: block;
-}
-
-.download-media-fallback {
- width: 100%;
- height: 100%;
- display: flex;
- align-items: center;
- justify-content: center;
- position: relative;
-}
-
-.download-media-fallback svg {
- width: 56px;
- height: 56px;
- fill: rgba(255,255,255,0.35);
-}
-
-.format-badge-overlay {
- position: absolute;
- top: 10px;
- right: 10px;
- font-size: 10px;
- font-weight: 700;
- letter-spacing: 0.8px;
- text-transform: uppercase;
- padding: 6px 9px;
- border-radius: 999px;
- color: white;
- background: rgba(0,0,0,0.45);
- border: 1px solid rgba(255,255,255,0.2);
+ transform: translateY(-1px);
 }
 
 .download-info-row {
  display: flex;
- align-items: flex-start;
- gap: 12px;
- padding: 0 4px 4px;
+ align-items: center;
+ gap: 10px;
+ flex: 1;
+ min-width: 0;
 }
 
 .download-thumbnail-small {
- width: 48px;
- height: 48px;
+ width: 42px;
+ height: 42px;
  border-radius: 10px;
  background: linear-gradient(135deg, #1c2b33, #2c5364);
  display: flex;
@@ -372,8 +336,8 @@ body {
 }
 
 .download-thumbnail-small svg {
- width: 24px;
- height: 24px;
+ width: 20px;
+ height: 20px;
  fill: rgba(255,255,255,0.4);
 }
 
@@ -386,23 +350,18 @@ body {
 }
 
 .download-filename {
- font-size: 15px;
- font-weight: 700;
- line-height: 1.35;
+ font-size: 14px;
+ font-weight: 600;
+ line-height: 1.3;
  color: white;
- word-break: break-word;
-}
-
-.download-file-label {
- font-size: 11px;
- color: #96a4ad;
- letter-spacing: 0.5px;
- text-transform: uppercase;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
 }
 
 .download-header {
  display: flex;
- align-items: center;
+ align-items: flex-start;
  justify-content: space-between;
  gap: 10px;
 }
@@ -431,8 +390,11 @@ body {
  display: flex;
  align-items: center;
  gap: 8px;
- font-size: 12px;
+ font-size: 11px;
  color: #888;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
 }
 
 .download-meta span {
@@ -448,9 +410,9 @@ body {
 }
 
 .download-menu-btn {
- width: 36px;
- height: 36px;
- border-radius: 50%;
+ width: 32px;
+ height: 32px;
+ border-radius: 10px;
  border: none;
  background: transparent;
  color: #888;
@@ -468,15 +430,15 @@ body {
 }
 
 .download-menu-btn svg {
- width: 18px;
- height: 18px;
+ width: 16px;
+ height: 16px;
  fill: currentColor;
 }
 
 .download-action-btn {
- width: 36px;
- height: 36px;
- border-radius: 50%;
+ width: 32px;
+ height: 32px;
+ border-radius: 10px;
  border: none;
  background: rgba(0,212,170,0.16);
  color: #00d4aa;
@@ -494,9 +456,16 @@ body {
 }
 
 .download-action-btn svg {
- width: 18px;
- height: 18px;
+ width: 16px;
+ height: 16px;
  fill: currentColor;
+}
+
+.download-actions {
+ display: flex;
+ align-items: center;
+ gap: 6px;
+ margin-left: auto;
 }
 
 .empty-state {
@@ -1295,12 +1264,6 @@ function createDownloadCard(item) {
    : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
  
  card.innerHTML = `
-   <div class="download-media">
-     <div class="download-media-fallback">
-       <svg viewBox="0 0 24 24"><path d="${mediaIconPath}"/></svg>
-     </div>
-     <span class="format-badge-overlay">${formatLabel}</span>
-   </div>
    <div class="download-info-row">
      <div class="download-thumbnail-small">
        <svg viewBox="0 0 24 24">
@@ -1309,10 +1272,9 @@ function createDownloadCard(item) {
      </div>
      <div class="download-info">
        <div class="download-header">
-         <span class="download-file-label">Filename</span>
+         <div class="download-filename" title="${fileName}">${fileName}</div>
          <span class="format-badge ${isVideo ? 'video' : 'audio'}">${formatLabel}</span>
        </div>
-       <div class="download-filename" title="${fileName}">${fileName}</div>
        <div class="download-meta">
          <span>
            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
@@ -1322,12 +1284,14 @@ function createDownloadCard(item) {
           <span>${formatFileSize(fileSize)}</span>
        </div>
      </div>
-     <button class="download-action-btn" data-action="download" title="Download">
-       <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
-     </button>
-     <button class="download-menu-btn" data-action="remove" data-id="${item.id}" title="Remove">
-       <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-     </button>
+     <div class="download-actions">
+       <button class="download-action-btn" data-action="download" title="Download">
+         <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
+       </button>
+       <button class="download-menu-btn" data-action="remove" data-id="${item.id}" title="Remove">
+         <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+       </button>
+     </div>
    </div>
  `;
  
