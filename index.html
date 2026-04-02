@@ -813,6 +813,59 @@ body {
  position: relative;
  z-index: 20;
 }
+
+/* ==================== VIDEO PREVIEW MODAL ==================== */
+.video-modal {
+ position: fixed;
+ inset: 0;
+ background: rgba(0, 0, 0, 0.9);
+ display: none;
+ align-items: center;
+ justify-content: center;
+ z-index: 2000;
+ padding: 20px;
+}
+
+.video-modal.active {
+ display: flex;
+}
+
+.video-modal-content {
+ position: relative;
+ width: min(900px, 100%);
+ max-height: 90vh;
+}
+
+.video-modal-player {
+ width: 100%;
+ max-width: 100%;
+ max-height: 80vh;
+ border-radius: 12px;
+ background: #000;
+ outline: none;
+}
+
+.video-modal-close {
+ position: absolute;
+ top: -40px;
+ right: 0;
+ width: 34px;
+ height: 34px;
+ border-radius: 50%;
+ border: none;
+ background: rgba(255, 255, 255, 0.15);
+ color: #fff;
+ font-size: 24px;
+ line-height: 1;
+ cursor: pointer;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+}
+
+.video-modal-close:hover {
+ background: rgba(255, 255, 255, 0.3);
+}
 </style>
 </head>
 
@@ -950,6 +1003,14 @@ body {
    </div>
  </div>
 </section>
+
+<!-- ==================== VIDEO MODAL ==================== -->
+<div class="video-modal" id="videoModal" aria-hidden="true" role="dialog" aria-label="Video preview">
+ <div class="video-modal-content" id="videoModalContent">
+   <button class="video-modal-close" id="videoModalClose" aria-label="Close video preview">×</button>
+   <video class="video-modal-player" id="videoModalPlayer" controls autoplay playsinline></video>
+ </div>
+</div>
 
 <!-- ==================== FOOTER ==================== -->
 <footer class="footer">FlashVidz</footer>
@@ -1113,6 +1174,12 @@ const CONFIG = {
 // ==================== STATE ====================
 let abortController = null;
 let isAborted = false;
+let previousBodyOverflow = '';
+
+const videoModal = document.getElementById('videoModal');
+const videoModalContent = document.getElementById('videoModalContent');
+const videoModalPlayer = document.getElementById('videoModalPlayer');
+const videoModalClose = document.getElementById('videoModalClose');
 
 // ==================== LOCAL STORAGE ====================
 function loadDownloads() {
@@ -1160,6 +1227,36 @@ function removeDownload(id) {
    saveDownloads(downloads);
    renderDownloads();
  }
+}
+
+function openVideoModal(downloadUrl) {
+ if (!downloadUrl) {
+   setMessage('Video preview unavailable: missing URL.', 'error');
+   return;
+ }
+
+ videoModalPlayer.src = downloadUrl;
+ videoModalPlayer.load();
+ videoModal.classList.add('active');
+ videoModal.setAttribute('aria-hidden', 'false');
+ previousBodyOverflow = document.body.style.overflow;
+ document.body.style.overflow = 'hidden';
+
+ const playPromise = videoModalPlayer.play();
+ if (playPromise && typeof playPromise.catch === 'function') {
+   playPromise.catch(() => {
+     setMessage('Tap play to start preview.', 'loading');
+   });
+ }
+}
+
+function closeVideoModal() {
+ videoModal.classList.remove('active');
+ videoModal.setAttribute('aria-hidden', 'true');
+ videoModalPlayer.pause();
+ videoModalPlayer.removeAttribute('src');
+ videoModalPlayer.load();
+ document.body.style.overflow = previousBodyOverflow;
 }
 
 // ==================== DOWNLOADS UI ====================
@@ -1368,7 +1465,8 @@ function createDownloadCard(item) {
  `;
  
  const redownloadBtn = card.querySelector('[data-action="download"]');
- redownloadBtn.addEventListener('click', async () => {
+ redownloadBtn.addEventListener('click', async (event) => {
+   event.stopPropagation();
    try {
      const itemDownloadUrl = item.downloadUrl || item.fileUrl;
      if (!itemDownloadUrl) {
@@ -1384,7 +1482,8 @@ function createDownloadCard(item) {
  });
 
  const shareBtn = card.querySelector('[data-action="share"]');
- shareBtn.addEventListener('click', async () => {
+ shareBtn.addEventListener('click', async (event) => {
+   event.stopPropagation();
    if (navigator.share) {
      try {
        await navigator.share({
@@ -1404,10 +1503,19 @@ function createDownloadCard(item) {
 
  // Add delete handler
  const deleteBtn = card.querySelector('[data-action="remove"]');
- deleteBtn.addEventListener('click', () => {
+ deleteBtn.addEventListener('click', (event) => {
+   event.stopPropagation();
    if (confirm('Remove this download from history?')) {
      removeDownload(item.id);
    }
+ });
+
+ card.addEventListener('click', () => {
+   const itemDownloadUrl = item.downloadUrl || item.fileUrl;
+   if (!isVideo) {
+     return;
+   }
+   openVideoModal(itemDownloadUrl);
  });
  
  return card;
@@ -1560,6 +1668,18 @@ window.addEventListener('beforeunload', () => {
  if (abortController) {
    abortController.abort();
  }
+});
+
+videoModalClose.addEventListener('click', closeVideoModal);
+
+videoModal.addEventListener('click', (event) => {
+ if (!videoModalContent.contains(event.target)) {
+   closeVideoModal();
+ }
+});
+
+videoModalPlayer.addEventListener('error', () => {
+ setMessage('Unable to preview this video.', 'error');
 });
 
 // Initial render of downloads (in case we're on that tab or for count)
