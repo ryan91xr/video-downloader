@@ -1398,14 +1398,16 @@ async function handleDownload() {
 
    const data = await response.json();
 
-   if (!data?.success || !data?.url) {
+   const resolvedDownloadUrl = data?.downloadUrl || data?.url;
+
+   if (!data?.success || !resolvedDownloadUrl) {
      throw new Error(data?.error || 'Invalid response from server');
    }
 
-   const fileUrl = data.url;
+   const fileUrl = resolvedDownloadUrl;
    const responseFormat = data.format || selectedFormat;
    const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
-   const backendFileSize = Number(data.fileSize) || 0;
+   const backendFileSize = Number(data.fileSizeBytes) || 0;
 
    // Save to localStorage using backend metadata
    addDownload(fileUrl, responseFormat, backendFileName, backendFileSize);
