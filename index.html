@@ -284,7 +284,7 @@ body {
 .downloads-list {
  display: flex;
  flex-direction: column;
- gap: 10px;
+ gap: 8px;
  max-height: min(60vh, 520px);
  overflow-y: auto;
  padding-right: 2px;
@@ -302,11 +302,11 @@ body {
 .download-card {
  display: flex;
  align-items: center;
- gap: 10px;
+ gap: 8px;
  background: rgba(255,255,255,0.06);
  backdrop-filter: blur(18px);
  border-radius: 14px;
- padding: 10px;
+ padding: 8px;
  border: 1px solid rgba(255,255,255,0.08);
  transition: all 0.2s ease;
 }
@@ -325,9 +325,9 @@ body {
 }
 
 .download-thumbnail-small {
- width: 42px;
- height: 42px;
- border-radius: 10px;
+ width: 38px;
+ height: 38px;
+ border-radius: 9px;
  background: linear-gradient(135deg, #1c2b33, #2c5364);
  display: flex;
  align-items: center;
@@ -336,8 +336,8 @@ body {
 }
 
 .download-thumbnail-small svg {
- width: 20px;
- height: 20px;
+ width: 18px;
+ height: 18px;
  fill: rgba(255,255,255,0.4);
 }
 
@@ -389,7 +389,7 @@ body {
 .download-meta {
  display: flex;
  align-items: center;
- gap: 8px;
+ gap: 6px;
  font-size: 11px;
  color: #888;
  white-space: nowrap;
@@ -464,7 +464,7 @@ body {
 .download-actions {
  display: flex;
  align-items: center;
- gap: 6px;
+ gap: 4px;
  margin-left: auto;
 }
 
@@ -1172,8 +1172,18 @@ function formatFileSize(bytes) {
  return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-async function triggerDownload(fileUrl, fileName, onProgress) {
- const response = await fetch(fileUrl);
+function triggerNativeDownload(fileUrl, fileName) {
+ const anchor = document.createElement('a');
+ anchor.href = fileUrl;
+ anchor.download = fileName || 'flashvidz-download';
+ anchor.rel = 'noopener';
+ document.body.appendChild(anchor);
+ anchor.click();
+ anchor.remove();
+}
+
+async function trackDownloadProgress(fileUrl, onProgress, signal) {
+ const response = await fetch(fileUrl, { signal });
  if (!response.ok) {
    throw new Error(`Download failed: ${response.status}`);
  }
@@ -1181,17 +1191,16 @@ async function triggerDownload(fileUrl, fileName, onProgress) {
  const total = Number(response.headers.get('content-length')) || 0;
  const reader = response.body?.getReader();
  if (!reader) {
-   throw new Error('Unable to read download stream');
+   onProgress?.(100);
+   return total;
  }
 
- const chunks = [];
  let loaded = 0;
 
  while (true) {
    const { done, value } = await reader.read();
    if (done) break;
    if (value) {
-     chunks.push(value);
      loaded += value.length;
      if (total > 0) {
        const percent = Math.min(100, Math.round((loaded / total) * 100));
@@ -1201,18 +1210,13 @@ async function triggerDownload(fileUrl, fileName, onProgress) {
  }
 
  onProgress?.(100);
+ return loaded || total;
+}
 
- const blob = new Blob(chunks);
- const blobUrl = URL.createObjectURL(blob);
- const anchor = document.createElement('a');
- anchor.href = blobUrl;
- anchor.download = fileName || 'flashvidz-download';
- anchor.rel = 'noopener';
- document.body.appendChild(anchor);
- anchor.click();
- anchor.remove();
- URL.revokeObjectURL(blobUrl);
- return loaded;
+async function runDownloadFlow(fileUrl, fileName, onProgress, signal) {
+ const progressPromise = trackDownloadProgress(fileUrl, onProgress, signal);
+ triggerNativeDownload(fileUrl, fileName);
+ return progressPromise;
 }
 
 function formatDownloadDate(timestamp) {
@@ -1257,7 +1261,7 @@ function createDownloadCard(item) {
  const isVideo = normalizedFormat === 'video';
  const formatLabel = isVideo ? 'VIDEO' : 'AUDIO';
  const fileName = item.fileName || item.filename || 'flashvidz_download';
- const fileSize = Number(item.fileSize ?? item.size ?? 0);
+ const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
  const displayDate = formatDownloadDate(item.timestamp);
  const mediaIconPath = isVideo
    ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
@@ -1288,6 +1292,9 @@ function createDownloadCard(item) {
        <button class="download-action-btn" data-action="download" title="Download">
          <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
        </button>
+       <button class="download-menu-btn" data-action="share" title="Share">
+         <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77l-7.13-4.15a2.91 2.91 0 0 0 0-1.39l7.13-4.15A2.99 2.99 0 1 0 15 5a2.9 2.9 0 0 0 .04.49L7.91 9.64a3 3 0 1 0 0 4.72l7.13 4.15c-.03.16-.04.32-.04.49a3 3 0 1 0 3-2.92z"/></svg>
+       </button>
        <button class="download-menu-btn" data-action="remove" data-id="${item.id}" title="Remove">
          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
        </button>
@@ -1298,12 +1305,31 @@ function createDownloadCard(item) {
  const redownloadBtn = card.querySelector('[data-action="download"]');
  redownloadBtn.addEventListener('click', async () => {
    try {
-     await triggerDownload(item.fileUrl, fileName, (progress) => {
+     await runDownloadFlow(item.fileUrl, fileName, (progress) => {
        setMessage(`Downloading... ${progress}%`, 'loading');
-     });
+     }, undefined);
      setMessage('Download complete!', 'success');
    } catch (error) {
      setMessage(error.message || 'Download failed', 'error');
+   }
+ });
+
+ const shareBtn = card.querySelector('[data-action="share"]');
+ shareBtn.addEventListener('click', async () => {
+   if (navigator.share) {
+     try {
+       await navigator.share({
+         title: 'FlashVidz Download',
+         text: fileName,
+         url: item.fileUrl
+       });
+     } catch (error) {
+       if (error?.name !== 'AbortError') {
+         alert('Could not share this file right now.');
+       }
+     }
+   } else {
+     alert('Sharing is not supported on this browser.');
    }
  });
 
@@ -1411,12 +1437,12 @@ async function handleDownload() {
    const fileUrl = resolvedDownloadUrl;
    const responseFormat = data.format || selectedFormat;
    const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
-   const backendFileSize = Number(data.fileSizeBytes) || 0;
+   const backendFileSize = Number(data.fileSize) || 0;
 
    setMessage('Downloading... 0%', 'loading');
-   const downloadedFileSize = await triggerDownload(fileUrl, backendFileName, (progress) => {
+   const downloadedFileSize = await runDownloadFlow(fileUrl, backendFileName, (progress) => {
      setMessage(`Downloading... ${progress}%`, 'loading');
-   });
+   }, abortController.signal);
 
    // Save to localStorage using backend metadata
    addDownload(
@@ -1427,6 +1453,7 @@ async function handleDownload() {
    );
 
    setMessage('Download complete!', 'success');
+   switchTab('downloads');
    
    // Clear input
    document.getElementById('linkInput').value = '';
