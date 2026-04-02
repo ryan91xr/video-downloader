@@ -290,11 +290,11 @@ body {
 .download-card {
  display: flex;
  flex-direction: column;
- gap: 12px;
+ gap: 14px;
  background: rgba(255,255,255,0.06);
  backdrop-filter: blur(18px);
  border-radius: 16px;
- padding: 14px;
+ padding: 12px;
  border: 1px solid rgba(255,255,255,0.08);
  transition: all 0.2s ease;
 }
@@ -309,6 +309,7 @@ body {
  border-radius: 12px;
  overflow: hidden;
  background: #0a0a0a;
+ position: relative;
 }
 
 .download-media video,
@@ -322,10 +323,47 @@ body {
  object-fit: cover;
 }
 
-.download-info-row {
+.download-media audio {
+ border-top: 1px solid rgba(255,255,255,0.08);
+ background: rgba(0,0,0,0.3);
+}
+
+.download-media-fallback {
+ width: 100%;
+ height: 190px;
+ background: linear-gradient(135deg, #13222b, #274656);
  display: flex;
  align-items: center;
+ justify-content: center;
+ position: relative;
+}
+
+.download-media-fallback svg {
+ width: 56px;
+ height: 56px;
+ fill: rgba(255,255,255,0.35);
+}
+
+.format-badge-overlay {
+ position: absolute;
+ top: 10px;
+ right: 10px;
+ font-size: 10px;
+ font-weight: 700;
+ letter-spacing: 0.8px;
+ text-transform: uppercase;
+ padding: 6px 9px;
+ border-radius: 999px;
+ color: white;
+ background: rgba(0,0,0,0.45);
+ border: 1px solid rgba(255,255,255,0.2);
+}
+
+.download-info-row {
+ display: flex;
+ align-items: flex-start;
  gap: 12px;
+ padding: 0 4px 4px;
 }
 
 .download-thumbnail-small {
@@ -350,16 +388,49 @@ body {
  min-width: 0;
  display: flex;
  flex-direction: column;
- gap: 4px;
+ gap: 6px;
 }
 
 .download-filename {
- font-size: 14px;
- font-weight: 600;
+ font-size: 15px;
+ font-weight: 700;
+ line-height: 1.35;
  color: white;
- white-space: nowrap;
- overflow: hidden;
- text-overflow: ellipsis;
+ word-break: break-word;
+}
+
+.download-file-label {
+ font-size: 11px;
+ color: #96a4ad;
+ letter-spacing: 0.5px;
+ text-transform: uppercase;
+}
+
+.download-header {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 10px;
+}
+
+.format-badge {
+ font-size: 10px;
+ font-weight: 700;
+ letter-spacing: 0.7px;
+ text-transform: uppercase;
+ border-radius: 999px;
+ padding: 5px 9px;
+ flex-shrink: 0;
+}
+
+.format-badge.video {
+ color: #00241b;
+ background: linear-gradient(135deg, #00d4aa, #54f6cc);
+}
+
+.format-badge.audio {
+ color: #dad7ff;
+ background: linear-gradient(135deg, #3f3a77, #6357ca);
 }
 
 .download-meta {
@@ -1144,34 +1215,51 @@ function createDownloadCard(item) {
  card.className = 'download-card';
  
  const isVideo = item.format === 'video';
+ const formatLabel = isVideo ? 'VIDEO' : 'AUDIO';
+ const mediaIconPath = isVideo
+   ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
+   : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
+ const posterPlaceholder = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#13222b"/>
+        <stop offset="100%" stop-color="#274656"/>
+      </linearGradient>
+    </defs>
+    <rect width="320" height="180" fill="url(#g)"/>
+    <path d="M145 68l44 22-44 22z" fill="rgba(255,255,255,0.78)"/>
+    <text x="160" y="148" fill="rgba(255,255,255,0.65)" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif">Video preview</text>
+  </svg>
+ `);
  
  card.innerHTML = `
    <div class="download-media">
      ${isVideo 
-       ? `<video controls preload="metadata" src="${item.fileUrl}"></video>`
-       : `<audio controls preload="metadata" src="${item.fileUrl}"></audio>`
+       ? `<video controls preload="metadata" poster="${posterPlaceholder}" src="${item.fileUrl}"></video>`
+       : `<div class="download-media-fallback"><svg viewBox="0 0 24 24"><path d="${mediaIconPath}"/></svg></div><audio controls preload="metadata" src="${item.fileUrl}"></audio>`
      }
+     <span class="format-badge-overlay">${formatLabel}</span>
    </div>
    <div class="download-info-row">
      <div class="download-thumbnail-small">
        <svg viewBox="0 0 24 24">
-         ${isVideo 
-           ? '<path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>'
-           : '<path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>'
-         }
+         <path d="${mediaIconPath}"/>
        </svg>
      </div>
      <div class="download-info">
-       <div class="download-filename">${item.filename}</div>
+       <div class="download-header">
+         <span class="download-file-label">Filename</span>
+         <span class="format-badge ${isVideo ? 'video' : 'audio'}">${formatLabel}</span>
+       </div>
+       <div class="download-filename" title="${item.filename}">${item.filename}</div>
        <div class="download-meta">
          <span>
            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
            ${item.date}
          </span>
          <span>•</span>
-         <span>${formatFileSize(item.size)}</span>
-         <span>•</span>
-         <span>${isVideo ? 'Video' : 'Audio'}</span>
+          <span>${formatFileSize(item.size)}</span>
        </div>
      </div>
      <button class="download-menu-btn" data-id="${item.id}" title="Remove">
