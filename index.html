@@ -1132,12 +1132,12 @@ function saveDownloads(downloads) {
  }
 }
 
-function addDownload(fileUrl, format, fileName, fileSize) {
+function addDownload(downloadUrl, format, fileName, fileSize) {
  const downloads = loadDownloads();
  const now = Date.now();
  const download = {
    id: now.toString(),
-   fileUrl,
+   downloadUrl,
    format,
    fileName,
    fileSize: Number(fileSize) || 0,
@@ -1172,18 +1172,18 @@ function formatFileSize(bytes) {
  return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-function triggerNativeDownload(fileUrl, fileName) {
- const anchor = document.createElement('a');
- anchor.href = fileUrl;
- anchor.download = fileName || 'flashvidz-download';
- anchor.rel = 'noopener';
- document.body.appendChild(anchor);
- anchor.click();
- anchor.remove();
+function triggerNativeDownload(downloadUrl, fileName) {
+ const a = document.createElement('a');
+ a.href = downloadUrl;
+ a.download = fileName || 'flashvidz-download';
+ a.rel = 'noopener';
+ document.body.appendChild(a);
+ a.click();
+ document.body.removeChild(a);
 }
 
-async function trackDownloadProgress(fileUrl, onProgress, signal) {
- const response = await fetch(fileUrl, { signal });
+async function trackDownloadProgress(downloadUrl, onProgress, signal) {
+ const response = await fetch(downloadUrl, { signal });
  if (!response.ok) {
    throw new Error(`Download failed: ${response.status}`);
  }
@@ -1213,9 +1213,9 @@ async function trackDownloadProgress(fileUrl, onProgress, signal) {
  return loaded || total;
 }
 
-async function runDownloadFlow(fileUrl, fileName, onProgress, signal) {
- const progressPromise = trackDownloadProgress(fileUrl, onProgress, signal);
- triggerNativeDownload(fileUrl, fileName);
+async function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
+ const progressPromise = trackDownloadProgress(downloadUrl, onProgress, signal);
+ triggerNativeDownload(downloadUrl, fileName);
  return progressPromise;
 }
 
@@ -1305,7 +1305,11 @@ function createDownloadCard(item) {
  const redownloadBtn = card.querySelector('[data-action="download"]');
  redownloadBtn.addEventListener('click', async () => {
    try {
-     await runDownloadFlow(item.fileUrl, fileName, (progress) => {
+     const itemDownloadUrl = item.downloadUrl || item.fileUrl;
+     if (!itemDownloadUrl) {
+       throw new Error('Missing download URL');
+     }
+     await runDownloadFlow(itemDownloadUrl, fileName, (progress) => {
        setMessage(`Downloading... ${progress}%`, 'loading');
      }, undefined);
      setMessage('Download complete!', 'success');
@@ -1321,7 +1325,7 @@ function createDownloadCard(item) {
        await navigator.share({
          title: 'FlashVidz Download',
          text: fileName,
-         url: item.fileUrl
+         url: item.downloadUrl || item.fileUrl
        });
      } catch (error) {
        if (error?.name !== 'AbortError') {
@@ -1434,19 +1438,19 @@ async function handleDownload() {
      throw new Error(data?.error || 'Invalid response from server');
    }
 
-   const fileUrl = resolvedDownloadUrl;
+   const downloadUrl = resolvedDownloadUrl;
    const responseFormat = data.format || selectedFormat;
    const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
    const backendFileSize = Number(data.fileSize) || 0;
 
    setMessage('Downloading... 0%', 'loading');
-   const downloadedFileSize = await runDownloadFlow(fileUrl, backendFileName, (progress) => {
+   const downloadedFileSize = await runDownloadFlow(downloadUrl, backendFileName, (progress) => {
      setMessage(`Downloading... ${progress}%`, 'loading');
    }, abortController.signal);
 
    // Save to localStorage using backend metadata
    addDownload(
-     fileUrl,
+     downloadUrl,
      responseFormat,
      backendFileName,
      backendFileSize > 0 ? backendFileSize : downloadedFileSize
