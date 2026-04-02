@@ -1204,15 +1204,46 @@ function formatFileSize(bytes) {
 }
 
 async function triggerDownload(fileUrl, fileName, onProgress) {
+ const response = await fetch(fileUrl);
+ if (!response.ok) {
+   throw new Error(`Download failed: ${response.status}`);
+ }
+
+ const total = Number(response.headers.get('content-length')) || 0;
+ const reader = response.body?.getReader();
+ if (!reader) {
+   throw new Error('Unable to read download stream');
+ }
+
+ const chunks = [];
+ let loaded = 0;
+
+ while (true) {
+   const { done, value } = await reader.read();
+   if (done) break;
+   if (value) {
+     chunks.push(value);
+     loaded += value.length;
+     if (total > 0) {
+       const percent = Math.min(100, Math.round((loaded / total) * 100));
+       onProgress?.(percent);
+     }
+   }
+ }
+
  onProgress?.(100);
+
+ const blob = new Blob(chunks);
+ const blobUrl = URL.createObjectURL(blob);
  const anchor = document.createElement('a');
- anchor.href = fileUrl;
+ anchor.href = blobUrl;
  anchor.download = fileName || 'flashvidz-download';
  anchor.rel = 'noopener';
  document.body.appendChild(anchor);
  anchor.click();
  anchor.remove();
- return 0;
+ URL.revokeObjectURL(blobUrl);
+ return loaded;
 }
 
 function formatDownloadDate(timestamp) {
@@ -1416,7 +1447,7 @@ async function handleDownload() {
    const fileUrl = resolvedDownloadUrl;
    const responseFormat = data.format || selectedFormat;
    const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
-   const backendFileSize = Number(data.fileSize) || 0;
+   const backendFileSize = Number(data.fileSizeBytes) || 0;
 
    setMessage('Downloading... 0%', 'loading');
    const downloadedFileSize = await triggerDownload(fileUrl, backendFileName, (progress) => {
