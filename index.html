@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+pan class="guide<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1205,7 +1205,7 @@ function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
  const download = {
    id: now.toString(),
    downloadUrl,
-   fileUrl,   // ADD THIS
+   fileUrl,
    format,
    fileName,
    fileSize: Number(fileSize) || 0,
@@ -1634,7 +1634,7 @@ async function handleDownload() {
    // Save to localStorage using backend metadata
    addDownload(
      downloadUrl,
-     data.fileUrl,   // ADD THIS
+     data.fileUrl,
      responseFormat,
      backendFileName,
      finalFileSize
