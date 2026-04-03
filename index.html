@@ -1207,11 +1207,15 @@ const CONFIG = {
 let abortController = null;
 let isAborted = false;
 let previousBodyOverflow = '';
+let currentDownloadId = 0;
+let modalHistoryPushed = false;
+let closingFromPopState = false;
 
 const videoModal = document.getElementById('videoModal');
 const videoModalContent = document.getElementById('videoModalContent');
 const videoModalPlayer = document.getElementById('videoModalPlayer');
 const videoModalClose = document.getElementById('videoModalClose');
+const emptyStateTemplate = document.getElementById('emptyState');
 
 // ==================== LOCAL STORAGE ====================
 function loadDownloads() {
@@ -1234,6 +1238,7 @@ function saveDownloads(downloads) {
 function normalizeStoredUrl(value) {
  const trimmed = (typeof value === 'string' ? value.trim() : '');
  if (!trimmed) return null;
+ if (!isValidHttpUrl(trimmed)) return null;
  return trimmed.slice(0, 500);
 }
 
@@ -1289,13 +1294,16 @@ function openVideoModal(fileUrl) {
 
  videoModalPlayer.pause();
  videoModalPlayer.removeAttribute('src');
- videoModalPlayer.load();
  videoModalPlayer.src = fileUrl;
  videoModalPlayer.load();
  videoModal.classList.add('active');
  videoModal.setAttribute('aria-hidden', 'false');
  previousBodyOverflow = document.body.style.overflow;
  document.body.style.overflow = 'hidden';
+ if (!modalHistoryPushed) {
+   history.pushState({ videoModal: true }, '');
+   modalHistoryPushed = true;
+ }
 
  const playPromise = videoModalPlayer.play();
  if (playPromise && typeof playPromise.catch === 'function') {
@@ -1315,6 +1323,12 @@ function closeVideoModal() {
  videoModalPlayer.removeAttribute('src');
  videoModalPlayer.load();
  document.body.style.overflow = previousBodyOverflow;
+ if (modalHistoryPushed && !closingFromPopState) {
+   modalHistoryPushed = false;
+   history.back();
+ } else {
+   modalHistoryPushed = false;
+ }
 }
 
 // ==================== DOWNLOADS UI ====================
@@ -1454,13 +1468,9 @@ function renderDownloads() {
  listContainer.innerHTML = '';
  
  if (downloads.length === 0) {
-   listContainer.innerHTML = `
-     <div class="empty-state">
-       <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-       <h3>No downloads yet</h3>
-       <p>Your downloaded videos will appear here</p>
-     </div>
-   `;
+   const emptyState = emptyStateTemplate.cloneNode(true);
+   emptyState.removeAttribute('id');
+   listContainer.appendChild(emptyState);
    countBadge.textContent = '0 items';
    return;
  }
@@ -1613,8 +1623,9 @@ function setMessage(text, type = '') {
  msg.className = type;
 }
 
-function resetUI(delay = 2000) {
+function resetUI(delay = 2000, downloadId = currentDownloadId) {
  setTimeout(() => {
+   if (downloadId !== currentDownloadId) return;
    document.getElementById('submitBtn').disabled = false;
    document.getElementById('submitBtn').classList.remove('loading');
    document.getElementById('pasteBtn').disabled = false;
@@ -1639,32 +1650,38 @@ async function pasteLink() {
 document.getElementById('pasteBtn').addEventListener('click', pasteLink);
 
 async function handleDownload() {
+ const downloadId = ++currentDownloadId;
  const link = document.getElementById('linkInput').value.trim();
  const btn = document.getElementById('submitBtn');
  if (btn.disabled) {
    return;
  }
 
+ const updateMessage = (text, type = '') => {
+   if (downloadId !== currentDownloadId) return;
+   setMessage(text, type);
+ };
+
  btn.disabled = true;
  btn.classList.add('loading');
  document.getElementById('pasteBtn').disabled = true;
  
  if (!link) {
-   setMessage('Enter a video link', 'error');
-   resetUI(0);
+   updateMessage('Enter a video link', 'error');
+   resetUI(0, downloadId);
    return;
  }
 
  const platform = detectPlatform(link);
  
  if (platform === 'unknown') {
-   setMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
-   resetUI(0);
+   updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
+   resetUI(0, downloadId);
    return;
  }
 
  isAborted = false;
- setMessage('Starting download...', 'loading');
+ updateMessage('Starting download...', 'loading');
 
  abortController = new AbortController();
 
@@ -1698,9 +1715,9 @@ async function handleDownload() {
    const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
    const backendFileSize = Number(data.fileSize) || 0;
 
-   setMessage('Downloading... 0%', 'loading');
+   updateMessage('Downloading... 0%', 'loading');
    const downloadedFileSize = await runDownloadFlow(downloadUrl, backendFileName, (progress) => {
-     setMessage(`Downloading... ${progress}%`, 'loading');
+     updateMessage(`Downloading... ${progress}%`, 'loading');
    }, abortController.signal);
 
   // Prefer downloaded size, then backend reported size, otherwise unknown
@@ -1722,6 +1739,7 @@ async function handleDownload() {
      finalFileSize
    );
 
+   if (downloadId !== currentDownloadId) return;
    setMessage('Download complete!', 'success');
    switchTab('downloads');
    
@@ -1747,10 +1765,12 @@ async function handleDownload() {
      }
    }
    
-   setMessage(errorMsg, 'error');
+   updateMessage(errorMsg, 'error');
  } finally {
-   abortController = null;
-   resetUI(isAborted ? 0 : 2000);
+   if (downloadId === currentDownloadId) {
+     abortController = null;
+   }
+   resetUI(isAborted ? 0 : 2000, downloadId);
    isAborted = false;
  }
 }
@@ -1760,6 +1780,14 @@ document.getElementById('submitBtn').addEventListener('click', handleDownload);
 window.addEventListener('beforeunload', () => {
  if (abortController) {
    abortController.abort();
+ }
+});
+
+window.addEventListener('popstate', () => {
+ if (videoModal.classList.contains('active')) {
+   closingFromPopState = true;
+   closeVideoModal();
+   closingFromPopState = false;
  }
 });
 
