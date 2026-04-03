@@ -1246,7 +1246,7 @@ function openVideoModal(fileUrl) {
  const playPromise = videoModalPlayer.play();
  if (playPromise && typeof playPromise.catch === 'function') {
    playPromise.catch(() => {
-     setMessage('Tap play to start preview.', 'loading');
+    setMessage('Tap play ▶️ to start video preview', 'loading');
    });
  }
 }
@@ -1633,8 +1633,13 @@ async function handleDownload() {
      setMessage(`Downloading... ${progress}%`, 'loading');
    }, abortController.signal);
 
-   // FIX: Use downloadedFileSize if available, fallback to backendFileSize
-   const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize;
+  // Prefer downloaded size, then backend reported size, otherwise unknown
+  const finalFileSize =
+    downloadedFileSize > 0
+      ? downloadedFileSize
+      : backendFileSize > 0
+      ? backendFileSize
+      : null;
 
    const safeFileUrl = data.fileUrl || null;
 
