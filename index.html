@@ -1258,10 +1258,13 @@ function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
  const normalizedFileSize = Number(fileSize);
  const normalizedDownloadUrl = normalizeStoredUrl(downloadUrl);
  const normalizedFileUrl = normalizeStoredUrl(fileUrl);
+ if (!normalizedDownloadUrl) {
+   return null;
+ }
  const download = {
    id: now.toString(),
    downloadUrl: normalizedDownloadUrl,
-   fileUrl: normalizedFileUrl,
+   fileUrl: normalizedFileUrl || normalizedDownloadUrl,
    format,
    fileName,
    fileSize: Number.isFinite(normalizedFileSize) && normalizedFileSize > 0 ? normalizedFileSize : null,
@@ -1303,7 +1306,7 @@ function openVideoModal(fileUrl) {
  previousBodyOverflow = document.body.style.overflow;
  document.body.style.overflow = 'hidden';
  const hasModalState = Boolean(history.state && history.state.videoModal);
- if (!hasModalState) {
+ if (!hasModalState && !modalHistoryPushed) {
    history.pushState({ videoModal: true }, '');
    modalHistoryPushed = true;
  } else {
@@ -1429,7 +1432,7 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
        document.body.appendChild(a);
        a.click();
        document.body.removeChild(a);
-       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+       setTimeout(() => URL.revokeObjectURL(objectUrl), 300);
 
        resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
      });
@@ -1581,10 +1584,10 @@ function createDownloadCard(item) {
      try {
        const candidateFileUrl = normalizeStoredUrl(item.fileUrl);
        const candidateDownloadUrl = normalizeStoredUrl(item.downloadUrl);
-       const shareUrl = isValidHttpUrl(candidateFileUrl)
-         ? candidateFileUrl
-         : isValidHttpUrl(candidateDownloadUrl)
+       const shareUrl = isValidHttpUrl(candidateDownloadUrl)
          ? candidateDownloadUrl
+         : isValidHttpUrl(candidateFileUrl)
+         ? candidateFileUrl
          : null;
        if (!shareUrl) {
          throw new Error('Missing share URL');
@@ -1614,6 +1617,10 @@ function createDownloadCard(item) {
  });
 
  card.addEventListener('click', () => {
+   if (isActivelyDownloading()) {
+     return;
+   }
+
    // FIX: Use ONLY item.fileUrl for preview, with safety check
    if (!isVideo) {
      setMessage('Audio preview not supported yet.', 'loading');
@@ -1757,7 +1764,7 @@ async function handleDownload() {
       ? backendFileSize
       : null;
 
-   const safeFileUrl = normalizeStoredUrl(data.fileUrl);
+   const safeFileUrl = normalizeStoredUrl(data.fileUrl) || downloadUrl;
 
    // Save to localStorage using backend metadata
    addDownload(
