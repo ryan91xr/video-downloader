@@ -1230,13 +1230,13 @@ function removeDownload(id) {
  }
 }
 
-function openVideoModal(downloadUrl) {
- if (!downloadUrl) {
+function openVideoModal(fileUrl) {
+ if (!fileUrl) {
    setMessage('Video preview unavailable: missing URL.', 'error');
    return;
  }
 
- videoModalPlayer.src = downloadUrl;
+ videoModalPlayer.src = fileUrl;
  videoModalPlayer.load();
  videoModal.classList.add('active');
  videoModal.setAttribute('aria-hidden', 'false');
@@ -1469,7 +1469,8 @@ function createDownloadCard(item) {
  redownloadBtn.addEventListener('click', async (event) => {
    event.stopPropagation();
    try {
-     const itemDownloadUrl = item.downloadUrl || item.fileUrl;
+     // FIX: Use ONLY item.downloadUrl for re-downloading
+     const itemDownloadUrl = item.downloadUrl;
      if (!itemDownloadUrl) {
        throw new Error('Missing download URL');
      }
@@ -1512,7 +1513,12 @@ function createDownloadCard(item) {
  });
 
  card.addEventListener('click', () => {
-   const previewUrl = item.fileUrl || item.downloadUrl;
+   // FIX: Use ONLY item.fileUrl for preview, with safety check
+   const previewUrl = item.fileUrl;
+   if (!previewUrl) {
+     setMessage('Video preview unavailable: missing preview URL.', 'error');
+     return;
+   }
    if (!isVideo) {
      return;
    }
@@ -1622,13 +1628,16 @@ async function handleDownload() {
      setMessage(`Downloading... ${progress}%`, 'loading');
    }, abortController.signal);
 
+   // FIX: Use downloadedFileSize if available, fallback to backendFileSize
+   const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize;
+
    // Save to localStorage using backend metadata
    addDownload(
      downloadUrl,
      data.fileUrl,   // ADD THIS
      responseFormat,
      backendFileName,
-     backendFileSize
+     finalFileSize
    );
 
    setMessage('Download complete!', 'success');
