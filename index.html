@@ -1519,7 +1519,7 @@ function createDownloadCard(item) {
  card.addEventListener('click', () => {
    // FIX: Use ONLY item.fileUrl for preview, with safety check
    if (!isVideo) {
-     setMessage('Audio preview not supported yet.');
+     setMessage('Audio preview not supported yet.', 'loading');
      return;
    }
 
