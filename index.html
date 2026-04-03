@@ -118,17 +118,28 @@ body {
 
 .menu-header {
  display: flex;
- align-items: center;
+ align-items: flex-start;
  justify-content: space-between;
  margin-bottom: 30px;
  padding-bottom: 20px;
  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
+.menu-title-group {
+ display: flex;
+ flex-direction: column;
+ gap: 4px;
+}
+
 .menu-title {
  font-size: 18px;
  font-weight: 600;
  color: white;
+}
+
+.menu-subtitle {
+ font-size: 12px;
+ color: #8ca0aa;
 }
 
 .close-menu-btn {
@@ -172,6 +183,11 @@ body {
 
 .menu-item:hover {
  background: rgba(0,212,170,0.15);
+ color: #00d4aa;
+}
+
+.menu-item.active {
+ background: rgba(0,212,170,0.2);
  color: #00d4aa;
 }
 
@@ -875,7 +891,10 @@ body {
 <div class="menu-overlay" id="menuOverlay"></div>
 <nav class="hamburger-menu-container" id="hamburgerMenu" aria-label="Main navigation">
  <div class="menu-header">
-   <span class="menu-title">Menu</span>
+   <div class="menu-title-group">
+     <span class="menu-title">Menu</span>
+     <span class="menu-subtitle">FlashVidz - Download Manager</span>
+   </div>
    <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">×</button>
  </div>
  <ul class="menu-list">
@@ -1092,27 +1111,40 @@ function closeMenu() {
  document.body.style.overflow = '';
 }
 
+function setActiveMenuItem(menuId) {
+ const menuItems = document.querySelectorAll('.menu-item');
+ menuItems.forEach(item => item.classList.remove('active'));
+ const activeItem = document.getElementById(menuId);
+ if (activeItem) {
+   activeItem.classList.add('active');
+ }
+}
+
 hamburgerBtn.addEventListener('click', openMenu);
 closeMenuBtn.addEventListener('click', closeMenu);
 menuOverlay.addEventListener('click', closeMenu);
 
 // Menu items
 document.getElementById('menuHistory').addEventListener('click', function() {
+ setActiveMenuItem('menuHistory');
  alert('History - Feature coming soon');
  closeMenu();
 });
 
 document.getElementById('menuSettings').addEventListener('click', function() {
+ setActiveMenuItem('menuSettings');
  alert('Settings - Feature coming soon');
  closeMenu();
 });
 
 document.getElementById('menuAbout').addEventListener('click', function() {
+ setActiveMenuItem('menuAbout');
  alert('FlashVidz v1.0\nProfessional video downloader');
  closeMenu();
 });
 
 document.getElementById('menuHelp').addEventListener('click', function() {
+ setActiveMenuItem('menuHelp');
  alert('Help & Support\nContact: support@flashvidz.com');
  closeMenu();
 });
@@ -1202,13 +1234,14 @@ function saveDownloads(downloads) {
 function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
  const downloads = loadDownloads();
  const now = Date.now();
+ const normalizedFileSize = Number(fileSize);
  const download = {
    id: now.toString(),
    downloadUrl,
    fileUrl,
    format,
    fileName,
-   fileSize: Number(fileSize) || 0,
+   fileSize: Number.isFinite(normalizedFileSize) && normalizedFileSize > 0 ? normalizedFileSize : null,
    timestamp: now
  };
  downloads.unshift(download);
@@ -1352,7 +1385,7 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
        document.body.appendChild(a);
        a.click();
        document.body.removeChild(a);
-       URL.revokeObjectURL(objectUrl);
+       setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
        resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
      });
@@ -1581,9 +1614,14 @@ async function handleDownload() {
  if (btn.disabled) {
    return;
  }
+
+ btn.disabled = true;
+ btn.classList.add('loading');
+ document.getElementById('pasteBtn').disabled = true;
  
  if (!link) {
    setMessage('Enter a video link', 'error');
+   resetUI(0);
    return;
  }
 
@@ -1591,14 +1629,11 @@ async function handleDownload() {
  
  if (platform === 'unknown') {
    setMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
+   resetUI(0);
    return;
  }
 
  isAborted = false;
-
- btn.disabled = true;
- btn.classList.add('loading');
- document.getElementById('pasteBtn').disabled = true;
  setMessage('Starting download...', 'loading');
 
  abortController = new AbortController();
