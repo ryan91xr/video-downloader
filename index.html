@@ -1231,14 +1231,32 @@ function saveDownloads(downloads) {
  }
 }
 
+function normalizeStoredUrl(value) {
+ const trimmed = (typeof value === 'string' ? value.trim() : '');
+ if (!trimmed) return null;
+ return trimmed.slice(0, 500);
+}
+
+function isValidHttpUrl(value) {
+ if (!value) return false;
+ try {
+   const parsed = new URL(value);
+   return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+ } catch {
+   return false;
+ }
+}
+
 function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
  const downloads = loadDownloads();
  const now = Date.now();
  const normalizedFileSize = Number(fileSize);
+ const normalizedDownloadUrl = normalizeStoredUrl(downloadUrl);
+ const normalizedFileUrl = normalizeStoredUrl(fileUrl);
  const download = {
    id: now.toString(),
-   downloadUrl,
-   fileUrl,
+   downloadUrl: normalizedDownloadUrl,
+   fileUrl: normalizedFileUrl,
    format,
    fileName,
    fileSize: Number.isFinite(normalizedFileSize) && normalizedFileSize > 0 ? normalizedFileSize : null,
@@ -1269,6 +1287,9 @@ function openVideoModal(fileUrl) {
    return;
  }
 
+ videoModalPlayer.pause();
+ videoModalPlayer.removeAttribute('src');
+ videoModalPlayer.load();
  videoModalPlayer.src = fileUrl;
  videoModalPlayer.load();
  videoModal.classList.add('active');
@@ -1279,7 +1300,10 @@ function openVideoModal(fileUrl) {
  const playPromise = videoModalPlayer.play();
  if (playPromise && typeof playPromise.catch === 'function') {
    playPromise.catch(() => {
-    setMessage('Tap play ▶️ to start video preview', 'loading');
+    const messageEl = document.getElementById('message');
+    if (!messageEl.classList.contains('error')) {
+      setMessage('Tap play ▶️ to start video preview', 'loading');
+    }
    });
  }
 }
@@ -1521,7 +1545,13 @@ function createDownloadCard(item) {
    event.stopPropagation();
    if (navigator.share) {
      try {
-       const shareUrl = item.fileUrl || item.downloadUrl;
+       const candidateFileUrl = normalizeStoredUrl(item.fileUrl);
+       const candidateDownloadUrl = normalizeStoredUrl(item.downloadUrl);
+       const shareUrl = isValidHttpUrl(candidateFileUrl)
+         ? candidateFileUrl
+         : isValidHttpUrl(candidateDownloadUrl)
+         ? candidateDownloadUrl
+         : null;
        if (!shareUrl) {
          throw new Error('Missing share URL');
        }
@@ -1660,7 +1690,10 @@ async function handleDownload() {
      throw new Error(data?.error || 'Invalid response from server');
    }
 
-   const downloadUrl = data.downloadUrl;
+   const downloadUrl = normalizeStoredUrl(data.downloadUrl);
+   if (!downloadUrl) {
+     throw new Error('Invalid response from server');
+   }
    const responseFormat = data.format || selectedFormat;
    const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
    const backendFileSize = Number(data.fileSize) || 0;
@@ -1678,7 +1711,7 @@ async function handleDownload() {
       ? backendFileSize
       : null;
 
-   const safeFileUrl = data.fileUrl || null;
+   const safeFileUrl = normalizeStoredUrl(data.fileUrl);
 
    // Save to localStorage using backend metadata
    addDownload(
