@@ -1006,7 +1006,7 @@ body {
    <div class="input-bar">
      <!-- Format Selector -->
      <div class="format-selector">
-       <button class="format-btn" id="formatBtn">
+       <button class="format-btn" id="formatBtn" aria-label="Select download format">
          <svg viewBox="0 0 24 24" id="formatIconVideo"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
          <svg viewBox="0 0 24 24" id="formatIconAudio" style="display:none"><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
          <svg class="arrow-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
@@ -1029,10 +1029,10 @@ body {
      <input id="linkInput" placeholder="Paste link here..." autocomplete="off">
      
      <!-- Paste Button -->
-     <button class="paste-btn-bar" id="pasteBtn">Paste</button>
+     <button class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">Paste</button>
      
      <!-- Submit Button -->
-     <button class="submit-btn" id="submitBtn">
+     <button class="submit-btn" id="submitBtn" aria-label="Start download">
        <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
      </button>
    </div>
@@ -1559,7 +1559,7 @@ function runHybridDownloadFlow(downloadUrl, fileName, fileSize, onProgress, sign
      return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
    }
    onProgress?.(0);
-   setMessage('Starting download...', 'loading');
+   setMessage('Large file detected. Preparing browser download…', 'loading');
    setTimeout(() => {
      const a = document.createElement('a');
      a.href = downloadUrl;
@@ -1643,13 +1643,13 @@ function createDownloadCard(item) {
        </div>
      </div>
      <div class="download-actions">
-       <button class="download-action-btn primary" data-action="download" title="Download">
+       <button class="download-action-btn primary" data-action="download" title="Download" aria-label="Download file">
          <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
        </button>
-       <button class="download-menu-btn" data-action="share" title="Share">
+       <button class="download-menu-btn" data-action="share" title="Share" aria-label="Share file">
          <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77l-7.13-4.15a2.91 2.91 0 0 0 0-1.39l7.13-4.15A2.99 2.99 0 1 0 15 5a2.9 2.9 0 0 0 .04.49L7.91 9.64a3 3 0 1 0 0 4.72l7.13 4.15c-.03.16-.04.32-.04.49a3 3 0 1 0 3-2.92z"/></svg>
        </button>
-       <button class="download-menu-btn" data-action="remove" data-id="${item.id}" title="Remove">
+       <button class="download-menu-btn" data-action="remove" data-id="${item.id}" title="Remove" aria-label="Remove from download history">
          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
        </button>
      </div>
@@ -1781,8 +1781,13 @@ async function pasteLink() {
    const text = await navigator.clipboard.readText();
    document.getElementById('linkInput').value = text.trim();
    maybeAutoDownload();
- } catch {
-   setMessage('Clipboard access denied', 'error');
+ } catch (error) {
+   const isSecureContextIssue = window.isSecureContext === false;
+   const baseMessage = isSecureContextIssue
+     ? 'Clipboard requires HTTPS or localhost. Paste manually if needed.'
+     : 'Could not read your clipboard. Please allow clipboard permission or paste manually.';
+   setMessage(baseMessage, 'error');
+   console.error('Clipboard read failed:', error);
  } finally {
    btn.disabled = false;
  }
