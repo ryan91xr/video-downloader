@@ -118,12 +118,11 @@ body {
 
 .menu-header {
  display: flex;
- align-items: flex-start;
+ align-items: center;
  justify-content: space-between;
- margin-bottom: 30px;
- padding-bottom: 20px;
- border-bottom: 1px solid rgba(255,255,255,0.1);
+ margin-bottom: 20px;
 }
+
 
 .menu-title-group {
  display: flex;
@@ -166,6 +165,9 @@ body {
  list-style: none;
  padding: 0;
  margin: 0;
+ display: flex;
+ flex-direction: column;
+ gap: 8px;
 }
 
 .menu-item {
@@ -178,12 +180,15 @@ body {
  transition: all 0.2s ease;
  color: #e0e0e0;
  font-size: 14px;
- margin-bottom: 4px;
 }
 
 .menu-item:hover {
- background: rgba(0,212,170,0.15);
+ background: rgba(255,255,255,0.08);
  color: #00d4aa;
+}
+
+.menu-item:active {
+ background: rgba(255,255,255,0.12);
 }
 
 .menu-item.active {
@@ -197,12 +202,6 @@ body {
  fill: currentColor;
 }
 
-.menu-divider {
- height: 1px;
- background: rgba(255,255,255,0.1);
- margin: 16px 0;
- border: none;
-}
 
 /* ==================== MATERIAL TABS ==================== */
 .tabs-container {
@@ -892,8 +891,7 @@ body {
 <nav class="hamburger-menu-container" id="hamburgerMenu" aria-label="Main navigation">
  <div class="menu-header">
    <div class="menu-title-group">
-     <span class="menu-title">Menu</span>
-     <span class="menu-subtitle">FlashVidz - Download Manager</span>
+     <span class="menu-title">Settings</span>
    </div>
    <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">×</button>
  </div>
@@ -902,11 +900,6 @@ body {
      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
      <span>Downloads</span>
    </li>
-   <li class="menu-item" id="menuSettings">
-     <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L3.16 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-     <span>Settings</span>
-   </li>
-   <li class="menu-divider"></li>
    <li class="menu-item" id="menuShareApp">
      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
      <span>Share App</span>
@@ -915,7 +908,6 @@ body {
      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
      <span>Rate App</span>
    </li>
-   <li class="menu-divider"></li>
    <li class="menu-item" id="menuHelp">
      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
      <span>Help</span>
@@ -925,6 +917,11 @@ body {
      <span>Privacy</span>
    </li>
  </ul>
+ <div style="display:none" aria-hidden="true">
+   <button id="menuSettings" tabindex="-1"></button>
+   <button id="menuLanguage" tabindex="-1"></button>
+   <button id="menuFeedback" tabindex="-1"></button>
+ </div>
 </nav>
 
 <!-- ==================== HEADER ==================== -->
