@@ -315,7 +315,7 @@ body {
  gap: 8px;
  max-height: none;
  overflow-y: auto;
- padding-right: 2px;
+ padding-right: 6px;
 }
 
 .downloads-list::-webkit-scrollbar {
@@ -352,8 +352,7 @@ body {
  min-width: 0;
 }
 
-.download-thumbnail-small,
-.download-thumbnail {
+.download-thumbnail-small {
  width: 38px;
  height: 38px;
  border-radius: 9px;
@@ -389,10 +388,7 @@ body {
 }
 
 .download-header {
- display: flex;
- align-items: flex-start;
- justify-content: space-between;
- gap: 10px;
+ display: block;
 }
 
 .format-badge {
@@ -901,8 +897,8 @@ body {
 
 .video-modal-close {
  position: absolute;
- top: -40px;
- right: 0;
+ top: 10px;
+ right: 10px;
  width: 34px;
  height: 34px;
  border-radius: 50%;
@@ -1386,6 +1382,7 @@ function openVideoModal(fileUrl) {
    return;
  }
 
+ setMessage('Loading preview...', 'loading');
  videoModalPlayer.pause();
  videoModalPlayer.removeAttribute('src');
  videoModalPlayer.src = normalizedPreviewUrl;
@@ -1568,6 +1565,7 @@ function runHybridDownloadFlow(downloadUrl, fileName, fileSize, onProgress, sign
      document.body.appendChild(a);
      a.click();
      document.body.removeChild(a);
+     setMessage('Download started in browser', 'success');
    }, 120);
    return Promise.resolve(normalizedSize);
  }
@@ -1680,30 +1678,45 @@ function createDownloadCard(item) {
  const shareBtn = card.querySelector('[data-action="share"]');
  shareBtn.addEventListener('click', async (event) => {
    event.stopPropagation();
+   const candidateFileUrl = normalizeStoredUrl(item.fileUrl);
+   const candidateDownloadUrl = normalizeStoredUrl(item.downloadUrl);
+   const shareUrl = isValidHttpUrl(candidateDownloadUrl)
+     ? candidateDownloadUrl
+     : isValidHttpUrl(candidateFileUrl)
+     ? candidateFileUrl
+     : null;
+   if (!shareUrl) {
+     setMessage('Missing share URL for this item.', 'error');
+     return;
+   }
+
    if (navigator.share) {
      try {
-       const candidateFileUrl = normalizeStoredUrl(item.fileUrl);
-       const candidateDownloadUrl = normalizeStoredUrl(item.downloadUrl);
-       const shareUrl = isValidHttpUrl(candidateDownloadUrl)
-         ? candidateDownloadUrl
-         : isValidHttpUrl(candidateFileUrl)
-         ? candidateFileUrl
-         : null;
-       if (!shareUrl) {
-         throw new Error('Missing share URL');
-       }
        await navigator.share({
          title: 'FlashVidz Download',
          text: fileName,
          url: shareUrl
        });
      } catch (error) {
-       if (error?.name !== 'AbortError') {
-         alert('Could not share this file right now.');
+       if (error?.name === 'AbortError') {
+         return;
+       }
+       try {
+         await copyTextToClipboard(shareUrl);
+         setMessage('Share URL copied to clipboard.', 'success');
+       } catch (copyError) {
+         console.error('Share fallback copy failed:', copyError);
+         setMessage('Could not share or copy this file URL right now.', 'error');
        }
      }
    } else {
-     alert('Sharing is not supported on this browser.');
+     try {
+       await copyTextToClipboard(shareUrl);
+       setMessage('Share URL copied to clipboard.', 'success');
+     } catch (error) {
+       console.error('Share fallback copy failed:', error);
+       setMessage('Sharing is not supported and copy failed.', 'error');
+     }
    }
  });
 
@@ -1755,6 +1768,28 @@ function setMessage(text, type = '') {
  const msg = document.getElementById('message');
  msg.textContent = text;
  msg.className = type;
+}
+
+async function copyTextToClipboard(text) {
+ if (!text) {
+   return false;
+ }
+
+ if (navigator.clipboard?.writeText) {
+   await navigator.clipboard.writeText(text);
+   return true;
+ }
+
+ const tempInput = document.createElement('textarea');
+ tempInput.value = text;
+ tempInput.setAttribute('readonly', '');
+ tempInput.style.position = 'absolute';
+ tempInput.style.left = '-9999px';
+ document.body.appendChild(tempInput);
+ tempInput.select();
+ const success = document.execCommand('copy');
+ document.body.removeChild(tempInput);
+ return success;
 }
 
 function isActivelyDownloading() {
@@ -1970,6 +2005,17 @@ videoModal.addEventListener('click', (event) => {
 videoModalPlayer.addEventListener('error', () => {
  if (videoModal.classList.contains('active') && !isActivelyDownloading()) {
    setMessage('Unable to preview this video.', 'error');
+ }
+});
+
+videoModalPlayer.addEventListener('loadeddata', () => {
+ const messageEl = document.getElementById('message');
+ if (
+   videoModal.classList.contains('active') &&
+   messageEl?.classList.contains('loading') &&
+   messageEl.textContent === 'Loading preview...'
+ ) {
+   setMessage('', '');
  }
 });
 
