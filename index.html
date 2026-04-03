@@ -363,6 +363,13 @@ body {
  flex-shrink: 0;
 }
 
+.download-thumbnail-small img {
+ width: 100%;
+ height: 100%;
+ object-fit: cover;
+ border-radius: 9px;
+}
+
 .download-thumbnail-small svg {
  width: 18px;
  height: 18px;
@@ -1333,12 +1340,13 @@ function isValidHttpUrl(value) {
  }
 }
 
-function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
+function addDownload(downloadUrl, fileUrl, format, fileName, fileSize, thumbnail) {
  const downloads = loadDownloads();
  const now = Date.now();
  const normalizedFileSize = Number(fileSize);
  const normalizedDownloadUrl = normalizeStoredUrl(downloadUrl);
  const normalizedFileUrl = normalizeStoredUrl(fileUrl);
+ const normalizedThumbnail = normalizeStoredUrl(thumbnail);
  const normalizedFileName = typeof fileName === 'string'
    ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH)
    : '';
@@ -1352,6 +1360,7 @@ function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
    format,
    fileName: normalizedFileName || 'flashvidz_download',
    fileSize: Number.isFinite(normalizedFileSize) && normalizedFileSize > 0 ? normalizedFileSize : null,
+   thumbnail: normalizedThumbnail,
    timestamp: now
  };
  downloads.unshift(download);
@@ -1615,16 +1624,20 @@ function createDownloadCard(item) {
  const fileName = item.fileName || item.filename || 'flashvidz_download';
  const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
  const displayDate = formatDownloadDate(item.timestamp);
+ const thumbnailUrl = normalizeStoredUrl(item.thumbnail);
  const mediaIconPath = isVideo
    ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
    : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
+ const thumbnailMarkup = thumbnailUrl
+   ? `<img src="${thumbnailUrl}" alt="${isVideo ? 'Video' : 'Audio'} thumbnail" loading="lazy">`
+   : `<svg viewBox="0 0 24 24">
+        <path d="${mediaIconPath}"/>
+      </svg>`;
  
  card.innerHTML = `
    <div class="download-info-row">
      <div class="download-thumbnail-small">
-       <svg viewBox="0 0 24 24">
-         <path d="${mediaIconPath}"/>
-       </svg>
+       ${thumbnailMarkup}
      </div>
      <div class="download-info">
        <div class="download-header">
@@ -1933,7 +1946,8 @@ async function handleDownload() {
      safeFileUrl,
      responseFormat,
      backendFileName,
-     finalFileSize
+     finalFileSize,
+     data.thumbnail || data.thumbnailUrl
    );
 
    if (downloadId !== currentDownloadId) return;
