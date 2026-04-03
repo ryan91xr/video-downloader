@@ -1263,7 +1263,7 @@ function closeVideoModal() {
 // ==================== DOWNLOADS UI ====================
 function formatFileSize(bytes) {
  const num = Number(bytes);
- if (!Number.isFinite(num) || num <= 0) return '0 B';
+ if (!Number.isFinite(num) || num <= 0) return '—';
  const k = 1024;
  const sizes = ['B', 'KB', 'MB', 'GB'];
  const i = Math.floor(Math.log(num) / Math.log(k));
@@ -1518,12 +1518,14 @@ function createDownloadCard(item) {
 
  card.addEventListener('click', () => {
    // FIX: Use ONLY item.fileUrl for preview, with safety check
+   if (!isVideo) {
+     setMessage('Audio preview not supported yet.');
+     return;
+   }
+
    const previewUrl = item.fileUrl;
    if (!previewUrl) {
      setMessage('Video preview unavailable: missing preview URL.', 'error');
-     return;
-   }
-   if (!isVideo) {
      return;
    }
    openVideoModal(previewUrl);
