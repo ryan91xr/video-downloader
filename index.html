@@ -1217,7 +1217,6 @@ const videoModal = document.getElementById('videoModal');
 const videoModalContent = document.getElementById('videoModalContent');
 const videoModalPlayer = document.getElementById('videoModalPlayer');
 const videoModalClose = document.getElementById('videoModalClose');
-const emptyStateTemplate = document.getElementById('emptyState');
 const DIRECT_DOWNLOAD_THRESHOLD = 50 * 1024 * 1024;
 
 // ==================== LOCAL STORAGE ====================
@@ -1226,6 +1225,7 @@ function loadDownloads() {
    const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
    return stored ? JSON.parse(stored) : [];
  } catch {
+   localStorage.removeItem(CONFIG.STORAGE_KEY);
    return [];
  }
 }
@@ -1296,7 +1296,8 @@ function removeDownload(id) {
 }
 
 function openVideoModal(fileUrl) {
- if (!fileUrl) {
+ const normalizedPreviewUrl = normalizeStoredUrl(fileUrl);
+ if (!normalizedPreviewUrl) {
    if (!isActivelyDownloading()) {
      setMessage('Video preview unavailable: missing URL.', 'error');
    }
@@ -1305,7 +1306,7 @@ function openVideoModal(fileUrl) {
 
  videoModalPlayer.pause();
  videoModalPlayer.removeAttribute('src');
- videoModalPlayer.src = fileUrl;
+ videoModalPlayer.src = normalizedPreviewUrl;
  videoModalPlayer.load();
  videoModal.classList.add('active');
  videoModal.setAttribute('aria-hidden', 'false');
@@ -1478,7 +1479,13 @@ function runHybridDownloadFlow(downloadUrl, fileName, fileSize, onProgress, sign
    onProgress?.(0);
    setMessage('Starting download...', 'loading');
    setTimeout(() => {
-     window.location.href = downloadUrl;
+     const a = document.createElement('a');
+     a.href = downloadUrl;
+     a.download = fileName || 'flashvidz-download';
+     a.rel = 'noopener';
+     document.body.appendChild(a);
+     a.click();
+     document.body.removeChild(a);
    }, 120);
    return Promise.resolve(normalizedSize);
  }
@@ -1500,11 +1507,13 @@ function renderDownloads() {
  listContainer.innerHTML = '';
  
  if (downloads.length === 0) {
-   if (emptyStateTemplate) {
-     const emptyState = emptyStateTemplate.cloneNode(true);
-     emptyState.removeAttribute('id');
-     listContainer.appendChild(emptyState);
-   }
+   listContainer.innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      <h3>No downloads yet</h3>
+      <p>Your downloaded videos will appear here</p>
+    </div>
+   `;
    countBadge.textContent = '0 items';
    return;
  }
@@ -1824,6 +1833,12 @@ document.getElementById('submitBtn').addEventListener('click', handleDownload);
 
 window.addEventListener('beforeunload', () => {
  if (abortController) {
+   abortController.abort();
+ }
+});
+
+document.addEventListener('visibilitychange', () => {
+ if (document.visibilityState === 'hidden' && abortController) {
    abortController.abort();
  }
 });
