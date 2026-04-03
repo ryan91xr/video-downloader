@@ -1267,7 +1267,6 @@ function getSettings() {
  const defaults = {
    format: 'video',
    quality: 'best',
-   autoDownload: false
  };
 
  try {
@@ -1278,9 +1277,7 @@ function getSettings() {
 
    const format = parsed.format === 'audio' ? 'audio' : 'video';
    const quality = ['best', 'medium', 'low'].includes(parsed.quality) ? parsed.quality : 'best';
-   const autoDownload = parsed.autoDownload === true;
-
-   return { format, quality, autoDownload };
+   return { format, quality };
  } catch {
    return defaults;
  }
@@ -1752,7 +1749,6 @@ async function pasteLink() {
  try {
    const text = await navigator.clipboard.readText();
    document.getElementById('linkInput').value = text.trim();
-   maybeAutoDownload();
  } catch {
    setMessage('Clipboard access denied', 'error');
  } finally {
@@ -1761,16 +1757,6 @@ async function pasteLink() {
 }
 
 document.getElementById('pasteBtn').addEventListener('click', pasteLink);
-
-function maybeAutoDownload() {
- const settings = getSettings();
- const link = document.getElementById('linkInput').value.trim();
- const submitBtn = document.getElementById('submitBtn');
- if (!settings.autoDownload || !link || !isValidHttpUrl(link) || submitBtn.disabled || isActivelyDownloading()) {
-   return;
- }
- handleDownload();
-}
 
 async function handleDownload() {
  const downloadId = ++currentDownloadId;
@@ -1904,7 +1890,6 @@ async function handleDownload() {
 }
 
 document.getElementById('submitBtn').addEventListener('click', handleDownload);
-document.getElementById('linkInput').addEventListener('input', maybeAutoDownload);
 
 window.addEventListener('beforeunload', () => {
  if (abortController) {
