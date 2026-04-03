@@ -1155,6 +1155,8 @@ const tabContents = document.querySelectorAll('.tab-content');
 const tabIndicator = document.getElementById('tabIndicator');
 
 function switchTab(tabId) {
+ setMessage('', '');
+
  // Update buttons
  tabBtns.forEach(btn => {
    if (btn.dataset.tab === tabId) {
@@ -1200,6 +1202,7 @@ const CONFIG = {
    ? 'http://localhost:3000/download'
    : 'https://flashvidz-backend.onrender.com/download',
  MAX_FILE_SIZE: 500 * 1024 * 1024,
+ MAX_FILENAME_LENGTH: 180,
  STORAGE_KEY: 'flashvidz_downloads'
 };
 
@@ -1258,6 +1261,9 @@ function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
  const normalizedFileSize = Number(fileSize);
  const normalizedDownloadUrl = normalizeStoredUrl(downloadUrl);
  const normalizedFileUrl = normalizeStoredUrl(fileUrl);
+ const normalizedFileName = typeof fileName === 'string'
+   ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH)
+   : '';
  if (!normalizedDownloadUrl) {
    return null;
  }
@@ -1266,7 +1272,7 @@ function addDownload(downloadUrl, fileUrl, format, fileName, fileSize) {
    downloadUrl: normalizedDownloadUrl,
    fileUrl: normalizedFileUrl || normalizedDownloadUrl,
    format,
-   fileName,
+   fileName: normalizedFileName || 'flashvidz_download',
    fileSize: Number.isFinite(normalizedFileSize) && normalizedFileSize > 0 ? normalizedFileSize : null,
    timestamp: now
  };
@@ -1317,7 +1323,8 @@ function openVideoModal(fileUrl) {
  if (playPromise && typeof playPromise.catch === 'function') {
    playPromise.catch(() => {
     const messageEl = document.getElementById('message');
-    if (!messageEl.classList.contains('error') && !isActivelyDownloading()) {
+    const isModalActive = videoModal.classList.contains('active');
+    if (isModalActive && !messageEl.classList.contains('error') && !isActivelyDownloading()) {
       setMessage('Tap play ▶️ to start video preview', 'loading');
     }
    });
@@ -1562,6 +1569,9 @@ function createDownloadCard(item) {
  const redownloadBtn = card.querySelector('[data-action="download"]');
  redownloadBtn.addEventListener('click', async (event) => {
    event.stopPropagation();
+   if (isActivelyDownloading()) {
+     return;
+   }
    try {
      // FIX: Use ONLY item.downloadUrl for re-downloading
      const itemDownloadUrl = item.downloadUrl;
