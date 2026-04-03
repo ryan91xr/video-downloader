@@ -312,10 +312,17 @@ body {
 .downloads-list {
  display: flex;
  flex-direction: column;
- gap: 8px;
+ gap: 10px;
  max-height: min(60vh, 520px);
  overflow-y: auto;
  padding-right: 2px;
+ padding-bottom: 4px;
+ transition: all 0.25s ease;
+}
+
+.downloads-list.is-empty {
+ min-height: min(50vh, 380px);
+ justify-content: center;
 }
 
 .downloads-list::-webkit-scrollbar {
@@ -329,38 +336,54 @@ body {
 
 .download-card {
  display: flex;
- align-items: center;
- gap: 8px;
+ align-items: stretch;
+ gap: 12px;
  background: rgba(255,255,255,0.06);
  backdrop-filter: blur(18px);
- border-radius: 14px;
- padding: 8px;
+ border-radius: 16px;
+ padding: 12px;
  border: 1px solid rgba(255,255,255,0.08);
- transition: all 0.2s ease;
+ box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+ transition: background-color 0.25s ease, transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+ animation: fadeInCard 0.28s ease both;
 }
 
 .download-card:hover {
- background: rgba(255,255,255,0.1);
- transform: translateY(-1px);
+ background: rgba(255,255,255,0.09);
+ border-color: rgba(255,255,255,0.14);
+ transform: translateY(-2px);
+ box-shadow: 0 12px 26px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes fadeInCard {
+ from {
+   opacity: 0;
+   transform: translateY(8px) scale(0.99);
+ }
+ to {
+   opacity: 1;
+   transform: translateY(0) scale(1);
+ }
 }
 
 .download-info-row {
  display: flex;
- align-items: center;
- gap: 10px;
+ align-items: stretch;
+ gap: 12px;
  flex: 1;
  min-width: 0;
 }
 
 .download-thumbnail-small {
- width: 38px;
- height: 38px;
- border-radius: 9px;
+ width: 42px;
+ height: 42px;
+ border-radius: 11px;
  background: linear-gradient(135deg, #1c2b33, #2c5364);
  display: flex;
  align-items: center;
  justify-content: center;
  flex-shrink: 0;
+ margin-top: 2px;
 }
 
 .download-thumbnail-small svg {
@@ -374,7 +397,7 @@ body {
  min-width: 0;
  display: flex;
  flex-direction: column;
- gap: 6px;
+ gap: 7px;
 }
 
 .download-filename {
@@ -391,7 +414,7 @@ body {
  display: flex;
  align-items: flex-start;
  justify-content: space-between;
- gap: 10px;
+ gap: 12px;
 }
 
 .format-badge {
@@ -417,9 +440,9 @@ body {
 .download-meta {
  display: flex;
  align-items: center;
- gap: 6px;
+ gap: 8px;
  font-size: 11px;
- color: #888;
+ color: #a6b2b8;
  white-space: nowrap;
  overflow: hidden;
  text-overflow: ellipsis;
@@ -438,8 +461,8 @@ body {
 }
 
 .download-menu-btn {
- width: 32px;
- height: 32px;
+ width: 30px;
+ height: 30px;
  border-radius: 10px;
  border: none;
  background: transparent;
@@ -464,46 +487,76 @@ body {
 }
 
 .download-action-btn {
- width: 32px;
- height: 32px;
+ min-width: 34px;
+ height: 34px;
  border-radius: 10px;
  border: none;
- background: rgba(0,212,170,0.16);
- color: #00d4aa;
+ background: rgba(255,255,255,0.06);
+ color: #c7fff1;
  cursor: pointer;
  display: flex;
  align-items: center;
  justify-content: center;
- transition: all 0.2s;
+ gap: 6px;
+ padding: 0 10px;
+ font-size: 12px;
+ font-weight: 600;
+ letter-spacing: 0.2px;
+ transition: background-color 0.25s ease, transform 0.25s ease, color 0.25s ease, border-color 0.25s ease;
  flex-shrink: 0;
+ border: 1px solid transparent;
 }
 
 .download-action-btn:hover {
- background: rgba(0,212,170,0.28);
+ background: rgba(255,255,255,0.12);
+ transform: scale(1.04);
+ border-color: rgba(255,255,255,0.16);
+}
+
+.download-action-btn:active,
+.download-menu-btn:active {
+ transform: scale(0.96);
+}
+
+.download-action-btn.primary {
+ background: rgba(0,212,170,0.18);
  color: #7dffe2;
+ border-color: rgba(0,212,170,0.25);
+}
+
+.download-action-btn.primary:hover {
+ background: rgba(0,212,170,0.28);
+ border-color: rgba(0,212,170,0.4);
 }
 
 .download-action-btn svg {
- width: 16px;
- height: 16px;
+ width: 14px;
+ height: 14px;
  fill: currentColor;
 }
 
 .download-actions {
  display: flex;
  align-items: center;
- gap: 4px;
+ align-self: center;
+ gap: 6px;
  margin-left: auto;
 }
 
 .empty-state {
  text-align: center;
- color: #888;
- padding: 60px 20px;
+ color: #98a7ae;
+ padding: 56px 20px;
  background: rgba(255,255,255,0.03);
  backdrop-filter: blur(18px);
  border-radius: 20px;
  border: 1px solid rgba(255,255,255,0.08);
+ width: 100%;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ gap: 2px;
 }
 
 .empty-state svg {
@@ -1055,7 +1108,7 @@ body {
      <div class="empty-state" id="emptyState">
        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
        <h3>No downloads yet</h3>
-       <p>Your downloaded videos will appear here</p>
+       <p>Paste a link to start downloading</p>
      </div>
    </div>
  </div>
@@ -1560,17 +1613,19 @@ function renderDownloads() {
  listContainer.innerHTML = '';
  
  if (downloads.length === 0) {
+   listContainer.classList.add('is-empty');
    listContainer.innerHTML = `
     <div class="empty-state">
       <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
       <h3>No downloads yet</h3>
-      <p>Your downloaded videos will appear here</p>
+      <p>Paste a link to start downloading</p>
     </div>
    `;
    countBadge.textContent = '0 items';
    return;
  }
  
+ listContainer.classList.remove('is-empty');
  countBadge.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
  
  downloads.forEach(item => {
@@ -1615,11 +1670,13 @@ function createDownloadCard(item) {
        </div>
      </div>
      <div class="download-actions">
-       <button class="download-action-btn" data-action="download" title="Download">
-         <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
+       <button class="download-action-btn" data-action="preview" title="Preview">
+         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+         <span>Preview</span>
        </button>
-       <button class="download-menu-btn" data-action="share" title="Share">
-         <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77l-7.13-4.15a2.91 2.91 0 0 0 0-1.39l7.13-4.15A2.99 2.99 0 1 0 15 5a2.9 2.9 0 0 0 .04.49L7.91 9.64a3 3 0 1 0 0 4.72l7.13 4.15c-.03.16-.04.32-.04.49a3 3 0 1 0 3-2.92z"/></svg>
+       <button class="download-action-btn primary" data-action="download" title="Download">
+         <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
+         <span>Save</span>
        </button>
        <button class="download-menu-btn" data-action="remove" data-id="${item.id}" title="Remove">
          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
@@ -1649,34 +1706,25 @@ function createDownloadCard(item) {
    }
  });
 
- const shareBtn = card.querySelector('[data-action="share"]');
- shareBtn.addEventListener('click', async (event) => {
+ const previewBtn = card.querySelector('[data-action="preview"]');
+ previewBtn.addEventListener('click', async (event) => {
    event.stopPropagation();
-   if (navigator.share) {
-     try {
-       const candidateFileUrl = normalizeStoredUrl(item.fileUrl);
-       const candidateDownloadUrl = normalizeStoredUrl(item.downloadUrl);
-       const shareUrl = isValidHttpUrl(candidateDownloadUrl)
-         ? candidateDownloadUrl
-         : isValidHttpUrl(candidateFileUrl)
-         ? candidateFileUrl
-         : null;
-       if (!shareUrl) {
-         throw new Error('Missing share URL');
-       }
-       await navigator.share({
-         title: 'FlashVidz Download',
-         text: fileName,
-         url: shareUrl
-       });
-     } catch (error) {
-       if (error?.name !== 'AbortError') {
-         alert('Could not share this file right now.');
-       }
-     }
-   } else {
-     alert('Sharing is not supported on this browser.');
+   if (isActivelyDownloading()) {
+     return;
    }
+
+   if (!isVideo) {
+     setMessage('Audio preview not supported yet.', 'loading');
+     return;
+   }
+
+   const previewUrl = item.fileUrl;
+   if (!previewUrl) {
+     setMessage('Video preview unavailable: missing preview URL.', 'error');
+     return;
+   }
+
+   openVideoModal(previewUrl);
  });
 
  // Add delete handler
