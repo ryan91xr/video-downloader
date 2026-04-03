@@ -1263,6 +1263,29 @@ function loadDownloads() {
  }
 }
 
+function getSettings() {
+ const defaults = {
+   format: 'video',
+   quality: 'best',
+   autoDownload: false
+ };
+
+ try {
+   const stored = localStorage.getItem('settings');
+   if (!stored) return defaults;
+   const parsed = JSON.parse(stored);
+   if (!parsed || typeof parsed !== 'object') return defaults;
+
+   const format = parsed.format === 'audio' ? 'audio' : 'video';
+   const quality = ['best', 'medium', 'low'].includes(parsed.quality) ? parsed.quality : 'best';
+   const autoDownload = parsed.autoDownload === true;
+
+   return { format, quality, autoDownload };
+ } catch {
+   return defaults;
+ }
+}
+
 function saveDownloads(downloads) {
  try {
    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(downloads));
@@ -1729,6 +1752,7 @@ async function pasteLink() {
  try {
    const text = await navigator.clipboard.readText();
    document.getElementById('linkInput').value = text.trim();
+   maybeAutoDownload();
  } catch {
    setMessage('Clipboard access denied', 'error');
  } finally {
@@ -1738,9 +1762,25 @@ async function pasteLink() {
 
 document.getElementById('pasteBtn').addEventListener('click', pasteLink);
 
+function maybeAutoDownload() {
+ const settings = getSettings();
+ const link = document.getElementById('linkInput').value.trim();
+ const submitBtn = document.getElementById('submitBtn');
+ if (!settings.autoDownload || !link || !isValidHttpUrl(link) || submitBtn.disabled || isActivelyDownloading()) {
+   return;
+ }
+ handleDownload();
+}
+
 async function handleDownload() {
  const downloadId = ++currentDownloadId;
  const link = document.getElementById('linkInput').value.trim();
+ const settings = getSettings();
+ const selectedQuality = settings.quality;
+ const selectedDownloadFormat = settings.format || selectedFormat;
+ if (selectedFormat !== selectedDownloadFormat) {
+   selectFormat(selectedDownloadFormat);
+ }
  const btn = document.getElementById('submitBtn');
  if (btn.disabled) {
    return;
@@ -1779,7 +1819,8 @@ async function handleDownload() {
      headers: { 'Content-Type': 'application/json' },
      body: JSON.stringify({ 
        url: link, 
-       format: selectedFormat 
+       format: selectedDownloadFormat,
+       quality: selectedQuality
      }),
      signal: abortController.signal
    });
@@ -1799,7 +1840,7 @@ async function handleDownload() {
    if (!downloadUrl) {
      throw new Error('Invalid response from server');
    }
-   const responseFormat = data.format || selectedFormat;
+   const responseFormat = data.format || selectedDownloadFormat;
    const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
    const backendFileSize = Number(data.fileSize) || 0;
 
@@ -1863,6 +1904,7 @@ async function handleDownload() {
 }
 
 document.getElementById('submitBtn').addEventListener('click', handleDownload);
+document.getElementById('linkInput').addEventListener('input', maybeAutoDownload);
 
 window.addEventListener('beforeunload', () => {
  if (abortController) {
