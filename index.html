@@ -1216,6 +1216,7 @@ const videoModalContent = document.getElementById('videoModalContent');
 const videoModalPlayer = document.getElementById('videoModalPlayer');
 const videoModalClose = document.getElementById('videoModalClose');
 const emptyStateTemplate = document.getElementById('emptyState');
+const DIRECT_DOWNLOAD_THRESHOLD = 50 * 1024 * 1024;
 
 // ==================== LOCAL STORAGE ====================
 function loadDownloads() {
@@ -1288,7 +1289,9 @@ function removeDownload(id) {
 
 function openVideoModal(fileUrl) {
  if (!fileUrl) {
-   setMessage('Video preview unavailable: missing URL.', 'error');
+   if (!isActivelyDownloading()) {
+     setMessage('Video preview unavailable: missing URL.', 'error');
+   }
    return;
  }
 
@@ -1300,8 +1303,11 @@ function openVideoModal(fileUrl) {
  videoModal.setAttribute('aria-hidden', 'false');
  previousBodyOverflow = document.body.style.overflow;
  document.body.style.overflow = 'hidden';
- if (!modalHistoryPushed) {
+ const hasModalState = Boolean(history.state && history.state.videoModal);
+ if (!hasModalState) {
    history.pushState({ videoModal: true }, '');
+   modalHistoryPushed = true;
+ } else {
    modalHistoryPushed = true;
  }
 
@@ -1309,7 +1315,7 @@ function openVideoModal(fileUrl) {
  if (playPromise && typeof playPromise.catch === 'function') {
    playPromise.catch(() => {
     const messageEl = document.getElementById('message');
-    if (!messageEl.classList.contains('error')) {
+    if (!messageEl.classList.contains('error') && !isActivelyDownloading()) {
       setMessage('Tap play ▶️ to start video preview', 'loading');
     }
    });
@@ -1323,7 +1329,8 @@ function closeVideoModal() {
  videoModalPlayer.removeAttribute('src');
  videoModalPlayer.load();
  document.body.style.overflow = previousBodyOverflow;
- if (modalHistoryPushed && !closingFromPopState) {
+ const hasModalState = Boolean(history.state && history.state.videoModal);
+ if (modalHistoryPushed && hasModalState && !closingFromPopState) {
    modalHistoryPushed = false;
    history.back();
  } else {
@@ -1453,6 +1460,19 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
  });
 }
 
+function runHybridDownloadFlow(downloadUrl, fileName, fileSize, onProgress, signal) {
+ const normalizedSize = Number(fileSize) || 0;
+ if (normalizedSize > DIRECT_DOWNLOAD_THRESHOLD) {
+   if (signal?.aborted) {
+     return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+   }
+   onProgress?.(100);
+   window.location.href = downloadUrl;
+   return Promise.resolve(normalizedSize);
+ }
+ return runDownloadFlow(downloadUrl, fileName, onProgress, signal);
+}
+
 function formatDownloadDate(timestamp) {
  const parsed = Number(timestamp);
  const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
@@ -1468,9 +1488,11 @@ function renderDownloads() {
  listContainer.innerHTML = '';
  
  if (downloads.length === 0) {
-   const emptyState = emptyStateTemplate.cloneNode(true);
-   emptyState.removeAttribute('id');
-   listContainer.appendChild(emptyState);
+   if (emptyStateTemplate) {
+     const emptyState = emptyStateTemplate.cloneNode(true);
+     emptyState.removeAttribute('id');
+     listContainer.appendChild(emptyState);
+   }
    countBadge.textContent = '0 items';
    return;
  }
@@ -1541,9 +1563,9 @@ function createDownloadCard(item) {
      if (!itemDownloadUrl) {
        throw new Error('Missing download URL');
      }
-     await runDownloadFlow(itemDownloadUrl, fileName, (progress) => {
-       setMessage(`Downloading... ${progress}%`, 'loading');
-     }, undefined);
+    await runHybridDownloadFlow(itemDownloadUrl, fileName, fileSize, (progress) => {
+      setMessage(`Downloading... ${progress}%`, 'loading');
+    }, undefined);
      setMessage('Download complete!', 'success');
    } catch (error) {
      setMessage(error.message || 'Download failed', 'error');
@@ -1621,6 +1643,12 @@ function setMessage(text, type = '') {
  const msg = document.getElementById('message');
  msg.textContent = text;
  msg.className = type;
+}
+
+function isActivelyDownloading() {
+ const btn = document.getElementById('submitBtn');
+ const msg = document.getElementById('message');
+ return Boolean(btn?.disabled && msg?.classList.contains('loading'));
 }
 
 function resetUI(delay = 2000, downloadId = currentDownloadId) {
@@ -1716,7 +1744,7 @@ async function handleDownload() {
    const backendFileSize = Number(data.fileSize) || 0;
 
    updateMessage('Downloading... 0%', 'loading');
-   const downloadedFileSize = await runDownloadFlow(downloadUrl, backendFileName, (progress) => {
+   const downloadedFileSize = await runHybridDownloadFlow(downloadUrl, backendFileName, backendFileSize, (progress) => {
      updateMessage(`Downloading... ${progress}%`, 'loading');
    }, abortController.signal);
 
