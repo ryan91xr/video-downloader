@@ -1488,10 +1488,14 @@ function createDownloadCard(item) {
    event.stopPropagation();
    if (navigator.share) {
      try {
+       const shareUrl = item.fileUrl || item.downloadUrl;
+       if (!shareUrl) {
+         throw new Error('Missing share URL');
+       }
        await navigator.share({
          title: 'FlashVidz Download',
          text: fileName,
-         url: item.downloadUrl || item.fileUrl
+         url: shareUrl
        });
      } catch (error) {
        if (error?.name !== 'AbortError') {
@@ -1572,6 +1576,9 @@ document.getElementById('pasteBtn').addEventListener('click', pasteLink);
 async function handleDownload() {
  const link = document.getElementById('linkInput').value.trim();
  const btn = document.getElementById('submitBtn');
+ if (btn.disabled) {
+   return;
+ }
  
  if (!link) {
    setMessage('Enter a video link', 'error');
@@ -1631,10 +1638,15 @@ async function handleDownload() {
    // FIX: Use downloadedFileSize if available, fallback to backendFileSize
    const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize;
 
+   if (!downloadUrl) {
+     throw new Error('Missing download URL');
+   }
+   const safeFileUrl = data.fileUrl || null;
+
    // Save to localStorage using backend metadata
    addDownload(
      downloadUrl,
-     data.fileUrl,
+     safeFileUrl,
      responseFormat,
      backendFileName,
      finalFileSize
