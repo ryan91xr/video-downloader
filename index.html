@@ -1588,7 +1588,6 @@ function createDownloadCard(item) {
  
  const normalizedFormat = (item.format || 'video').toLowerCase();
  const isVideo = normalizedFormat === 'video';
- const formatLabel = isVideo ? 'VIDEO' : 'AUDIO';
  const fileName = item.fileName || item.filename || 'flashvidz_download';
  const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
  const displayDate = formatDownloadDate(item.timestamp);
@@ -1606,7 +1605,6 @@ function createDownloadCard(item) {
      <div class="download-info">
        <div class="download-header">
          <div class="download-filename" title="${fileName}">${fileName}</div>
-         <span class="format-badge ${isVideo ? 'video' : 'audio'}">${formatLabel}</span>
        </div>
        <div class="download-meta">
          <span>
