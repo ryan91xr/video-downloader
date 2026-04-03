@@ -1205,7 +1205,6 @@ const CONFIG = {
 
 // ==================== STATE ====================
 let abortController = null;
-let isAborted = false;
 let previousBodyOverflow = '';
 let currentDownloadId = 0;
 let modalHistoryPushed = false;
@@ -1466,8 +1465,11 @@ function runHybridDownloadFlow(downloadUrl, fileName, fileSize, onProgress, sign
    if (signal?.aborted) {
      return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
    }
-   onProgress?.(100);
-   window.location.href = downloadUrl;
+   onProgress?.(0);
+   setMessage('Starting download...', 'loading');
+   setTimeout(() => {
+     window.location.href = downloadUrl;
+   }, 120);
    return Promise.resolve(normalizedSize);
  }
  return runDownloadFlow(downloadUrl, fileName, onProgress, signal);
@@ -1708,7 +1710,6 @@ async function handleDownload() {
    return;
  }
 
- isAborted = false;
  updateMessage('Starting download...', 'loading');
 
  abortController = new AbortController();
@@ -1798,8 +1799,7 @@ async function handleDownload() {
    if (downloadId === currentDownloadId) {
      abortController = null;
    }
-   resetUI(isAborted ? 0 : 2000, downloadId);
-   isAborted = false;
+   resetUI(2000, downloadId);
  }
 }
 
@@ -1828,7 +1828,9 @@ videoModal.addEventListener('click', (event) => {
 });
 
 videoModalPlayer.addEventListener('error', () => {
- setMessage('Unable to preview this video.', 'error');
+ if (videoModal.classList.contains('active') && !isActivelyDownloading()) {
+   setMessage('Unable to preview this video.', 'error');
+ }
 });
 
 // Initial render of downloads (in case we're on that tab or for count)
