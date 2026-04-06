@@ -329,12 +329,12 @@ body {
 
 .download-card {
  display: flex;
- align-items: flex-start;
- gap: 12px;
+ align-items: center;
+ gap: 14px;
  background: rgba(255,255,255,0.06);
  backdrop-filter: blur(18px);
  border-radius: 14px;
- padding: 16px;
+ padding: 12px;
  border: 1px solid rgba(255,255,255,0.08);
  transition: transform 0.2s ease;
 }
@@ -346,17 +346,18 @@ body {
 
 .download-info-row {
  display: flex;
- align-items: flex-start;
+ align-items: center;
  gap: 10px;
  flex: 1;
  min-width: 0;
 }
 
 .download-thumbnail-small {
- width: 38px;
- height: 38px;
- border-radius: 9px;
- background: rgba(255,255,255,0.05);
+ width: 110px;
+ height: 80px;
+ border-radius: 8px;
+ overflow: hidden;
+ background: #111;
  display: flex;
  align-items: center;
  justify-content: center;
@@ -368,12 +369,11 @@ body {
  width: 100%;
  height: 100%;
  object-fit: cover;
- border-radius: 9px;
 }
 
 .download-thumbnail-small svg {
- width: 18px;
- height: 18px;
+ width: 24px;
+ height: 24px;
  fill: rgba(255,255,255,0.4);
 }
 
@@ -391,20 +391,22 @@ body {
 
 .download-info {
  flex: 1;
- min-width: 0;
  display: flex;
  flex-direction: column;
- gap: 6px;
+ justify-content: center;
+ min-width: 0;
+ gap: 4px;
 }
 
 .download-filename {
  font-size: 15px;
- font-weight: 700;
- line-height: 1.3;
- color: white;
- white-space: nowrap;
+ font-weight: 600;
+ line-height: 1.2;
+ color: #fff;
+ display: -webkit-box;
+ -webkit-line-clamp: 2;
+ -webkit-box-orient: vertical;
  overflow: hidden;
- text-overflow: ellipsis;
 }
 
 .download-header {
@@ -432,14 +434,12 @@ body {
 }
 
 .download-meta {
- display: flex;
- width: 100%;
- flex-direction: column;
- align-items: flex-start;
- gap: 2px;
- margin-top: 2px;
  font-size: 12px;
- color: #9aa0a6;
+ color: #bbb;
+ margin-top: 4px;
+ display: flex;
+ flex-direction: column;
+ gap: 2px;
 }
 
 .meta-left {
@@ -531,11 +531,63 @@ body {
 }
 
 .download-actions {
- display: flex;
+ display: none;
  align-items: center;
  gap: 12px;
  margin-left: auto;
  flex-shrink: 0;
+}
+
+.menu-wrapper {
+ position: relative;
+ flex-shrink: 0;
+}
+
+.menu-btn {
+ background: transparent;
+ border: none;
+ color: #ccc;
+ font-size: 20px;
+ line-height: 1;
+ padding: 4px 8px;
+ border-radius: 8px;
+ cursor: pointer;
+}
+
+.menu-btn:hover {
+ background: rgba(255,255,255,0.08);
+}
+
+.menu-dropdown {
+ position: absolute;
+ right: 0;
+ top: 30px;
+ background: #222;
+ border-radius: 8px;
+ padding: 6px 0;
+ min-width: 120px;
+ border: 1px solid rgba(255,255,255,0.12);
+ box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+ z-index: 30;
+}
+
+.menu-dropdown .menu-item {
+ width: 100%;
+ padding: 10px 14px;
+ background: none;
+ border: none;
+ color: #fff;
+ text-align: left;
+ cursor: pointer;
+ font-size: 13px;
+}
+
+.menu-dropdown .menu-item:hover {
+ background: rgba(255,255,255,0.08);
+}
+
+.hidden {
+ display: none;
 }
 
 .empty-state {
@@ -1668,28 +1720,39 @@ function createDownloadCard(item) {
            <span>
              <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
              ${displayDate}
-           </span>
+          </span>
          </div>
           <span class="meta-size">${formatFileSize(fileSize)}</span>
        </div>
      </div>
-     <div class="download-actions">
-       <button class="download-action-btn primary" data-action="download" title="Download" aria-label="Download file">
-         <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7z"/></svg>
-       </button>
-       <button class="download-menu-btn" data-action="share" title="Share" aria-label="Share file">
-         <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77l-7.13-4.15a2.91 2.91 0 0 0 0-1.39l7.13-4.15A2.99 2.99 0 1 0 15 5a2.9 2.9 0 0 0 .04.49L7.91 9.64a3 3 0 1 0 0 4.72l7.13 4.15c-.03.16-.04.32-.04.49a3 3 0 1 0 3-2.92z"/></svg>
-       </button>
-       <button class="download-menu-btn" data-action="remove" data-id="${item.id}" title="Remove" aria-label="Remove from download history">
-         <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-       </button>
+     <div class="menu-wrapper">
+       <button class="menu-btn" aria-label="Open menu" title="More options">⋮</button>
+       <div class="menu-dropdown hidden">
+         <button class="menu-item save" data-action="download">Save</button>
+         <button class="menu-item share" data-action="share">Share</button>
+         <button class="menu-item delete" data-action="remove">Delete</button>
+       </div>
      </div>
    </div>
  `;
  
- const redownloadBtn = card.querySelector('[data-action="download"]');
+ const menuBtn = card.querySelector('.menu-btn');
+ const menuDropdown = card.querySelector('.menu-dropdown');
+
+ menuBtn.addEventListener('click', (event) => {
+   event.stopPropagation();
+   document.querySelectorAll('.menu-dropdown').forEach(dropdown => {
+     if (dropdown !== menuDropdown) {
+       dropdown.classList.add('hidden');
+     }
+   });
+   menuDropdown.classList.toggle('hidden');
+ });
+
+ const redownloadBtn = card.querySelector('.menu-item.save');
  redownloadBtn.addEventListener('click', async (event) => {
    event.stopPropagation();
+   menuDropdown.classList.add('hidden');
    if (isActivelyDownloading()) {
      return;
    }
@@ -1708,9 +1771,10 @@ function createDownloadCard(item) {
    }
  });
 
- const shareBtn = card.querySelector('[data-action="share"]');
+ const shareBtn = card.querySelector('.menu-item.share');
  shareBtn.addEventListener('click', async (event) => {
    event.stopPropagation();
+   menuDropdown.classList.add('hidden');
    const candidateFileUrl = normalizeStoredUrl(item.fileUrl);
    const candidateDownloadUrl = normalizeStoredUrl(item.downloadUrl);
    const shareUrl = isValidHttpUrl(candidateDownloadUrl)
@@ -1754,9 +1818,10 @@ function createDownloadCard(item) {
  });
 
  // Add delete handler
- const deleteBtn = card.querySelector('[data-action="remove"]');
+ const deleteBtn = card.querySelector('.menu-item.delete');
  deleteBtn.addEventListener('click', (event) => {
    event.stopPropagation();
+   menuDropdown.classList.add('hidden');
    if (confirm('Remove this download from history?')) {
      removeDownload(item.id);
    }
@@ -1786,6 +1851,14 @@ function createDownloadCard(item) {
  
  return card;
 }
+
+document.addEventListener('click', (event) => {
+ if (!event.target.closest('.menu-wrapper')) {
+   document.querySelectorAll('.menu-dropdown').forEach(dropdown => {
+     dropdown.classList.add('hidden');
+   });
+ }
+});
 
 // ==================== UTILS ====================
 function detectPlatform(link) {
