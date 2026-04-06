@@ -346,7 +346,7 @@ body {
 
 .download-info-row {
  display: flex;
- align-items: center;
+ align-items: flex-start;
  gap: 10px;
  flex: 1;
  min-width: 0;
@@ -389,13 +389,19 @@ body {
  font-weight: 600;
 }
 
-.download-info {
+.download-main {
  flex: 1;
  display: flex;
  flex-direction: column;
  justify-content: center;
  min-width: 0;
- gap: 4px;
+}
+
+.download-top {
+ display: flex;
+ justify-content: space-between;
+ align-items: flex-start;
+ gap: 10px;
 }
 
 .download-filename {
@@ -407,10 +413,6 @@ body {
  -webkit-line-clamp: 2;
  -webkit-box-orient: vertical;
  overflow: hidden;
-}
-
-.download-header {
- display: block;
 }
 
 .format-badge {
@@ -436,24 +438,9 @@ body {
 .download-meta {
  font-size: 12px;
  color: #bbb;
- margin-top: 4px;
+ margin-top: 6px;
  display: flex;
  flex-direction: column;
- gap: 2px;
-}
-
-.meta-left {
- display: flex;
- align-items: center;
- gap: 4px;
- overflow: hidden;
- text-overflow: ellipsis;
- white-space: nowrap;
-}
-
-.meta-size {
- flex-shrink: 0;
- margin-top: 2px;
 }
 
 .download-meta span {
@@ -1711,29 +1698,24 @@ function createDownloadCard(item) {
          ? `<span class="video-duration">${item.duration}</span>`
          : ``}
      </div>
-     <div class="download-info">
-       <div class="download-header">
-         <div class="download-filename" title="${fileName}">${fileName}</div>
-       </div>
-       <div class="download-meta">
-         <div class="meta-left">
-           <span>
-             <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
-             ${displayDate}
-          </span>
-         </div>
-          <span class="meta-size">${formatFileSize(fileSize)}</span>
-       </div>
-     </div>
-     <div class="menu-wrapper">
-       <button class="menu-btn" aria-label="Open menu" title="More options">⋮</button>
-       <div class="menu-dropdown hidden">
-         <button class="menu-item save" data-action="download">Save</button>
-         <button class="menu-item share" data-action="share">Share</button>
-         <button class="menu-item delete" data-action="remove">Delete</button>
-       </div>
-     </div>
-   </div>
+    <div class="download-main">
+      <div class="download-top">
+        <div class="download-filename" title="${fileName}">${fileName}</div>
+        <div class="menu-wrapper">
+          <button class="menu-btn" aria-label="Open menu" title="More options">⋮</button>
+          <div class="menu-dropdown hidden">
+            <button class="menu-item save" data-action="download">Save</button>
+            <button class="menu-item share" data-action="share">Share</button>
+            <button class="menu-item delete" data-action="remove">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div class="download-meta">
+        <span>${displayDate}</span>
+        <span>${formatFileSize(fileSize)}</span>
+      </div>
+    </div>
+  </div>
  `;
  
  const menuBtn = card.querySelector('.menu-btn');
