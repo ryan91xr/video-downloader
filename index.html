@@ -12,11 +12,14 @@ body {
  margin: 0;
  padding: 0;
  min-height: 100vh;
- display: flex;
- flex-direction: column;
- align-items: center;
  background: linear-gradient(135deg, #0f2027, #1c2b33, #2c5364);
  font-family: 'Segoe UI', sans-serif;
+}
+
+.app-container {
+ max-width: 420px;
+ margin: 0 auto;
+ width: 100%;
 }
 
 /* ==================== HEADER ==================== */
@@ -317,7 +320,7 @@ body {
  overflow-y: auto;
  padding-right: 6px;
  position: relative;
- z-index: 1;
+ z-index: auto;
 }
 
 .downloads-list::-webkit-scrollbar {
@@ -340,7 +343,7 @@ body {
  border: 1px solid rgba(255,255,255,0.08);
  transition: transform 0.2s ease;
  position: relative;
- z-index: 1;
+ z-index: auto;
 }
 
 .download-card:hover {
@@ -569,14 +572,14 @@ body {
 }
 
 .menu-dropdown {
- position: fixed !important;
+ position: absolute;
  background: #222;
  border-radius: 8px;
  padding: 6px 0;
  min-width: 120px;
  border: 1px solid rgba(255,255,255,0.12);
  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
- z-index: 99999 !important;
+ z-index: 99999;
 }
 
 .menu-dropdown .menu-item {
@@ -1058,6 +1061,7 @@ body {
  </div>
 </nav>
 
+<div class="app-container">
 <!-- ==================== HEADER ==================== -->
 <header class="app-header">
  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">☰</button>
@@ -1173,6 +1177,7 @@ body {
 
 <!-- ==================== FOOTER ==================== -->
 <footer class="footer">FlashVidz</footer>
+</div>
 
 <script>
 // ==================== FORMAT SELECTOR ====================
@@ -1754,26 +1759,12 @@ function createDownloadCard(item) {
        dropdown.classList.add('hidden');
      }
    });
+   const wrapper = menuBtn.closest('.menu-wrapper');
    const rect = menuBtn.getBoundingClientRect();
+   const parentRect = wrapper.getBoundingClientRect();
 
-   let top = rect.bottom + 5;
-   let left = rect.right - 120;
-
-   // Prevent bottom overflow
-   const dropdownHeight = 120;
-   if (top + dropdownHeight > window.innerHeight) {
-     top = rect.top - dropdownHeight - 5;
-   }
-
-   // Prevent right overflow
-   if (left + 130 > window.innerWidth) {
-     left = window.innerWidth - 140;
-   }
-
-   // Prevent left overflow
-   if (left < 10) {
-     left = 10;
-   }
+   let top = rect.bottom - parentRect.top + 5;
+   let left = rect.right - parentRect.left - 120;
 
    menuDropdown.style.top = top + 'px';
    menuDropdown.style.left = left + 'px';
