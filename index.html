@@ -1760,15 +1760,33 @@ function createDownloadCard(item) {
      }
    });
    const wrapper = menuBtn.closest('.menu-wrapper');
+   const shouldShow = menuDropdown.classList.contains('hidden');
+
+   if (!shouldShow) {
+     menuDropdown.classList.add('hidden');
+     return;
+   }
+
+   menuDropdown.classList.remove('hidden');
+
    const rect = menuBtn.getBoundingClientRect();
    const parentRect = wrapper.getBoundingClientRect();
+   const dropdownRect = menuDropdown.getBoundingClientRect();
 
-   let top = rect.bottom - parentRect.top + 5;
-   let left = rect.right - parentRect.left - 120;
+   let top = rect.bottom - parentRect.top + 2;
+
+   // Align right edge of dropdown with button
+   let left = rect.right - parentRect.left - dropdownRect.width;
+
+   const wrapperWidth = wrapper.offsetWidth;
+
+   if (left < 0) left = 8;
+   if (left + dropdownRect.width > wrapperWidth) {
+     left = wrapperWidth - dropdownRect.width - 8;
+   }
 
    menuDropdown.style.top = top + 'px';
    menuDropdown.style.left = left + 'px';
-   menuDropdown.classList.toggle('hidden');
  });
 
  const redownloadBtn = card.querySelector('.menu-item.save');
