@@ -316,6 +316,8 @@ body {
  max-height: none;
  overflow-y: auto;
  padding-right: 6px;
+ position: relative;
+ z-index: 1;
 }
 
 .downloads-list::-webkit-scrollbar {
@@ -337,6 +339,8 @@ body {
  padding: 12px;
  border: 1px solid rgba(255,255,255,0.08);
  transition: transform 0.2s ease;
+ position: relative;
+ z-index: 1;
 }
 
 .download-card:hover {
@@ -565,16 +569,14 @@ body {
 }
 
 .menu-dropdown {
- position: absolute;
- right: 0;
- top: 30px;
+ position: fixed !important;
  background: #222;
  border-radius: 8px;
  padding: 6px 0;
  min-width: 120px;
  border: 1px solid rgba(255,255,255,0.12);
  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
- z-index: 9999;
+ z-index: 99999 !important;
 }
 
 .menu-dropdown .menu-item {
@@ -1752,6 +1754,9 @@ function createDownloadCard(item) {
        dropdown.classList.add('hidden');
      }
    });
+   const rect = menuBtn.getBoundingClientRect();
+   menuDropdown.style.top = (rect.bottom + 5) + 'px';
+   menuDropdown.style.left = (rect.right - 120) + 'px';
    menuDropdown.classList.toggle('hidden');
  });
 
