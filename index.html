@@ -552,7 +552,7 @@ body {
 }
 
 .menu-wrapper {
- position: relative;
+ position: static;
  flex-shrink: 0;
 }
 
@@ -572,14 +572,14 @@ body {
 }
 
 .menu-dropdown {
- position: absolute;
+ position: fixed;
  background: #222;
  border-radius: 8px;
  padding: 6px 0;
  min-width: 120px;
  border: 1px solid rgba(255,255,255,0.12);
  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
- z-index: 99999;
+ z-index: 999999;
 }
 
 .menu-dropdown .menu-item {
@@ -1759,7 +1759,6 @@ function createDownloadCard(item) {
        dropdown.classList.add('hidden');
      }
    });
-   const wrapper = menuBtn.closest('.menu-wrapper');
    const shouldShow = menuDropdown.classList.contains('hidden');
 
    if (!shouldShow) {
@@ -1770,19 +1769,16 @@ function createDownloadCard(item) {
    menuDropdown.classList.remove('hidden');
 
    const rect = menuBtn.getBoundingClientRect();
-   const parentRect = wrapper.getBoundingClientRect();
-   const dropdownRect = menuDropdown.getBoundingClientRect();
 
-   let top = rect.bottom - parentRect.top + 2;
+   menuDropdown.style.position = 'fixed';
 
-   // Align right edge of dropdown with button
-   let left = rect.right - parentRect.left - dropdownRect.width;
+   let top = rect.bottom + 6;
+   let left = rect.right - menuDropdown.offsetWidth;
 
-   const wrapperWidth = wrapper.offsetWidth;
-
-   if (left < 0) left = 8;
-   if (left + dropdownRect.width > wrapperWidth) {
-     left = wrapperWidth - dropdownRect.width - 8;
+   // Prevent overflow
+   if (left < 8) left = 8;
+   if (left + menuDropdown.offsetWidth > window.innerWidth) {
+     left = window.innerWidth - menuDropdown.offsetWidth - 8;
    }
 
    menuDropdown.style.top = top + 'px';
