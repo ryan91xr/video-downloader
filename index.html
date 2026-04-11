@@ -1863,10 +1863,10 @@ function createDownloadCard(item) {
  const displayDate = formatDownloadDate(item.timestamp);
  
  // Sanitize thumbnail URL - critical XSS fix
- let thumbnailUrl = null;
- if (typeof item.thumbnail === "string" && item.thumbnail.trim().length > 5) {
-   thumbnailUrl = normalizeStoredUrl(item.thumbnail.trim());
- }
+ const thumbnailUrl =
+   typeof item.thumbnail === "string" && item.thumbnail.trim().length > 5
+   ? item.thumbnail.trim()
+   : null;
  
  const mediaIconPath = isVideo
    ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
@@ -1875,16 +1875,14 @@ function createDownloadCard(item) {
  // Build thumbnail markup safely
  let thumbnailMarkup;
  if (thumbnailUrl) {
-   // Use safe URL in src, with fallback on error
-   const safeThumb = escapeHtml(thumbnailUrl);
-   thumbnailMarkup = `<img src="${safeThumb}" alt="thumbnail" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-      <svg class="thumbnail-fallback" viewBox="0 0 24 24" style="display:none; position:absolute;">
-        <path d="${mediaIconPath}"/>
-      </svg>`;
+   thumbnailMarkup = `<img 
+src="${thumbnailUrl}" 
+alt="thumbnail"
+loading="lazy"
+onerror="this.onerror=null; this.closest('.download-thumbnail-small').classList.remove('has-thumbnail'); this.style.display='none';"
+/>`;
  } else {
-   thumbnailMarkup = `<svg class="thumbnail-fallback" viewBox="0 0 24 24">
-        <path d="${mediaIconPath}"/>
-      </svg>`;
+   thumbnailMarkup = ``;
  }
 
  // Sanitize duration
@@ -1900,6 +1898,9 @@ function createDownloadCard(item) {
    <div class="download-info-row">
      <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">
        ${thumbnailMarkup}
+       <svg class="thumbnail-fallback" viewBox="0 0 24 24">
+         <path d="${mediaIconPath}"/>
+       </svg>
        ${durationBadge}
      </div>
      <div class="download-info">
