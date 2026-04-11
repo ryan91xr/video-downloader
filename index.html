@@ -863,31 +863,6 @@ body {
  z-index: 40;
 }
 
-.global-progress-container {
- width: 100%;
- max-width: 360px;
- padding: 0 20px;
- margin: 12px 0 16px 0;
- display: none;
- position: relative;
- z-index: 40;
-}
-
-.global-progress-bar {
- height: 4px;
- width: 0%;
- background: linear-gradient(90deg, #00d4aa, #00b894);
- border-radius: 6px;
- box-shadow: 0 0 8px rgba(0, 212, 170, 0.4);
- transition: width 0.25s ease;
-}
-
-.global-progress-text {
- font-size: 12px;
- color: #b0c4c4;
- margin-top: 6px;
-}
-
 #message {
  font-size: 14px;
  min-height: 20px;
@@ -1146,11 +1121,6 @@ body {
        <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
      </button>
    </div>
- </div>
-
- <div id="global-progress-container" class="global-progress-container">
-   <div class="global-progress-bar"></div>
-   <div class="global-progress-text">Downloading...</div>
  </div>
 
  <!-- Message -->
@@ -2027,7 +1997,6 @@ globalDownloadMenu.addEventListener('click', async (event) => {
        throw new Error('Missing download URL');
      }
      await runHybridDownloadFlow(itemDownloadUrl, fileName, fileSize, (progress) => {
-       updateGlobalProgress(progress);
        setMessage(`Downloading... ${progress}%`, 'loading');
      }, undefined);
      setMessage('Download complete!', 'success');
@@ -2103,29 +2072,6 @@ function setMessage(text, type = '') {
  const msg = document.getElementById('message');
  msg.textContent = text;
  msg.className = type;
-}
-
-function updateGlobalProgress(percent) {
- const container = document.getElementById('global-progress-container');
- if (!container) return;
-
- const bar = container.querySelector('.global-progress-bar');
- const text = container.querySelector('.global-progress-text');
-
- container.style.display = 'block';
- bar.style.width = `${percent}%`;
- text.textContent = `Downloading... ${percent}%`;
-
- if (percent >= 100) {
-   setTimeout(() => {
-     bar.style.width = '100%';
-   }, 200);
-
-   setTimeout(() => {
-     container.style.display = 'none';
-     bar.style.width = '0%';
-   }, 900);
- }
 }
 
 async function copyTextToClipboard(text) {
@@ -2278,7 +2224,6 @@ async function handleDownload() {
 
    updateMessage('Downloading... 0%', 'loading');
    const downloadedFileSize = await runHybridDownloadFlow(downloadUrl, backendFileName, backendFileSize, (progress) => {
-     updateGlobalProgress(progress);
      updateMessage(`Downloading... ${progress}%`, 'loading');
    }, abortController.signal);
 
