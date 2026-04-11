@@ -582,6 +582,10 @@ body {
  z-index: 999999;
 }
 
+.global-download-menu {
+ position: fixed;
+}
+
 .menu-dropdown .menu-item {
  width: 100%;
  padding: 10px 14px;
@@ -1080,7 +1084,7 @@ body {
 
 <!-- ==================== TAB CONTENT: ENTER URL ==================== -->
 <section class="tab-content active" id="tab-enter-url" role="tabpanel">
- 
+
  <!-- ==================== UNIFIED INPUT BAR ==================== -->
  <div class="input-bar-container">
    <div class="input-bar">
@@ -1104,20 +1108,20 @@ body {
          </div>
        </div>
      </div>
-     
+
      <!-- Input Field -->
      <input id="linkInput" placeholder="Paste link here..." autocomplete="off">
-     
+
      <!-- Paste Button -->
      <button class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">Paste</button>
-     
+
      <!-- Submit Button -->
      <button class="submit-btn" id="submitBtn" aria-label="Start download">
        <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
      </button>
    </div>
  </div>
- 
+
  <!-- Message -->
  <div class="message-container">
    <p id="message"></p>
@@ -1175,6 +1179,12 @@ body {
  </div>
 </div>
 
+<div class="menu-dropdown global-download-menu hidden" id="globalDownloadMenu" aria-hidden="true">
+ <button class="menu-item save" data-action="download">Save</button>
+ <button class="menu-item share" data-action="share">Share</button>
+ <button class="menu-item delete" data-action="remove">Delete</button>
+</div>
+
 <!-- ==================== FOOTER ==================== -->
 <footer class="footer">FlashVidz</footer>
 </div>
@@ -1201,7 +1211,7 @@ function closeFormatDropdown() {
 
 function selectFormat(format) {
  selectedFormat = format;
- 
+
  if (format === 'video') {
    formatIconVideo.style.display = 'block';
    formatIconAudio.style.display = 'none';
@@ -1213,7 +1223,7 @@ function selectFormat(format) {
    optionAudio.classList.add('selected');
    optionVideo.classList.remove('selected');
  }
- 
+
  closeFormatDropdown();
 }
 
@@ -1338,7 +1348,7 @@ tabBtns.forEach(btn => {
 
 // ==================== CONFIG ====================
 const CONFIG = {
- API_URL: window.location.hostname === 'localhost' 
+ API_URL: window.location.hostname === 'localhost'
    ? 'http://localhost:3000/download'
    : 'https://flashvidz-backend.onrender.com/download',
  MAX_FILE_SIZE: 500 * 1024 * 1024,
@@ -1516,6 +1526,37 @@ function closeVideoModal() {
 }
 
 // ==================== DOWNLOADS UI ====================
+const globalDownloadMenu = document.getElementById('globalDownloadMenu');
+let activeDownloadMenuContext = null;
+
+function hideGlobalDownloadMenu() {
+ globalDownloadMenu.classList.add('hidden');
+ globalDownloadMenu.setAttribute('aria-hidden', 'true');
+ activeDownloadMenuContext = null;
+}
+
+function showGlobalDownloadMenu(anchorBtn, context) {
+ activeDownloadMenuContext = context;
+ globalDownloadMenu.classList.remove('hidden');
+ globalDownloadMenu.setAttribute('aria-hidden', 'false');
+
+ const rect = anchorBtn.getBoundingClientRect();
+ let top = rect.bottom + 6;
+ let left = rect.right - globalDownloadMenu.offsetWidth;
+
+ if (left < 8) left = 8;
+ if (left + globalDownloadMenu.offsetWidth > window.innerWidth) {
+   left = window.innerWidth - globalDownloadMenu.offsetWidth - 8;
+ }
+ if (top + globalDownloadMenu.offsetHeight > window.innerHeight - 8) {
+   top = rect.top - globalDownloadMenu.offsetHeight - 6;
+ }
+ if (top < 8) top = 8;
+
+ globalDownloadMenu.style.top = `${top}px`;
+ globalDownloadMenu.style.left = `${left}px`;
+}
+
 function formatFileSize(bytes) {
  const num = Number(bytes);
  if (!Number.isFinite(num) || num <= 0) return '—';
@@ -1670,10 +1711,11 @@ function renderDownloads() {
  const listContainer = document.getElementById('downloadsList');
  const countBadge = document.getElementById('downloadsCount');
  const downloads = loadDownloads();
- 
+ hideGlobalDownloadMenu();
+
  // Clear existing content except empty state template
  listContainer.innerHTML = '';
- 
+
  if (downloads.length === 0) {
    listContainer.innerHTML = `
     <div class="empty-state">
@@ -1685,9 +1727,9 @@ function renderDownloads() {
    countBadge.textContent = '0 items';
    return;
  }
- 
+
  countBadge.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
- 
+
  downloads.forEach(item => {
    const card = createDownloadCard(item);
    listContainer.appendChild(card);
@@ -1697,7 +1739,7 @@ function renderDownloads() {
 function createDownloadCard(item) {
  const card = document.createElement('div');
  card.className = 'download-card';
- 
+
  const normalizedFormat = (item.format || 'video').toLowerCase();
  const isVideo = normalizedFormat === 'video';
  const fileName = item.fileName || item.filename || 'flashvidz_download';
@@ -1715,12 +1757,12 @@ function createDownloadCard(item) {
    : `<svg class="thumbnail-fallback" viewBox="0 0 24 24">
         <path d="${mediaIconPath}"/>
       </svg>`;
- 
+
  card.innerHTML = `
    <div class="download-info-row">
      <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">
        ${thumbnailMarkup}
-       ${item.duration 
+       ${item.duration
          ? `<span class="video-duration">${item.duration}</span>`
          : ``}
      </div>
@@ -1740,77 +1782,89 @@ function createDownloadCard(item) {
      </div>
      <div class="menu-wrapper">
        <button class="menu-btn" aria-label="Open menu" title="More options">⋮</button>
-       <div class="menu-dropdown hidden">
-         <button class="menu-item save" data-action="download">Save</button>
-         <button class="menu-item share" data-action="share">Share</button>
-         <button class="menu-item delete" data-action="remove">Delete</button>
-       </div>
      </div>
    </div>
  `;
- 
+
  const menuBtn = card.querySelector('.menu-btn');
- const menuDropdown = card.querySelector('.menu-dropdown');
 
  menuBtn.addEventListener('click', (event) => {
    event.stopPropagation();
-   document.querySelectorAll('.menu-dropdown').forEach(dropdown => {
-     if (dropdown !== menuDropdown) {
-       dropdown.classList.add('hidden');
-     }
-   });
-   const shouldShow = menuDropdown.classList.contains('hidden');
+   const shouldClose = activeDownloadMenuContext?.id === item.id && !globalDownloadMenu.classList.contains('hidden');
+   if (shouldClose) {
+     hideGlobalDownloadMenu();
+     return;
+   }
+   showGlobalDownloadMenu(menuBtn, { id: item.id, item, fileName, fileSize });
+ });
 
-   if (!shouldShow) {
-     menuDropdown.classList.add('hidden');
+ card.addEventListener('click', (event) => {
+   if (event.target.closest('button')) {
+     return;
+   }
+   if (isActivelyDownloading()) {
      return;
    }
 
-   menuDropdown.classList.remove('hidden');
-
-   const rect = menuBtn.getBoundingClientRect();
-
-   menuDropdown.style.position = 'fixed';
-
-   let top = rect.bottom + 6;
-   let left = rect.right - menuDropdown.offsetWidth;
-
-   // Prevent overflow
-   if (left < 8) left = 8;
-   if (left + menuDropdown.offsetWidth > window.innerWidth) {
-     left = window.innerWidth - menuDropdown.offsetWidth - 8;
+   // FIX: Use ONLY item.fileUrl for preview, with safety check
+   if (!isVideo) {
+     setMessage('Audio preview not supported yet.', 'loading');
+     return;
    }
 
-   menuDropdown.style.top = top + 'px';
-   menuDropdown.style.left = left + 'px';
+   const previewUrl = item.fileUrl;
+   if (!previewUrl) {
+     setMessage('Video preview unavailable: missing preview URL.', 'error');
+     return;
+   }
+   openVideoModal(previewUrl);
  });
 
- const redownloadBtn = card.querySelector('.menu-item.save');
- redownloadBtn.addEventListener('click', async (event) => {
-   event.stopPropagation();
-   menuDropdown.classList.add('hidden');
+ return card;
+}
+
+document.addEventListener('click', (event) => {
+ if (!event.target.closest('.menu-wrapper') && !event.target.closest('#globalDownloadMenu')) {
+   hideGlobalDownloadMenu();
+ }
+});
+
+
+window.addEventListener('scroll', () => {
+ hideGlobalDownloadMenu();
+});
+
+globalDownloadMenu.addEventListener('click', async (event) => {
+ event.stopPropagation();
+ const actionButton = event.target.closest('.menu-item');
+ if (!actionButton || !activeDownloadMenuContext) {
+   return;
+ }
+
+ const { item, fileName, fileSize } = activeDownloadMenuContext;
+ const action = actionButton.dataset.action;
+ hideGlobalDownloadMenu();
+
+ if (action === 'download') {
    if (isActivelyDownloading()) {
      return;
    }
    try {
-     // FIX: Use ONLY item.downloadUrl for re-downloading
      const itemDownloadUrl = item.downloadUrl;
      if (!itemDownloadUrl) {
        throw new Error('Missing download URL');
      }
-    await runHybridDownloadFlow(itemDownloadUrl, fileName, fileSize, (progress) => {
-      setMessage(`Downloading... ${progress}%`, 'loading');
-    }, undefined);
+     await runHybridDownloadFlow(itemDownloadUrl, fileName, fileSize, (progress) => {
+       setMessage(`Downloading... ${progress}%`, 'loading');
+     }, undefined);
      setMessage('Download complete!', 'success');
    } catch (error) {
      setMessage(error.message || 'Download failed', 'error');
    }
- });
+   return;
+ }
 
- const shareBtn = card.querySelector('.menu-item.share');
- shareBtn.addEventListener('click', async (event) => {
-   event.stopPropagation();
-   menuDropdown.classList.add('hidden');
+ if (action === 'share') {
    const candidateFileUrl = normalizeStoredUrl(item.fileUrl);
    const candidateDownloadUrl = normalizeStoredUrl(item.downloadUrl);
    const shareUrl = isValidHttpUrl(candidateDownloadUrl)
@@ -1851,56 +1905,12 @@ function createDownloadCard(item) {
        setMessage('Sharing is not supported and copy failed.', 'error');
      }
    }
- });
-
- // Add delete handler
- const deleteBtn = card.querySelector('.menu-item.delete');
- deleteBtn.addEventListener('click', (event) => {
-   event.stopPropagation();
-   menuDropdown.classList.add('hidden');
-   if (confirm('Remove this download from history?')) {
-     removeDownload(item.id);
-   }
- });
-
- card.addEventListener('click', (event) => {
-   if (event.target.closest('button')) {
-     return;
-   }
-   if (isActivelyDownloading()) {
-     return;
-   }
-
-   // FIX: Use ONLY item.fileUrl for preview, with safety check
-   if (!isVideo) {
-     setMessage('Audio preview not supported yet.', 'loading');
-     return;
-   }
-
-   const previewUrl = item.fileUrl;
-   if (!previewUrl) {
-     setMessage('Video preview unavailable: missing preview URL.', 'error');
-     return;
-   }
-   openVideoModal(previewUrl);
- });
- 
- return card;
-}
-
-document.addEventListener('click', (event) => {
- if (!event.target.closest('.menu-wrapper')) {
-   document.querySelectorAll('.menu-dropdown').forEach(dropdown => {
-     dropdown.classList.add('hidden');
-   });
+   return;
  }
-});
 
-
-window.addEventListener('scroll', () => {
- document.querySelectorAll('.menu-dropdown').forEach(dropdown => {
-   dropdown.classList.add('hidden');
- });
+ if (action === 'remove' && confirm('Remove this download from history?')) {
+   removeDownload(item.id);
+ }
 });
 
 // ==================== UTILS ====================
@@ -1960,7 +1970,7 @@ function resetUI(delay = 2000, downloadId = currentDownloadId) {
 async function pasteLink() {
  const btn = document.getElementById('pasteBtn');
  btn.disabled = true;
- 
+
  try {
    const text = await navigator.clipboard.readText();
    document.getElementById('linkInput').value = text.trim();
@@ -2011,7 +2021,7 @@ async function handleDownload() {
  btn.disabled = true;
  btn.classList.add('loading');
  document.getElementById('pasteBtn').disabled = true;
- 
+
  if (!link) {
    updateMessage('Enter a video link', 'error');
    resetUI(0, downloadId);
@@ -2019,7 +2029,7 @@ async function handleDownload() {
  }
 
  const platform = detectPlatform(link);
- 
+
  if (platform === 'unknown') {
    updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
    resetUI(0, downloadId);
@@ -2034,8 +2044,8 @@ async function handleDownload() {
    const response = await fetch(CONFIG.API_URL, {
      method: 'POST',
      headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({ 
-       url: link, 
+     body: JSON.stringify({
+       url: link,
        format: selectedDownloadFormat,
        quality: selectedQuality
      }),
@@ -2091,7 +2101,7 @@ async function handleDownload() {
    if (downloadId !== currentDownloadId) return;
    setMessage('Download complete!', 'success');
    switchTab('downloads');
-   
+
    // Clear input
    document.getElementById('linkInput').value = '';
 
@@ -2100,7 +2110,7 @@ async function handleDownload() {
      return;
    }
    console.error('Download error:', err);
-   
+
    let errorMsg = err.message || 'Download failed';
    if (platform === 'instagram' || platform === 'facebook') {
      if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
@@ -2113,7 +2123,7 @@ async function handleDownload() {
        errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
      }
    }
-   
+
    updateMessage(errorMsg, 'error');
  } finally {
    if (downloadId === currentDownloadId) {
