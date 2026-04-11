@@ -1,2351 +1,2686 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FlashVidz</title>
-
-<style>
-* { box-sizing: border-box; }
-
-body {
- margin: 0;
- padding: 0;
- min-height: 100vh;
- background: linear-gradient(135deg, #0f2027, #1c2b33, #2c5364);
- font-family: 'Segoe UI', sans-serif;
-}
-
-.app-container {
- max-width: 420px;
- margin: 0 auto;
- width: 100%;
-}
-
-/* ==================== HEADER ==================== */
-.app-header {
- width: 100%;
- max-width: 420px;
- display: flex;
- align-items: center;
- justify-content: space-between;
- padding: 16px 20px;
- position: sticky;
- top: 0;
- z-index: 100;
- background: rgba(15, 32, 39, 0.8);
- backdrop-filter: blur(10px);
-}
-
-.hamburger-btn {
- width: 40px;
- height: 40px;
- background: rgba(255,255,255,0.06);
- backdrop-filter: blur(10px);
- border: none;
- border-radius: 10px;
- cursor: pointer;
- display: flex;
- align-items: center;
- justify-content: center;
- transition: all 0.3s ease;
- color: #00d4aa;
- font-size: 20px;
-}
-
-.hamburger-btn:hover {
- background: rgba(255,255,255,0.12);
- transform: scale(1.05);
-}
-
-.app-title {
- font-size: 22px;
- font-weight: 700;
- color: white;
- margin: 0;
- flex: 1;
- text-align: center;
-}
-
-.app-title span {
- color: #00d4aa;
-}
-
-.pro-badge {
- background: linear-gradient(135deg, #00d4aa, #00b894);
- color: #000;
- font-size: 10px;
- font-weight: 700;
- padding: 4px 10px;
- border-radius: 12px;
- text-transform: uppercase;
- letter-spacing: 0.5px;
-}
-
-/* ==================== HAMBURGER MENU ==================== */
-.hamburger-menu-container {
- position: fixed;
- top: 0;
- left: -280px;
- width: 280px;
- height: 100vh;
- background: rgba(15, 32, 39, 0.98);
- backdrop-filter: blur(20px);
- z-index: 1001;
- transition: left 0.3s ease;
- padding: 20px;
- box-shadow: 4px 0 20px rgba(0,0,0,0.5);
-}
-
-.hamburger-menu-container.active {
- left: 0;
-}
-
-.menu-overlay {
- position: fixed;
- top: 0;
- left: 0;
- width: 100%;
- height: 100vh;
- background: rgba(0,0,0,0.5);
- z-index: 1000;
- opacity: 0;
- visibility: hidden;
- transition: all 0.3s ease;
-}
-
-.menu-overlay.active {
- opacity: 1;
- visibility: visible;
-}
-
-.menu-header {
- display: flex;
- align-items: baseline;
- justify-content: space-between;
- margin-bottom: 24px;
-}
-
-
-.menu-title-group {
- display: flex;
- flex-direction: column;
- gap: 4px;
-}
-
-.menu-title {
- font-size: 18px;
- font-weight: 600;
- color: white;
- line-height: 1.3;
-}
-
-.menu-subtitle {
- font-size: 12px;
- color: #8ca0aa;
-}
-
-.close-menu-btn {
- width: 32px;
- height: 32px;
- background: rgba(255,255,255,0.06);
- border: none;
- border-radius: 8px;
- cursor: pointer;
- color: #aaa;
- font-size: 18px;
- display: flex;
- align-items: center;
- justify-content: center;
- transition: all 0.2s;
- align-self: baseline;
-}
-
-.close-menu-btn:hover {
- background: rgba(255,100,100,0.2);
- color: #ff6464;
-}
-
-.menu-list {
- list-style: none;
- padding: 0;
- margin: 0;
- display: flex;
- flex-direction: column;
- gap: 8px;
-}
-
-.menu-item {
- display: flex;
- align-items: center;
- gap: 16px;
- padding: 16px;
- min-height: 48px;
- border-radius: 12px;
- cursor: pointer;
- transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
- color: #e0e0e0;
- font-size: 14px;
-}
-
-.menu-item:hover {
- background: rgba(0, 212, 170, 0.12);
- color: #00d4aa;
-}
-
-.menu-item:active {
- background: rgba(0, 212, 170, 0.12);
- transform: scale(0.98);
-}
-
-.menu-item.active {
- background: rgba(0, 212, 170, 0.12);
- color: #00d4aa;
-}
-
-.menu-item .menu-icon {
- width: 24px;
- height: 24px;
- flex-shrink: 0;
- stroke: currentColor;
- stroke-width: 2;
- stroke-linecap: round;
- stroke-linejoin: round;
- fill: none;
-}
-
-.menu-item span {
- line-height: 1.4;
-}
-
-
-/* ==================== MATERIAL TABS ==================== */
-.tabs-container {
- width: 100%;
- max-width: 360px;
- margin-top: 10px;
- margin-bottom: 20px;
-}
-
-.tabs-nav {
- display: flex;
- background: transparent;
- border-bottom: 1px solid rgba(255,255,255,0.1);
- position: relative;
-}
-
-.tab-btn {
- flex: 1;
- padding: 14px 16px;
- border: none;
- background: transparent;
- color: #888;
- font-size: 14px;
- font-weight: 500;
- cursor: pointer;
- transition: all 0.3s ease;
- position: relative;
- text-transform: uppercase;
- letter-spacing: 0.5px;
-}
-
-.tab-btn:hover {
- color: #ccc;
- background: rgba(255,255,255,0.03);
-}
-
-.tab-btn.active {
- color: #00d4aa;
- font-weight: 600;
-}
-
-.tab-indicator {
- position: absolute;
- bottom: 0;
- left: 0;
- height: 3px;
- width: 50%;
- background: #00d4aa;
- transition: transform 0.3s ease;
- border-radius: 3px 3px 0 0;
-}
-
-.tab-indicator.downloads {
- transform: translateX(100%);
-}
-
-/* ==================== TAB CONTENT ==================== */
-.tab-content {
- display: none;
- width: 100%;
- max-width: 360px;
-}
-
-.tab-content.active {
- display: block;
-}
-
-/* ==================== DOWNLOADS TAB ==================== */
-.downloads-container {
- padding: 0 20px;
-}
-
-.downloads-header {
- display: flex;
- align-items: center;
- justify-content: space-between;
- margin-bottom: 16px;
- padding: 0 4px;
-}
-
-.downloads-title {
- font-size: 18px;
- font-weight: 600;
- color: white;
-}
-
-.downloads-count {
- font-size: 13px;
- color: #888;
- background: rgba(255,255,255,0.06);
- padding: 4px 12px;
- border-radius: 20px;
-}
-
-.downloads-list {
- display: flex;
- flex-direction: column;
- gap: 8px;
- max-height: none;
- overflow-y: auto;
- padding-right: 6px;
- position: relative;
- z-index: auto;
-}
-
-.downloads-list::-webkit-scrollbar {
- width: 6px;
-}
-
-.downloads-list::-webkit-scrollbar-thumb {
- background: rgba(255,255,255,0.18);
- border-radius: 999px;
-}
-
-.download-card {
- display: flex;
- align-items: center;
- gap: 14px;
- background: rgba(255,255,255,0.06);
- backdrop-filter: blur(18px);
- border-radius: 14px;
- padding: 12px;
- border: 1px solid rgba(255,255,255,0.08);
- transition: transform 0.2s ease;
- position: relative;
- z-index: auto;
-}
-
-.download-card:hover {
- background: rgba(255,255,255,0.1);
- transform: translateY(-2px);
-}
-
-.download-info-row {
- display: flex;
- align-items: center;
- gap: 10px;
- flex: 1;
- min-width: 0;
-}
-
-.download-thumbnail-small {
- width: 110px;
- height: 80px;
- border-radius: 8px;
- overflow: hidden;
- background: #111;
- display: flex;
- align-items: center;
- justify-content: center;
- flex-shrink: 0;
- position: relative;
-}
-
-.download-thumbnail-small img {
- width: 100%;
- height: 100%;
- object-fit: cover;
-}
-
-.download-thumbnail-small:not(.has-thumbnail) .thumbnail-fallback {
-  display: block;
-}
-
-.download-thumbnail-small svg {
- width: 24px;
- height: 24px;
- fill: rgba(255,255,255,0.4);
-}
-
-.video-duration {
- position: absolute;
- bottom: 4px;
- right: 4px;
- background: rgba(0,0,0,0.7);
- color: #fff;
- font-size: 10px;
- padding: 2px 6px;
- border-radius: 6px;
- font-weight: 600;
-}
-
-.download-info {
- flex: 1;
- display: flex;
- flex-direction: column;
- justify-content: center;
- min-width: 0;
- gap: 4px;
-}
-
-.download-filename {
- font-size: 15px;
- font-weight: 600;
- line-height: 1.2;
- color: #fff;
- display: -webkit-box;
- -webkit-line-clamp: 2;
- -webkit-box-orient: vertical;
- overflow: hidden;
- word-break: break-word;
- overflow-wrap: anywhere;
-}
-
-.download-header {
- display: block;
-}
-
-.format-badge {
- font-size: 10px;
- font-weight: 700;
- letter-spacing: 0.7px;
- text-transform: uppercase;
- border-radius: 999px;
- padding: 5px 9px;
- flex-shrink: 0;
-}
-
-.format-badge.video {
- color: #00241b;
- background: linear-gradient(135deg, #00d4aa, #54f6cc);
-}
-
-.format-badge.audio {
- color: #dad7ff;
- background: linear-gradient(135deg, #3f3a77, #6357ca);
-}
-
-.download-meta {
- font-size: 12px;
- color: #bbb;
- margin-top: 4px;
- display: flex;
- flex-direction: column;
- gap: 2px;
-}
-
-.meta-left {
- display: flex;
- align-items: center;
- gap: 4px;
- overflow: hidden;
- text-overflow: ellipsis;
- white-space: nowrap;
-}
-
-.meta-size {
- flex-shrink: 0;
- margin-top: 2px;
-}
-
-.download-meta span {
- display: flex;
- align-items: center;
- gap: 4px;
-}
-
-.download-meta svg {
- width: 12px;
- height: 12px;
- fill: currentColor;
-}
-
-.download-menu-btn {
- width: 32px;
- height: 32px;
- border-radius: 10px;
- border: none;
- background: transparent;
- color: #888;
- cursor: pointer;
- display: flex;
- align-items: center;
- justify-content: center;
- opacity: 0.7;
- transition: 0.2s ease;
- flex-shrink: 0;
-}
-
-.download-menu-btn:hover {
- background: rgba(255,255,255,0.1);
- color: white;
- opacity: 1;
- transform: scale(1.05);
-}
-
-.download-menu-btn svg {
- width: 16px;
- height: 16px;
- fill: currentColor;
-}
-
-.download-action-btn {
- width: 32px;
- height: 32px;
- border-radius: 10px;
- border: none;
- background: rgba(0,212,170,0.16);
- color: #00d4aa;
- cursor: pointer;
- display: flex;
- align-items: center;
- justify-content: center;
- transition: all 0.2s;
- flex-shrink: 0;
-}
-
-.download-action-btn.primary {
- background: linear-gradient(135deg, #00d4aa, #00b894);
- color: #00241b;
- box-shadow: 0 2px 6px rgba(0,212,170,0.2);
- border-radius: 12px;
-}
-
-.download-action-btn:hover {
- background: rgba(0,212,170,0.28);
- color: #7dffe2;
-}
-
-.download-action-btn svg {
- width: 16px;
- height: 16px;
- fill: currentColor;
-}
-
-.download-actions {
- display: none;
- align-items: center;
- gap: 12px;
- margin-left: auto;
- flex-shrink: 0;
-}
-
-.menu-wrapper {
- position: static;
- flex-shrink: 0;
-}
-
-.menu-btn {
- background: transparent;
- border: none;
- color: #ccc;
- font-size: 20px;
- line-height: 1;
- padding: 4px 8px;
- border-radius: 8px;
- cursor: pointer;
-}
-
-.menu-btn:hover {
- background: rgba(255,255,255,0.08);
-}
-
-.menu-dropdown {
- position: fixed;
- background: #222;
- border-radius: 8px;
- padding: 6px 0;
- min-width: 120px;
- border: 1px solid rgba(255,255,255,0.12);
- box-shadow: 0 8px 20px rgba(0,0,0,0.35);
- z-index: 999999;
-}
-
-.global-download-menu {
- position: fixed;
- z-index: 999999;
-}
-
-.menu-dropdown .menu-item {
- width: 100%;
- padding: 10px 14px;
- background: none;
- border: none;
- color: #fff;
- text-align: left;
- cursor: pointer;
- font-size: 13px;
-}
-
-.menu-dropdown .menu-item:hover {
- background: rgba(255,255,255,0.08);
-}
-
-.hidden {
- display: none;
-}
-
-.empty-state {
- text-align: center;
- color: #888;
- padding: 60px 20px;
- background: rgba(255,255,255,0.03);
- backdrop-filter: blur(18px);
- border-radius: 20px;
- border: 1px solid rgba(255,255,255,0.08);
-}
-
-.empty-state svg {
- width: 64px;
- height: 64px;
- fill: rgba(255,255,255,0.15);
- margin-bottom: 16px;
-}
-
-.empty-state h3 {
- font-size: 18px;
- font-weight: 600;
- color: white;
- margin: 0 0 8px 0;
-}
-
-.empty-state p {
- font-size: 14px;
- margin: 0;
-}
-
-/* ==================== UNIFIED INPUT BAR ==================== */
-.input-bar-container {
- width: 100%;
- max-width: 360px;
- padding: 0 20px;
- margin-top: 20px;
- position: relative;
- z-index: 50;
-}
-
-.input-bar {
- display: flex;
- align-items: center;
- background: rgba(255,255,255,0.08);
- backdrop-filter: blur(20px);
- border-radius: 50px;
- padding: 6px;
- border: 1px solid rgba(255,255,255,0.1);
- box-shadow: 0 4px 20px rgba(0,0,0,0.3);
- position: relative;
-}
-
-/* Format Selector */
-.format-selector {
- position: relative;
- flex-shrink: 0;
- z-index: 60;
-}
-
-.format-btn {
- display: flex;
- align-items: center;
- gap: 4px;
- padding: 10px 14px;
- border-radius: 40px;
- border: none;
- background: rgba(255,255,255,0.1);
- color: #00d4aa;
- font-size: 13px;
- font-weight: 500;
- cursor: pointer;
- transition: all 0.2s;
- white-space: nowrap;
-}
-
-.format-btn:hover {
- background: rgba(0,212,170,0.2);
-}
-
-.format-btn svg {
- width: 16px;
- height: 16px;
- fill: currentColor;
- flex-shrink: 0;
-}
-
-.format-btn .arrow-icon {
- width: 14px;
- height: 14px;
- opacity: 0.7;
- transition: transform 0.2s;
-}
-
-.format-btn.active .arrow-icon {
- transform: rotate(180deg);
-}
-
-.format-dropdown {
- position: absolute;
- top: calc(100% + 10px);
- left: 0;
- background: rgba(20, 40, 50, 0.98);
- backdrop-filter: blur(20px);
- border-radius: 16px;
- padding: 8px;
- min-width: 150px;
- opacity: 0;
- visibility: hidden;
- transform: translateY(-10px);
- transition: all 0.3s ease;
- box-shadow: 0 10px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,212,170,0.3);
- border: 1px solid rgba(0,212,170,0.4);
- z-index: 70;
-}
-
-.format-dropdown.active {
- opacity: 1;
- visibility: visible;
- transform: translateY(0);
-}
-
-.format-option {
- display: flex;
- align-items: center;
- gap: 10px;
- padding: 12px;
- border-radius: 10px;
- cursor: pointer;
- transition: all 0.2s ease;
- color: #e0e0e0;
- font-size: 13px;
-}
-
-.format-option:hover {
- background: rgba(0,212,170,0.2);
- color: #00d4aa;
-}
-
-.format-option svg {
- width: 16px;
- height: 16px;
- fill: currentColor;
- flex-shrink: 0;
-}
-
-.format-option .check-icon {
- margin-left: auto;
- opacity: 0;
- width: 14px;
- height: 14px;
-}
-
-.format-option.selected .check-icon {
- opacity: 1;
-}
-
-/* Input Field */
-.input-bar input {
- flex: 1;
- border: none;
- background: transparent;
- color: white;
- font-size: 15px;
- padding: 10px 12px;
- outline: none;
- min-width: 0;
-}
-
-.input-bar input::placeholder {
- color: #888;
-}
-
-/* Paste Button */
-.paste-btn-bar {
- padding: 10px 14px;
- border-radius: 40px;
- border: none;
- background: transparent;
- color: #00d4aa;
- font-size: 13px;
- font-weight: 500;
- cursor: pointer;
- transition: all 0.2s;
- white-space: nowrap;
- flex-shrink: 0;
-}
-
-.paste-btn-bar:hover {
- background: rgba(0,212,170,0.15);
-}
-
-.paste-btn-bar:disabled {
- opacity: 0.5;
- cursor: not-allowed;
-}
-
-/* Submit Button */
-.submit-btn {
- width: 44px;
- height: 44px;
- border-radius: 50%;
- border: none;
- background: linear-gradient(135deg, #00d4aa, #00b894);
- color: #000;
- cursor: pointer;
- display: flex;
- align-items: center;
- justify-content: center;
- transition: all 0.2s;
- flex-shrink: 0;
- margin-left: 4px;
-}
-
-.submit-btn:hover:not(:disabled) {
- transform: scale(1.05);
- box-shadow: 0 4px 15px rgba(0,212,170,0.4);
-}
-
-.submit-btn:disabled {
- opacity: 0.7;
- cursor: not-allowed;
-}
-
-.submit-btn svg {
- width: 20px;
- height: 20px;
- fill: currentColor;
-}
-
-.submit-btn.loading svg {
- display: none;
-}
-
-.submit-btn.loading::after {
- content: "";
- width: 18px;
- height: 18px;
- border: 2px solid transparent;
- border-top-color: #000;
- border-radius: 50%;
- animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
- to { transform: rotate(360deg); }
-}
-
-/* ==================== MESSAGE ==================== */
-.message-container {
- width: 100%;
- max-width: 360px;
- padding: 0 20px;
- margin-top: 16px;
- text-align: center;
- position: relative;
- z-index: 40;
-}
-
-#message {
- font-size: 14px;
- min-height: 20px;
- margin: 0;
-}
-
-#message.error { color: #ff6464; }
-#message.success { color: #00d4aa; }
-#message.loading { color: #ccc; }
-
-/* ==================== USER GUIDE SECTION ==================== */
-.user-guide {
- margin-top: 40px;
- width: 100%;
- max-width: 360px;
- padding: 0 20px;
- position: relative;
- z-index: 30;
-}
-
-.guide-card {
- background: rgba(255,255,255,0.03);
- backdrop-filter: blur(10px);
- border-radius: 16px;
- padding: 20px;
- border: 1px solid rgba(255,255,255,0.08);
-}
-
-.guide-title {
- font-size: 14px;
- font-weight: 600;
- color: #00d4aa;
- text-transform: uppercase;
- letter-spacing: 1px;
- margin-bottom: 16px;
- text-align: center;
-}
-
-.guide-list {
- list-style: none;
- padding: 0;
- margin: 0;
-}
-
-.guide-item {
- display: flex;
- align-items: flex-start;
- gap: 12px;
- padding: 12px 0;
- border-bottom: 1px solid rgba(255,255,255,0.05);
- font-size: 13px;
- color: #b0b8c1;
- line-height: 1.5;
-}
-
-.guide-item:last-child {
- border-bottom: none;
-}
-
-.guide-number {
- width: 24px;
- height: 24px;
- background: rgba(0,212,170,0.15);
- color: #00d4aa;
- border-radius: 6px;
- display: flex;
- align-items: center;
- justify-content: center;
- font-size: 12px;
- font-weight: 700;
- flex-shrink: 0;
-}
-
-.guide-text strong {
- color: #fff;
- font-weight: 600;
-}
-
-/* ==================== FOOTER ==================== */
-.footer {
- margin-top: 40px;
- font-size: 12px;
- color: #aaa;
- text-align: center;
- padding-bottom: 20px;
- position: relative;
- z-index: 20;
-}
-
-/* ==================== VIDEO PREVIEW MODAL ==================== */
-.video-modal {
- position: fixed;
- inset: 0;
- background: rgba(0, 0, 0, 0.9);
- display: none;
- align-items: center;
- justify-content: center;
- z-index: 2000;
- padding: 20px;
-}
-
-.video-modal.active {
- display: flex;
-}
-
-.video-modal-content {
- position: relative;
- width: min(900px, 100%);
- max-height: 90vh;
-}
-
-.video-modal-player {
- width: 100%;
- max-width: 100%;
- max-height: 80vh;
- border-radius: 12px;
- background: #000;
- outline: none;
-}
-
-.video-modal-close {
- position: absolute;
- top: 10px;
- right: 10px;
- width: 34px;
- height: 34px;
- border-radius: 50%;
- border: none;
- background: rgba(255, 255, 255, 0.15);
- color: #fff;
- font-size: 24px;
- line-height: 1;
- cursor: pointer;
- display: flex;
- align-items: center;
- justify-content: center;
-}
-
-.video-modal-close:hover {
- background: rgba(255, 255, 255, 0.3);
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#0f2027">
+  <meta name="description" content="Download videos from TikTok, Instagram, YouTube, and Facebook">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>FlashVidz - Video Downloader</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  
+  <style>
+    /* ==================== CSS VARIABLES ==================== */
+    :root {
+      /* Colors */
+      --color-bg-primary: #0f2027;
+      --color-bg-secondary: #1c2b33;
+      --color-bg-tertiary: #2c5364;
+      --color-accent: #00d4aa;
+      --color-accent-dark: #00b894;
+      --color-accent-light: #7dffe2;
+      --color-text-primary: #ffffff;
+      --color-text-secondary: #b0b8c1;
+      --color-text-muted: #888888;
+      --color-error: #ff6464;
+      --color-error-bg: rgba(255, 100, 100, 0.2);
+      --color-success: #00d4aa;
+      --color-warning: #ffa726;
+      
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      
+      /* Border Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-full: 9999px;
+      
+      /* Shadows */
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 4px 15px rgba(0, 212, 170, 0.4);
+      
+      /* Z-Index Scale */
+      --z-base: 1;
+      --z-dropdown: 100;
+      --z-sticky: 200;
+      --z-modal: 300;
+      --z-toast: 400;
+      --z-menu: 500;
+      
+      /* Transitions */
+      --transition-fast: 150ms ease;
+      --transition-base: 250ms ease;
+      --transition-slow: 350ms ease;
+      
+      /* Layout */
+      --app-max-width: 420px;
+      --header-height: 72px;
+      --input-height: 56px;
+    }
+
+    /* ==================== RESET & BASE ==================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: linear-gradient(135deg, var(--color-bg-primary), var(--color-bg-secondary), var(--color-bg-tertiary));
+      background-attachment: fixed;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--color-text-primary);
+      line-height: 1.5;
+    }
+
+    /* Focus Styles */
+    :focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    /* Screen Reader Only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ==================== APP CONTAINER ==================== */
+    .app-container {
+      max-width: var(--app-max-width);
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==================== HEADER ==================== */
+    .app-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+      background: rgba(15, 32, 39, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      height: var(--header-height);
+    }
+
+    .hamburger-btn {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(10px);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-base);
+      color: var(--color-accent);
+      font-size: 20px;
+    }
+
+    .hamburger-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: scale(1.05);
+    }
+
+    .hamburger-btn:active {
+      transform: scale(0.95);
+    }
+
+    .app-title {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin: 0;
+      flex: 1;
+      text-align: center;
+    }
+
+    .app-title span {
+      color: var(--color-accent);
+    }
+
+    .pro-badge {
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+      color: #000;
+      font-size: 0.625rem;
+      font-weight: 700;
+      padding: var(--space-xs) 10px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==================== HAMBURGER MENU ==================== */
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: calc(var(--z-menu) - 1);
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-base);
+    }
+
+    .menu-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .hamburger-menu-container {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      height: 100dvh;
+      background: rgba(15, 32, 39, 0.98);
+      backdrop-filter: blur(20px);
+      z-index: var(--z-menu);
+      transition: left var(--transition-base);
+      padding: var(--space-lg);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+    }
+
+    .hamburger-menu-container.active {
+      left: 0;
+    }
+
+    .menu-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+
+    .menu-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .menu-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+    }
+
+    .menu-subtitle {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .close-menu-btn {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.06);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: #aaa;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .close-menu-btn:hover {
+      background: var(--color-error-bg);
+      color: var(--color-error);
+    }
+
+    .menu-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      min-height: 48px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: var(--color-text-secondary);
+      font-size: 0.875rem;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .menu-item:hover,
+    .menu-item:focus-visible {
+      background: rgba(0, 212, 170, 0.12);
+      color: var(--color-accent);
+    }
+
+    .menu-item:active {
+      transform: scale(0.98);
+    }
+
+    .menu-item.active {
+      background: rgba(0, 212, 170, 0.12);
+      color: var(--color-accent);
+    }
+
+    .menu-item .menu-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    /* ==================== TABS ==================== */
+    .tabs-container {
+      width: 100%;
+      max-width: 360px;
+      margin: var(--space-sm) auto var(--space-lg);
+      padding: 0 var(--space-lg);
+    }
+
+    .tabs-nav {
+      display: flex;
+      background: transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px var(--space-md);
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tab-btn:hover {
+      color: var(--color-text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tab-btn[aria-selected="true"] {
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+
+    .tab-indicator {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 50%;
+      background: var(--color-accent);
+      transition: transform var(--transition-base);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .tab-indicator.downloads {
+      transform: translateX(100%);
+    }
+
+    /* ==================== TAB CONTENT ==================== */
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+      flex: 1;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn var(--transition-base);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== INPUT BAR ==================== */
+    .input-bar-container {
+      width: 100%;
+      position: relative;
+      z-index: var(--z-dropdown);
+    }
+
+    .input-bar {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-full);
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow-md);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .input-bar:focus-within {
+      border-color: rgba(0, 212, 170, 0.4);
+      box-shadow: var(--shadow-md), 0 0 0 3px rgba(0, 212, 170, 0.1);
+    }
+
+    /* Format Selector */
+    .format-selector {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .format-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: 10px 14px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-accent);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .format-btn:hover {
+      background: rgba(0, 212, 170, 0.2);
+    }
+
+    .format-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .format-btn .arrow-icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.7;
+      transition: transform var(--transition-fast);
+    }
+
+    .format-btn[aria-expanded="true"] .arrow-icon {
+      transform: rotate(180deg);
+    }
+
+    .format-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      background: rgba(20, 40, 50, 0.98);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-lg);
+      padding: var(--space-sm);
+      min-width: 150px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all var(--transition-base);
+      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 212, 170, 0.3);
+      border: 1px solid rgba(0, 212, 170, 0.4);
+      z-index: calc(var(--z-dropdown) + 10);
+    }
+
+    .format-dropdown.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .format-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: var(--color-text-secondary);
+      font-size: 0.8125rem;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .format-option:hover,
+    .format-option:focus-visible {
+      background: rgba(0, 212, 170, 0.2);
+      color: var(--color-accent);
+    }
+
+    .format-option svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .format-option .check-icon {
+      margin-left: auto;
+      opacity: 0;
+      width: 14px;
+      height: 14px;
+    }
+
+    .format-option[aria-selected="true"] .check-icon {
+      opacity: 1;
+    }
+
+    /* Input Field */
+    .input-wrapper {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+
+    .input-bar input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--color-text-primary);
+      font-size: 0.9375rem;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .input-bar input::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    /* Paste Button */
+    .paste-btn-bar {
+      padding: 10px 14px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: transparent;
+      color: var(--color-accent);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .paste-btn-bar:hover {
+      background: rgba(0, 212, 170, 0.15);
+    }
+
+    .paste-btn-bar:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+      color: #000;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .submit-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .submit-btn.loading svg {
+      display: none;
+    }
+
+    .submit-btn.loading::after {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border: 2px solid transparent;
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==================== MESSAGE AREA ==================== */
+    .message-container {
+      width: 100%;
+      margin-top: var(--space-md);
+      text-align: center;
+      min-height: 24px;
+    }
+
+    #message {
+      font-size: 0.875rem;
+      margin: 0;
+      transition: color var(--transition-fast);
+    }
+
+    #message.error { color: var(--color-error); }
+    #message.success { color: var(--color-success); }
+    #message.loading { color: var(--color-text-secondary); }
+
+    /* ==================== TOAST NOTIFICATIONS ==================== */
+    .toast-container {
+      position: fixed;
+      top: calc(var(--header-height) + var(--space-md));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      width: calc(100% - var(--space-lg) * 2);
+      max-width: 360px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(30, 45, 55, 0.98);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-md);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      animation: toastSlideIn var(--transition-base);
+      pointer-events: auto;
+    }
+
+    .toast.hiding {
+      animation: toastSlideOut var(--transition-base) forwards;
+    }
+
+    @keyframes toastSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes toastSlideOut {
+      to {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+    }
+
+    .toast-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .toast-icon.success { color: var(--color-success); }
+    .toast-icon.error { color: var(--color-error); }
+    .toast-icon.info { color: var(--color-text-secondary); }
+
+    .toast-message {
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--color-text-primary);
+    }
+
+    .toast-close {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .toast-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-text-primary);
+    }
+
+    /* ==================== USER GUIDE ==================== */
+    .user-guide {
+      margin-top: var(--space-xl);
+      width: 100%;
+    }
+
+    .guide-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .guide-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: var(--space-md);
+      text-align: center;
+    }
+
+    .guide-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .guide-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.8125rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .guide-item:last-child {
+      border-bottom: none;
+    }
+
+    .guide-number {
+      width: 24px;
+      height: 24px;
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--color-accent);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .guide-text strong {
+      color: var(--color-text-primary);
+      font-weight: 600;
+    }
+
+    /* ==================== DOWNLOADS TAB ==================== */
+    .downloads-container {
+      padding: 0;
+    }
+
+    .downloads-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+
+    .downloads-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .downloads-count {
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+      background: rgba(255, 255, 255, 0.06);
+      padding: var(--space-xs) 12px;
+      border-radius: var(--radius-full);
+    }
+
+    .downloads-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      max-height: calc(100vh - 280px);
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .downloads-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .downloads-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .downloads-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius-full);
+    }
+
+    .download-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .download-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .download-card:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    .download-info-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .download-thumbnail-small {
+      width: 110px;
+      height: 80px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .download-thumbnail-small img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .download-thumbnail-small svg {
+      width: 24px;
+      height: 24px;
+      fill: rgba(255, 255, 255, 0.4);
+    }
+
+    .download-thumbnail-small.has-thumbnail svg {
+      display: none;
+    }
+
+    .video-duration {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      font-size: 0.625rem;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+    }
+
+    .download-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      gap: var(--space-xs);
+    }
+
+    .download-filename {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--color-text-primary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .download-meta {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .meta-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .meta-size {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .download-meta svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
+    }
+
+    .menu-wrapper {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .menu-btn {
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: none;
+      color: var(--color-text-muted);
+      font-size: 20px;
+      line-height: 1;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .menu-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--color-text-primary);
+    }
+
+    /* Dropdown Menu */
+    .menu-dropdown {
+      position: fixed;
+      background: rgba(30, 40, 50, 0.98);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-md);
+      padding: var(--space-xs) 0;
+      min-width: 140px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: var(--shadow-lg);
+      z-index: var(--z-dropdown);
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.95);
+      transition: all var(--transition-fast);
+    }
+
+    .menu-dropdown.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+    }
+
+    .menu-dropdown .menu-item {
+      width: 100%;
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      color: var(--color-text-primary);
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      transition: all var(--transition-fast);
+    }
+
+    .menu-dropdown .menu-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .menu-dropdown .menu-item.delete:hover {
+      background: var(--color-error-bg);
+      color: var(--color-error);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      color: var(--color-text-muted);
+      padding: 60px var(--space-lg);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      fill: rgba(255, 255, 255, 0.15);
+      margin-bottom: var(--space-md);
+    }
+
+    .empty-state h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin: 0 0 var(--space-xs) 0;
+    }
+
+    .empty-state p {
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    /* ==================== VIDEO MODAL ==================== */
+    .video-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: var(--z-modal);
+      padding: var(--space-lg);
+    }
+
+    .video-modal.active {
+      display: flex;
+      animation: modalFadeIn var(--transition-base);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .video-modal-content {
+      position: relative;
+      width: min(900px, 100%);
+      max-height: 90vh;
+      animation: modalContentIn var(--transition-base);
+    }
+
+    @keyframes modalContentIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .video-modal-player {
+      width: 100%;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: var(--radius-md);
+      background: #000;
+      outline: none;
+    }
+
+    .video-modal-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .video-modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ==================== FOOTER ==================== */
+    .footer {
+      margin-top: auto;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      text-align: center;
+      padding: var(--space-lg) var(--space-md);
+    }
+
+    /* ==================== PLATFORM BADGES ==================== */
+    .platform-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-text-secondary);
+    }
+
+    .platform-badge.tiktok { background: rgba(0, 0, 0, 0.5); color: #fff; }
+    .platform-badge.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
+    .platform-badge.youtube { background: #ff0000; color: #fff; }
+    .platform-badge.facebook { background: #1877f2; color: #fff; }
+
+    /* ==================== LOADING SKELETON ==================== */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 480px) {
+      :root {
+        --space-lg: 16px;
+        --space-xl: 24px;
+      }
+
+      .app-header {
+        padding: var(--space-sm) var(--space-md);
+      }
+
+      .tab-content,
+      .tabs-container {
+        padding-left: var(--space-md);
+        padding-right: var(--space-md);
+      }
+
+      .download-thumbnail-small {
+        width: 90px;
+        height: 65px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .app-container {
+        --app-max-width: 480px;
+      }
+    }
+
+    /* ==================== REDUCED MOTION ==================== */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ==================== HIGH CONTRAST ==================== */
+    @media (prefers-contrast: high) {
+      :root {
+        --color-accent: #00ffcc;
+        --color-text-primary: #ffffff;
+        --color-text-secondary: #cccccc;
+      }
+
+      .input-bar,
+      .download-card,
+      .guide-card {
+        border-width: 2px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-
-<!-- ==================== HAMBURGER MENU ==================== -->
-<div class="menu-overlay" id="menuOverlay"></div>
-<nav class="hamburger-menu-container" id="hamburgerMenu" aria-label="Main navigation">
- <div class="menu-header">
-   <div class="menu-title-group">
-     <span class="menu-title">Settings</span>
-   </div>
-   <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">×</button>
- </div>
- <ul class="menu-list">
-   <li class="menu-item" id="menuDownloads">
-     <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-       <path d="M12 4v10"></path>
-       <path d="M8 10l4 4 4-4"></path>
-       <path d="M5 19h14"></path>
-     </svg>
-     <span>Downloads</span>
-   </li>
-   <li class="menu-item" id="menuShareApp">
-     <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-       <circle cx="18" cy="5" r="2"></circle>
-       <circle cx="6" cy="12" r="2"></circle>
-       <circle cx="18" cy="19" r="2"></circle>
-       <path d="M8 12l8-6"></path>
-       <path d="M8 12l8 6"></path>
-     </svg>
-     <span>Share App</span>
-   </li>
-   <li class="menu-item" id="menuRateApp">
-     <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-       <path d="M12 3l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5-4.7-4.6 6.5-1z"></path>
-     </svg>
-     <span>Rate App</span>
-   </li>
-   <li class="menu-item" id="menuHelp">
-     <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-       <circle cx="12" cy="12" r="9"></circle>
-       <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4"></path>
-       <path d="M12 17h0"></path>
-     </svg>
-     <span>Help</span>
-   </li>
-   <li class="menu-item" id="menuPrivacy">
-     <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-       <rect x="6" y="11" width="12" height="9" rx="2"></rect>
-       <path d="M9 11V8a3 3 0 0 1 6 0v3"></path>
-     </svg>
-     <span>Privacy</span>
-   </li>
- </ul>
- <div style="display:none" aria-hidden="true">
-   <button id="menuSettings" tabindex="-1"></button>
-   <button id="menuLanguage" tabindex="-1"></button>
-   <button id="menuFeedback" tabindex="-1"></button>
- </div>
-</nav>
-
-<div class="app-container">
-<!-- ==================== HEADER ==================== -->
-<header class="app-header">
- <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">☰</button>
- <h1 class="app-title">Flash<span>Vidz</span></h1>
- <span class="pro-badge">PRO</span>
-</header>
-
-<!-- ==================== TABS ==================== -->
-<div class="tabs-container">
- <nav class="tabs-nav" role="tablist">
-   <button class="tab-btn active" data-tab="enter-url" role="tab" aria-selected="true">Enter URL</button>
-   <button class="tab-btn" data-tab="downloads" role="tab" aria-selected="false">Downloads</button>
-   <div class="tab-indicator" id="tabIndicator"></div>
- </nav>
-</div>
-
-<!-- ==================== TAB CONTENT: ENTER URL ==================== -->
-<section class="tab-content active" id="tab-enter-url" role="tabpanel">
-
- <!-- ==================== UNIFIED INPUT BAR ==================== -->
- <div class="input-bar-container">
-   <div class="input-bar">
-     <!-- Format Selector -->
-     <div class="format-selector">
-       <button class="format-btn" id="formatBtn" aria-label="Select download format">
-         <svg viewBox="0 0 24 24" id="formatIconVideo"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-         <svg viewBox="0 0 24 24" id="formatIconAudio" style="display:none"><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
-         <svg class="arrow-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-       </button>
-       <div class="format-dropdown" id="formatDropdown">
-         <div class="format-option selected" data-format="video" id="optionVideo">
-           <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-           <span>Video</span>
-           <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-         </div>
-         <div class="format-option" data-format="audio" id="optionAudio">
-           <svg viewBox="0 0 24 24"><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
-           <span>Audio</span>
-           <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-         </div>
-       </div>
-     </div>
-
-     <!-- Input Field -->
-     <input id="linkInput" placeholder="Paste link here..." autocomplete="off" maxlength="2000">
-
-     <!-- Paste Button -->
-     <button class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">Paste</button>
-
-     <!-- Submit Button -->
-     <button class="submit-btn" id="submitBtn" aria-label="Start download">
-       <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
-     </button>
-   </div>
- </div>
-
- <!-- Message -->
- <div class="message-container">
-   <p id="message"></p>
- </div>
-
- <!-- ==================== USER GUIDE ==================== -->
- <div class="user-guide">
-   <div class="guide-card">
-     <div class="guide-title">Quick Guide</div>
-     <ul class="guide-list">
-       <li class="guide-item">
-         <span class="guide-number">1</span>
-         <span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span>
-       </li>
-       <li class="guide-item">
-         <span class="guide-number">2</span>
-         <span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span>
-       </li>
-       <li class="guide-item">
-         <span class="guide-number">3</span>
-         <span class="guide-text"><strong>Download</strong> — Press the arrow button and wait for processing to complete</span>
-       </li>
-       <li class="guide-item">
-         <span class="guide-number">4</span>
-         <span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span>
-       </li>
-     </ul>
-   </div>
- </div>
-</section>
-
-<!-- ==================== TAB CONTENT: DOWNLOADS ==================== -->
-<section class="tab-content" id="tab-downloads" role="tabpanel">
- <div class="downloads-container">
-   <div class="downloads-header">
-     <span class="downloads-title">Downloads</span>
-     <span class="downloads-count" id="downloadsCount">0 items</span>
-   </div>
-   <div class="downloads-list" id="downloadsList">
-     <!-- Empty State -->
-     <div class="empty-state" id="emptyState">
-       <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-       <h3>No downloads yet</h3>
-       <p>Your downloaded videos will appear here</p>
-     </div>
-   </div>
- </div>
-</section>
-
-<!-- ==================== VIDEO MODAL ==================== -->
-<div class="video-modal" id="videoModal" aria-hidden="true" role="dialog" aria-label="Video preview">
- <div class="video-modal-content" id="videoModalContent">
-   <button class="video-modal-close" id="videoModalClose" aria-label="Close video preview">×</button>
-   <video class="video-modal-player" id="videoModalPlayer" controls autoplay playsinline></video>
- </div>
-</div>
-
-<!-- ==================== FOOTER ==================== -->
-<footer class="footer">FlashVidz</footer>
-</div>
-
-<script>
-// ==================== SECURITY UTILITIES ====================
-/**
- * Escape HTML to prevent XSS attacks
- * @param {string} str - String to escape
- * @returns {string} Escaped string safe for HTML insertion
- */
-function escapeHtml(str) {
-  if (typeof str !== 'string') return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-/**
- * Sanitize filename for safe download attribute
- * Removes path traversal characters and limits length
- * @param {string} filename - Original filename
- * @returns {string} Sanitized filename
- */
-function normalizeFileName(filename) {
-  if (typeof filename !== 'string') return 'flashvidz-download';
-  // Remove path traversal characters and control characters
-  let sanitized = filename
-    .replace(/[\\/:*?"<>|]/g, '_')  // Windows reserved chars
-    .replace(/[\x00-\x1f\x7f]/g, '') // Control characters
-    .replace(/^\.+/, '')             // Leading dots (hidden files)
-    .trim();
-  
-  // Limit length to prevent buffer issues
-  const MAX_LENGTH = 180;
-  if (sanitized.length > MAX_LENGTH) {
-    const ext = sanitized.lastIndexOf('.');
-    if (ext > 0 && ext > sanitized.length - 10) {
-      // Preserve extension
-      sanitized = sanitized.slice(0, MAX_LENGTH - (sanitized.length - ext)) + sanitized.slice(ext);
-    } else {
-      sanitized = sanitized.slice(0, MAX_LENGTH);
-    }
-  }
-  
-  return sanitized || 'flashvidz-download';
-}
-
-/**
- * Validate and normalize URL with stricter checks
- * @param {string} value - URL to validate
- * @returns {string|null} Normalized URL or null if invalid
- */
-function normalizeStoredUrl(value) {
-  const trimmed = (typeof value === 'string' ? value.trim() : '');
-  if (!trimmed) return null;
-  if (trimmed.length > 2000) return null; // Prevent abuse
-  
-  try {
-    const parsed = new URL(trimmed);
-    // Only allow http/https protocols
-    if (!['http:', 'https:'].includes(parsed.protocol)) return null;
-    
-    // Block private IP ranges and localhost
-    const hostname = parsed.hostname.toLowerCase();
-    if (hostname === 'localhost' || hostname.endsWith('.local')) return null;
-    if (/^127\./.test(hostname) || /^10\./.test(hostname) || /^192\.168\./.test(hostname)) return null;
-    if (hostname.startsWith('172.')) {
-      const secondOctet = parseInt(hostname.split('.')[1], 10);
-      if (secondOctet >= 16 && secondOctet <= 31) return null;
-    }
-    if (hostname.startsWith('169.254.')) return null; // Link-local
-    if (hostname === '::1' || hostname.startsWith('fe80:') || hostname.startsWith('fc') || hostname.startsWith('fd')) return null;
-    
-    return trimmed;
-  } catch {
-    return null;
-  }
-}
-
-// ==================== FORMAT SELECTOR ====================
-let selectedFormat = 'video';
-const formatBtn = document.getElementById('formatBtn');
-const formatDropdown = document.getElementById('formatDropdown');
-const formatIconVideo = document.getElementById('formatIconVideo');
-const formatIconAudio = document.getElementById('formatIconAudio');
-const optionVideo = document.getElementById('optionVideo');
-const optionAudio = document.getElementById('optionAudio');
-
-function toggleFormatDropdown() {
- formatDropdown.classList.toggle('active');
- formatBtn.classList.toggle('active');
-}
-
-function closeFormatDropdown() {
- formatDropdown.classList.remove('active');
- formatBtn.classList.remove('active');
-}
-
-function selectFormat(format) {
- selectedFormat = format;
-
- if (format === 'video') {
-   formatIconVideo.style.display = 'block';
-   formatIconAudio.style.display = 'none';
-   optionVideo.classList.add('selected');
-   optionAudio.classList.remove('selected');
- } else {
-   formatIconVideo.style.display = 'none';
-   formatIconAudio.style.display = 'block';
-   optionAudio.classList.add('selected');
-   optionVideo.classList.remove('selected');
- }
-
- closeFormatDropdown();
-}
-
-formatBtn.addEventListener('click', function(e) {
- e.stopPropagation();
- toggleFormatDropdown();
-});
-
-optionVideo.addEventListener('click', function(e) {
- e.stopPropagation();
- selectFormat('video');
-});
-
-optionAudio.addEventListener('click', function(e) {
- e.stopPropagation();
- selectFormat('audio');
-});
-
-document.addEventListener('click', function(e) {
- if (!formatBtn.contains(e.target) && !formatDropdown.contains(e.target)) {
-   closeFormatDropdown();
- }
-});
-
-// ==================== HAMBURGER MENU ====================
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-const closeMenuBtn = document.getElementById('closeMenuBtn');
-const hamburgerMenu = document.getElementById('hamburgerMenu');
-const menuOverlay = document.getElementById('menuOverlay');
-
-function openMenu() {
- hamburgerMenu.classList.add('active');
- menuOverlay.classList.add('active');
- document.body.style.overflow = 'hidden';
-}
-
-function closeMenu() {
- hamburgerMenu.classList.remove('active');
- menuOverlay.classList.remove('active');
- document.body.style.overflow = '';
-}
-
-function setActiveMenuItem(menuId) {
- const menuItems = document.querySelectorAll('.menu-item');
- menuItems.forEach(item => item.classList.remove('active'));
- const activeItem = document.getElementById(menuId);
- if (activeItem) {
-   activeItem.classList.add('active');
- }
-}
-
-hamburgerBtn.addEventListener('click', openMenu);
-closeMenuBtn.addEventListener('click', closeMenu);
-menuOverlay.addEventListener('click', closeMenu);
-
-// Menu items
-const menuActions = {
- menuDownloads: 'Downloads - Feature coming soon',
- menuSettings: 'Settings - Feature coming soon',
- menuLanguage: 'Language - Feature coming soon',
- menuShareApp: 'Share App - Feature coming soon',
- menuRateApp: 'Rate App - Feature coming soon',
- menuFeedback: 'Feedback - Feature coming soon',
- menuHelp: 'Help & Support\nContact: support@flashvidz.com',
- menuPrivacy: 'Privacy - Feature coming soon'
-};
-
-Object.entries(menuActions).forEach(([menuId, message]) => {
- document.getElementById(menuId).addEventListener('click', function() {
-   setActiveMenuItem(menuId);
-   alert(message);
-   closeMenu();
- });
-});
-
-// ==================== TABS ====================
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
-const tabIndicator = document.getElementById('tabIndicator');
-
-function switchTab(tabId) {
- setMessage('', '');
-
- // Update buttons
- tabBtns.forEach(btn => {
-   if (btn.dataset.tab === tabId) {
-     btn.classList.add('active');
-     btn.setAttribute('aria-selected', 'true');
-   } else {
-     btn.classList.remove('active');
-     btn.setAttribute('aria-selected', 'false');
-   }
- });
-
- // Update indicator
- if (tabId === 'downloads') {
-   tabIndicator.classList.add('downloads');
- } else {
-   tabIndicator.classList.remove('downloads');
- }
-
- // Update content
- tabContents.forEach(content => {
-   if (content.id === 'tab-' + tabId) {
-     content.classList.add('active');
-   } else {
-     content.classList.remove('active');
-   }
- });
-
- // Render downloads when switching to downloads tab
- if (tabId === 'downloads') {
-   renderDownloads();
- }
-}
-
-tabBtns.forEach(btn => {
- btn.addEventListener('click', () => {
-   switchTab(btn.dataset.tab);
- });
-});
-
-// ==================== CONFIG ====================
-const CONFIG = {
- API_URL: window.location.hostname === 'localhost'
-   ? 'http://localhost:3000/download'
-   : 'https://flashvidz-backend.onrender.com/download',
- MAX_FILE_SIZE: 500 * 1024 * 1024,
- MAX_FILENAME_LENGTH: 180,
- STORAGE_KEY: 'flashvidz_downloads'
-};
-
-// ==================== STATE ====================
-let abortController = null;
-let previousBodyOverflow = '';
-let currentDownloadId = 0;
-let modalHistoryPushed = false;
-let closingFromPopState = false;
-
-const videoModal = document.getElementById('videoModal');
-const videoModalContent = document.getElementById('videoModalContent');
-const videoModalPlayer = document.getElementById('videoModalPlayer');
-const videoModalClose = document.getElementById('videoModalClose');
-const DIRECT_DOWNLOAD_THRESHOLD = 50 * 1024 * 1024;
-
-// Track object URLs for cleanup
-const activeObjectUrls = new Set();
-
-// ==================== LOCAL STORAGE ====================
-function loadDownloads() {
- try {
-   const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
-   return stored ? JSON.parse(stored) : [];
- } catch {
-   localStorage.removeItem(CONFIG.STORAGE_KEY);
-   return [];
- }
-}
-
-function getSettings() {
- const defaults = {
-   format: 'video',
-   quality: 'best',
-   autoDownload: false
- };
-
- try {
-   const stored = localStorage.getItem('settings');
-   if (!stored) return defaults;
-   const parsed = JSON.parse(stored);
-   if (!parsed || typeof parsed !== 'object') return defaults;
-
-   const format = parsed.format === 'audio' ? 'audio' : 'video';
-   const quality = ['best', 'medium', 'low'].includes(parsed.quality) ? parsed.quality : 'best';
-   const autoDownload = parsed.autoDownload === true;
-
-   return { format, quality, autoDownload };
- } catch {
-   return defaults;
- }
-}
-
-function saveDownloads(downloads) {
- try {
-   localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(downloads));
- } catch (e) {
-   console.error('Failed to save downloads:', e);
- }
-}
-
-function isValidHttpUrl(value) {
- if (!value) return false;
- return normalizeStoredUrl(value) !== null;
-}
-
-function addDownload(downloadUrl, fileUrl, format, fileName, fileSize, thumbnail, duration) {
- const downloads = loadDownloads();
- const now = Date.now();
- const normalizedFileSize = Number(fileSize);
- const normalizedDownloadUrl = normalizeStoredUrl(downloadUrl);
- const normalizedFileUrl = normalizeStoredUrl(fileUrl);
- const normalizedThumbnail =
-  typeof thumbnail === "string" && thumbnail.trim().length > 5
-   ? thumbnail.trim()
-   : null;
- const normalizedFileName = typeof fileName === 'string'
-   ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH)
-   : '';
- if (!normalizedDownloadUrl) {
-   return null;
- }
- const download = {
-   id: now.toString(),
-   downloadUrl: normalizedDownloadUrl,
-   fileUrl: normalizedFileUrl,
-   format,
-   fileName: normalizedFileName || 'flashvidz_download',
-   fileSize: Number.isFinite(normalizedFileSize) && normalizedFileSize > 0 ? normalizedFileSize : null,
-   thumbnail: normalizedThumbnail,
-   duration: duration || null,
-   timestamp: now
- };
- downloads.unshift(download);
- // Keep only last 50 downloads to avoid storage limits
- if (downloads.length > 50) {
-   downloads.pop();
- }
- saveDownloads(downloads);
- return download;
-}
-
-function removeDownload(id) {
- const downloads = loadDownloads();
- const index = downloads.findIndex(d => d.id === id);
- if (index > -1) {
-   downloads.splice(index, 1);
-   saveDownloads(downloads);
-   renderDownloads();
- }
-}
-
-function openVideoModal(fileUrl) {
- const normalizedPreviewUrl = normalizeStoredUrl(fileUrl);
- if (!normalizedPreviewUrl) {
-   if (!isActivelyDownloading()) {
-     setMessage('Video preview unavailable: missing URL.', 'error');
-   }
-   return;
- }
-
- setMessage('Loading preview...', 'loading');
- videoModalPlayer.pause();
- videoModalPlayer.removeAttribute('src');
- videoModalPlayer.src = normalizedPreviewUrl;
- videoModalPlayer.load();
- videoModal.classList.add('active');
- videoModal.setAttribute('aria-hidden', 'false');
- previousBodyOverflow = document.body.style.overflow;
- document.body.style.overflow = 'hidden';
- const hasModalState = Boolean(history.state && history.state.videoModal);
- if (!hasModalState && !modalHistoryPushed) {
-   history.pushState({ videoModal: true }, '');
-   modalHistoryPushed = true;
- } else {
-   modalHistoryPushed = true;
- }
-
- const playPromise = videoModalPlayer.play();
- if (playPromise && typeof playPromise.catch === 'function') {
-   playPromise.catch(() => {
-    const messageEl = document.getElementById('message');
-    const isModalActive = videoModal.classList.contains('active');
-    if (isModalActive && !messageEl.classList.contains('error') && !isActivelyDownloading()) {
-      setMessage('Tap play ▶️ to start video preview', 'loading');
-    }
-   });
- }
-}
-
-function closeVideoModal() {
- videoModal.classList.remove('active');
- videoModal.setAttribute('aria-hidden', 'true');
- videoModalPlayer.pause();
- videoModalPlayer.removeAttribute('src');
- videoModalPlayer.load();
- document.body.style.overflow = previousBodyOverflow;
- const hasModalState = Boolean(history.state && history.state.videoModal);
- if (modalHistoryPushed && hasModalState && !closingFromPopState) {
-   modalHistoryPushed = false;
-   history.back();
- } else {
-   modalHistoryPushed = false;
- }
-}
-
-// ==================== DOWNLOADS UI ====================
-const DOWNLOAD_MENU_ACTIONS = [
- { action: 'download', label: 'Save', className: 'save' },
- { action: 'share', label: 'Share', className: 'share' },
- { action: 'remove', label: 'Delete', className: 'delete' }
-];
-
-const globalDownloadMenu = document.createElement('div');
-globalDownloadMenu.className = 'menu-dropdown global-download-menu hidden';
-globalDownloadMenu.id = 'globalDownloadMenu';
-globalDownloadMenu.setAttribute('aria-hidden', 'true');
-document.body.appendChild(globalDownloadMenu);
-let activeDownloadMenuContext = null;
-
-function populateGlobalDownloadMenu() {
- globalDownloadMenu.innerHTML = DOWNLOAD_MENU_ACTIONS.map(({ action, label, className }) => `
-   <button class="menu-item ${escapeHtml(className)}" data-action="${escapeHtml(action)}">${escapeHtml(label)}</button>
- `).join('');
-}
-
-function hideGlobalDownloadMenu() {
- globalDownloadMenu.classList.add('hidden');
- globalDownloadMenu.setAttribute('aria-hidden', 'true');
- activeDownloadMenuContext = null;
-}
-
-function showGlobalDownloadMenu(anchorBtn, context) {
- activeDownloadMenuContext = context;
- populateGlobalDownloadMenu();
- globalDownloadMenu.classList.remove('hidden');
- globalDownloadMenu.setAttribute('aria-hidden', 'false');
-
- requestAnimationFrame(() => {
-   const rect = anchorBtn.getBoundingClientRect();
-   const menuWidth = globalDownloadMenu.offsetWidth;
-   const menuHeight = globalDownloadMenu.offsetHeight;
-   const viewportPadding = 8;
-   const gap = 6;
-   const viewportWidth = window.innerWidth;
-   const viewportHeight = window.innerHeight;
-
-   let top = rect.bottom + gap;
-   let left = rect.right - menuWidth;
-
-   const minLeft = viewportPadding;
-   const maxLeft = viewportWidth - menuWidth - viewportPadding;
-   if (left < minLeft) left = minLeft;
-   if (left > maxLeft) left = maxLeft;
-
-   const bottomLimit = viewportHeight - viewportPadding;
-   if (top + menuHeight > bottomLimit) {
-     top = rect.top - menuHeight - gap;
-   }
-   const minTop = viewportPadding;
-   if (top < minTop) top = minTop;
-
-   globalDownloadMenu.style.top = `${top}px`;
-   globalDownloadMenu.style.left = `${left}px`;
- });
-}
-
-function formatFileSize(bytes) {
- const num = Number(bytes);
- if (!Number.isFinite(num) || num <= 0) return '—';
- const k = 1024;
- const sizes = ['B', 'KB', 'MB', 'GB'];
- const i = Math.floor(Math.log(num) / Math.log(k));
- return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
-
-function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
- return new Promise((resolve, reject) => {
-   const xhr = new XMLHttpRequest();
-   xhr.open('GET', downloadUrl, true);
-   xhr.responseType = 'blob';
-   let fakeProgress = 0;
-   let fakeInterval = null;
-   let objectUrl = null;
-
-   let finished = false;
-   const finish = (fn) => {
-     if (finished) return;
-     finished = true;
-     fn();
-   };
-
-   const cleanup = () => {
-     if (objectUrl) {
-       URL.revokeObjectURL(objectUrl);
-       activeObjectUrls.delete(objectUrl);
-       objectUrl = null;
-     }
-     stopFakeProgress();
-   };
-
-   const startFakeProgress = () => {
-     fakeProgress = 0;
-     onProgress?.(0);
-     fakeInterval = setInterval(() => {
-       if (fakeProgress < 90) {
-         fakeProgress += Math.random() * 6;
-         onProgress?.(Math.floor(fakeProgress));
-       }
-     }, 300);
-   };
-
-   const stopFakeProgress = () => {
-     if (fakeInterval) {
-       clearInterval(fakeInterval);
-       fakeInterval = null;
-     }
-   };
-
-   const abortHandler = () => {
-     finish(() => {
-       cleanup();
-       xhr.abort();
-       reject(new DOMException('The operation was aborted.', 'AbortError'));
-     });
-   };
-
-   if (signal) {
-     if (signal.aborted) {
-       abortHandler();
-       return;
-     }
-     signal.addEventListener('abort', abortHandler, { once: true });
-   }
-
-   xhr.onprogress = function(event) {
-     if (event.lengthComputable && event.total > 0) {
-       stopFakeProgress();
-       const percent = Math.round((event.loaded / event.total) * 100);
-       onProgress?.(Math.min(100, Math.max(0, percent)));
-     } else {
-       if (!fakeInterval) startFakeProgress();
-     }
-   };
-
-   xhr.onload = function() {
-     finish(() => {
-       if (signal) {
-         signal.removeEventListener('abort', abortHandler);
-       }
-
-       if (xhr.status < 200 || xhr.status >= 300) {
-         cleanup();
-         reject(new Error(`Download failed: ${xhr.status}`));
-         return;
-       }
-
-       onProgress?.(100);
-
-       const blob = xhr.response;
-       objectUrl = URL.createObjectURL(blob);
-       activeObjectUrls.add(objectUrl);
-       
-       const a = document.createElement('a');
-       a.href = objectUrl;
-       a.setAttribute('download', normalizeFileName(fileName));
-       a.rel = 'noopener';
-       document.body.appendChild(a);
-       a.click();
-       document.body.removeChild(a);
-       
-       // Delay cleanup to ensure download starts
-       setTimeout(() => {
-         if (objectUrl) {
-           URL.revokeObjectURL(objectUrl);
-           activeObjectUrls.delete(objectUrl);
-           objectUrl = null;
-         }
-       }, 1000);
-
-       resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
-     });
-   };
-
-   xhr.onerror = function() {
-     finish(() => {
-       cleanup();
-       if (signal) {
-         signal.removeEventListener('abort', abortHandler);
-       }
-       reject(new Error('Download failed'));
-     });
-   };
-
-   xhr.onabort = function() {
-     finish(() => {
-       cleanup();
-       if (signal) {
-         signal.removeEventListener('abort', abortHandler);
-       }
-       reject(new DOMException('The operation was aborted.', 'AbortError'));
-     });
-   };
-
-   xhr.send();
- });
-}
-
-function runHybridDownloadFlow(downloadUrl, fileName, fileSize, onProgress, signal) {
- const normalizedSize = Number(fileSize) || 0;
- if (normalizedSize > DIRECT_DOWNLOAD_THRESHOLD) {
-   if (signal?.aborted) {
-     return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
-   }
-   onProgress?.(0);
-   setMessage('Large file detected. Preparing browser download…', 'loading');
-   
-   return new Promise((resolve) => {
-     setTimeout(() => {
-       const a = document.createElement('a');
-       a.href = downloadUrl;
-       a.setAttribute('download', normalizeFileName(fileName));
-       a.rel = 'noopener';
-       document.body.appendChild(a);
-       a.click();
-       document.body.removeChild(a);
-       setMessage('Download started in browser', 'success');
-       resolve(normalizedSize);
-     }, 120);
-   });
- }
- return runDownloadFlow(downloadUrl, fileName, onProgress, signal);
-}
-
-function formatDownloadDate(timestamp) {
- const parsed = Number(timestamp);
- const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
- return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function renderDownloads() {
- const listContainer = document.getElementById('downloadsList');
- const countBadge = document.getElementById('downloadsCount');
- const downloads = loadDownloads();
- hideGlobalDownloadMenu();
-
- // Clear existing content except empty state template
- listContainer.innerHTML = '';
-
- if (downloads.length === 0) {
-   listContainer.innerHTML = `
-    <div class="empty-state">
-      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-      <h3>No downloads yet</h3>
-      <p>Your downloaded videos will appear here</p>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-label="Notifications"></div>
+
+  <!-- Menu Overlay -->
+  <div class="menu-overlay" id="menuOverlay" aria-hidden="true"></div>
+
+  <!-- Hamburger Menu -->
+  <nav class="hamburger-menu-container" id="hamburgerMenu" aria-label="Main navigation" aria-hidden="true">
+    <div class="menu-header">
+      <div class="menu-title-group">
+        <span class="menu-title">Settings</span>
+        <span class="menu-subtitle">FlashVidz v1.0</span>
+      </div>
+      <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
     </div>
-   `;
-   countBadge.textContent = '0 items';
-   return;
- }
-
- countBadge.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
-
- downloads.forEach(item => {
-   const card = createDownloadCard(item);
-   listContainer.appendChild(card);
- });
-}
-
-function createDownloadCard(item) {
- const card = document.createElement('div');
- card.className = 'download-card';
-
- const normalizedFormat = (item.format || 'video').toLowerCase();
- const isVideo = normalizedFormat === 'video';
- const fileName = item.fileName || item.filename || 'flashvidz_download';
- const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
- const displayDate = formatDownloadDate(item.timestamp);
- 
- // Sanitize thumbnail URL - critical XSS fix
- const thumbnailUrl =
-   typeof item.thumbnail === "string" && item.thumbnail.trim().length > 5
-   ? item.thumbnail.trim()
-   : null;
- 
- const mediaIconPath = isVideo
-   ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
-   : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
- 
- // Build thumbnail markup safely
- let thumbnailMarkup;
- if (thumbnailUrl) {
-   thumbnailMarkup = `<img 
-src="${thumbnailUrl}" 
-alt="thumbnail"
-loading="lazy"
-onerror="this.onerror=null; this.closest('.download-thumbnail-small').classList.remove('has-thumbnail'); this.style.display='none';"
-/>`;
- } else {
-   thumbnailMarkup = ``;
- }
-
- // Sanitize duration
- const safeDuration = item.duration ? escapeHtml(String(item.duration)) : null;
- const durationBadge = safeDuration ? `<span class="video-duration">${safeDuration}</span>` : '';
-
- // Sanitize filename for display
- const safeFileName = escapeHtml(fileName);
- const safeFileSize = escapeHtml(formatFileSize(fileSize));
- const safeDate = escapeHtml(displayDate);
-
- card.innerHTML = `
-   <div class="download-info-row">
-     <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">
-       ${thumbnailMarkup}
-       <svg class="thumbnail-fallback" viewBox="0 0 24 24">
-         <path d="${mediaIconPath}"/>
-       </svg>
-       ${durationBadge}
-     </div>
-     <div class="download-info">
-       <div class="download-header">
-         <div class="download-filename" title="${safeFileName}">${safeFileName}</div>
-       </div>
-       <div class="download-meta">
-         <div class="meta-left">
-           <span>
-             <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
-             ${safeDate}
-          </span>
-         </div>
-          <span class="meta-size">${safeFileSize}</span>
-       </div>
-     </div>
-     <div class="menu-wrapper">
-       <button class="menu-btn" aria-label="Open menu" title="More options">⋮</button>
-     </div>
-   </div>
- `;
-
- const menuBtn = card.querySelector('.menu-btn');
-
- menuBtn.addEventListener('click', (event) => {
-   event.stopPropagation();
-   const shouldClose = activeDownloadMenuContext?.id === item.id && !globalDownloadMenu.classList.contains('hidden');
-   if (shouldClose) {
-     hideGlobalDownloadMenu();
-     return;
-   }
-   showGlobalDownloadMenu(menuBtn, { id: item.id, item, fileName, fileSize });
- });
-
- card.addEventListener('click', (event) => {
-   if (event.target.closest('button')) {
-     return;
-   }
-   if (isActivelyDownloading()) {
-     return;
-   }
-
-   if (!isVideo) {
-     setMessage('Audio preview not supported yet.', 'loading');
-     return;
-   }
-
-   const previewUrl = item.fileUrl;
-   if (!previewUrl) {
-     setMessage('Video preview unavailable: missing preview URL.', 'error');
-     return;
-   }
-   openVideoModal(previewUrl);
- });
-
- return card;
-}
-
-document.addEventListener('click', (event) => {
- if (!event.target.closest('.menu-wrapper') && !event.target.closest('#globalDownloadMenu')) {
-   hideGlobalDownloadMenu();
- }
-});
-
-
-const downloadsList = document.querySelector('#downloadsList');
-let scrollTimeout;
-if (downloadsList) {
- downloadsList.addEventListener('scroll', () => {
-   clearTimeout(scrollTimeout);
-   scrollTimeout = setTimeout(() => {
-    hideGlobalDownloadMenu();
-   }, 100);
- });
-}
-
-globalDownloadMenu.addEventListener('click', async (event) => {
- event.stopPropagation();
- const actionButton = event.target.closest('.menu-item');
- if (!actionButton || !activeDownloadMenuContext) {
-   return;
- }
-
- const { item, fileName, fileSize } = activeDownloadMenuContext;
- const action = actionButton.dataset.action;
- hideGlobalDownloadMenu();
-
- if (action === 'download') {
-   if (isActivelyDownloading()) {
-     return;
-   }
-   try {
-     const itemDownloadUrl = item.downloadUrl;
-     if (!itemDownloadUrl) {
-       throw new Error('Missing download URL');
-     }
-     await runHybridDownloadFlow(itemDownloadUrl, fileName, fileSize, (progress) => {
-       setMessage(`Downloading... ${progress}%`, 'loading');
-     }, undefined);
-     setMessage('Download complete!', 'success');
-   } catch (error) {
-     setMessage(error.message || 'Download failed', 'error');
-   }
-   return;
- }
-
- if (action === 'share') {
-   const candidateFileUrl = normalizeStoredUrl(item.fileUrl);
-   const candidateDownloadUrl = normalizeStoredUrl(item.downloadUrl);
-   const shareUrl = isValidHttpUrl(candidateDownloadUrl)
-     ? candidateDownloadUrl
-     : isValidHttpUrl(candidateFileUrl)
-     ? candidateFileUrl
-     : null;
-   if (!shareUrl) {
-     setMessage('Missing share URL for this item.', 'error');
-     return;
-   }
-
-   if (navigator.share) {
-     try {
-       await navigator.share({
-         title: 'FlashVidz Download',
-         text: fileName,
-         url: shareUrl
-       });
-     } catch (error) {
-       if (error?.name === 'AbortError') {
-         return;
-       }
-       try {
-         await copyTextToClipboard(shareUrl);
-         setMessage('Share URL copied to clipboard.', 'success');
-       } catch (copyError) {
-         console.error('Share fallback copy failed:', copyError);
-         setMessage('Could not share or copy this file URL right now.', 'error');
-       }
-     }
-   } else {
-     try {
-       await copyTextToClipboard(shareUrl);
-       setMessage('Share URL copied to clipboard.', 'success');
-     } catch (error) {
-       console.error('Share fallback copy failed:', error);
-       setMessage('Sharing is not supported and copy failed.', 'error');
-     }
-   }
-   return;
- }
-
- if (action === 'remove' && confirm('Remove this download from history?')) {
-   removeDownload(item.id);
- }
-});
-
-// ==================== UTILS ====================
-function detectPlatform(link) {
- const url = link.toLowerCase();
- // Stricter validation - must be proper URL format first
- if (!isValidHttpUrl(link)) return 'unknown';
- 
- if (url.includes('tiktok.com')) return 'tiktok';
- if (url.includes('instagram.com')) return 'instagram';
- if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
- if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
- return 'unknown';
-}
-
-function setMessage(text, type = '') {
- const msg = document.getElementById('message');
- msg.textContent = text;
- msg.className = type;
-}
-
-async function copyTextToClipboard(text) {
- if (!text) {
-   return false;
- }
-
- if (navigator.clipboard?.writeText) {
-   await navigator.clipboard.writeText(text);
-   return true;
- }
-
- const tempInput = document.createElement('textarea');
- tempInput.value = text;
- tempInput.setAttribute('readonly', '');
- tempInput.style.position = 'absolute';
- tempInput.style.left = '-9999px';
- document.body.appendChild(tempInput);
- tempInput.select();
- const success = document.execCommand('copy');
- document.body.removeChild(tempInput);
- return success;
-}
-
-function isActivelyDownloading() {
- const btn = document.getElementById('submitBtn');
- const msg = document.getElementById('message');
- return Boolean(btn?.disabled && msg?.classList.contains('loading'));
-}
-
-function resetUI(delay = 2000, downloadId = currentDownloadId) {
- setTimeout(() => {
-   if (downloadId !== currentDownloadId) return;
-   document.getElementById('submitBtn').disabled = false;
-   document.getElementById('submitBtn').classList.remove('loading');
-   document.getElementById('pasteBtn').disabled = false;
- }, delay);
-}
-
-// ==================== ACTIONS ====================
-async function pasteLink() {
- const btn = document.getElementById('pasteBtn');
- btn.disabled = true;
-
- try {
-   const text = await navigator.clipboard.readText();
-   // Sanitize pasted content
-   const sanitized = text.trim().slice(0, 2000);
-   document.getElementById('linkInput').value = sanitized;
-   maybeAutoDownload();
- } catch (error) {
-   const isSecureContextIssue = window.isSecureContext === false;
-   const baseMessage = isSecureContextIssue
-     ? 'Clipboard requires HTTPS or localhost. Paste manually if needed.'
-     : 'Could not read your clipboard. Please allow clipboard permission or paste manually.';
-   setMessage(baseMessage, 'error');
-   console.error('Clipboard read failed:', error);
- } finally {
-   btn.disabled = false;
- }
-}
-
-document.getElementById('pasteBtn').addEventListener('click', pasteLink);
-
-function maybeAutoDownload() {
- const settings = getSettings();
- const link = document.getElementById('linkInput').value.trim();
- const submitBtn = document.getElementById('submitBtn');
- if (!settings.autoDownload || !link || !isValidHttpUrl(link) || submitBtn.disabled || isActivelyDownloading()) {
-   return;
- }
- handleDownload();
-}
-
-async function handleDownload() {
- const downloadId = ++currentDownloadId;
- const link = document.getElementById('linkInput').value.trim().slice(0, 2000);
- const settings = getSettings();
- const selectedQuality = settings.quality;
- const selectedDownloadFormat = settings.format || selectedFormat;
- if (selectedFormat !== selectedDownloadFormat) {
-   selectFormat(selectedDownloadFormat);
- }
- const btn = document.getElementById('submitBtn');
- if (btn.disabled) {
-   return;
- }
-
- const updateMessage = (text, type = '') => {
-   if (downloadId !== currentDownloadId) return;
-   setMessage(text, type);
- };
-
- btn.disabled = true;
- btn.classList.add('loading');
- document.getElementById('pasteBtn').disabled = true;
-
- if (!link) {
-   updateMessage('Enter a video link', 'error');
-   resetUI(0, downloadId);
-   return;
- }
-
- const platform = detectPlatform(link);
-
- if (platform === 'unknown') {
-   updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
-   resetUI(0, downloadId);
-   return;
- }
-
- updateMessage('Starting download...', 'loading');
-
- // Cleanup previous abort controller
- if (abortController) {
-   abortController.abort();
- }
- abortController = new AbortController();
-
- try {
-   const response = await fetch(CONFIG.API_URL, {
-     method: 'POST',
-     headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({
-       url: link,
-       format: selectedDownloadFormat,
-       quality: selectedQuality
-     }),
-     signal: abortController.signal
-   });
-
-   if (!response.ok) {
-     const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
-     throw new Error(errorData.error || `Server error: ${response.status}`);
-   }
-
-   const data = await response.json();
-
-   if (!data?.success || !(data?.downloadUrl || data?.url)) {
-     throw new Error(data?.error || 'Invalid response from server');
-   }
-
-   const downloadUrl = normalizeStoredUrl(data.downloadUrl || data.url);
-   if (!downloadUrl) {
-     throw new Error('Invalid response from server');
-   }
-   const responseFormat = data.format || selectedDownloadFormat;
-   const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
-   const backendFileSize = Number(data.fileSizeBytes) || 0;
-
-   updateMessage('Downloading... 0%', 'loading');
-   const downloadedFileSize = await runHybridDownloadFlow(downloadUrl, backendFileName, backendFileSize, (progress) => {
-     updateMessage(`Downloading... ${progress}%`, 'loading');
-   }, abortController.signal);
-
-  // Prefer downloaded size, then backend reported size, otherwise unknown
-  const finalFileSize =
-    downloadedFileSize > 0
-      ? downloadedFileSize
-      : backendFileSize > 0
-      ? backendFileSize
-      : null;
-
-   const safeFileUrl = normalizeStoredUrl(data.fileUrl);
-   console.log('Thumbnail URL:', data.thumbnail);
-
-   // Save to localStorage using backend metadata
-   addDownload(
-     downloadUrl,
-     safeFileUrl,
-     responseFormat,
-     backendFileName,
-     finalFileSize,
-     data.thumbnail,
-     data.duration
-   );
-
-   if (downloadId !== currentDownloadId) return;
-   setMessage('Download complete!', 'success');
-   switchTab('downloads');
-
-   // Clear input
-   document.getElementById('linkInput').value = '';
-
- } catch (err) {
-   if (err.name === 'AbortError') {
-     return;
-   }
-   console.error('Download error:', err);
-
-   let errorMsg = err.message || 'Download failed';
-   if (platform === 'instagram' || platform === 'facebook') {
-     if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
-       errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
-     } else if (errorMsg.includes('private')) {
-       errorMsg = `This ${platform} post is private.`;
-     }
-   } else if (platform === 'youtube') {
-     if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
-       errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
-     }
-   }
-
-   updateMessage(errorMsg, 'error');
- } finally {
-   if (downloadId === currentDownloadId) {
-     abortController = null;
-   }
-   resetUI(2000, downloadId);
- }
-}
-
-document.getElementById('submitBtn').addEventListener('click', handleDownload);
-document.getElementById('linkInput').addEventListener('input', maybeAutoDownload);
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
- if (abortController) {
-   abortController.abort();
- }
- // Cleanup any remaining object URLs
- activeObjectUrls.forEach(url => {
-   try {
-     URL.revokeObjectURL(url);
-   } catch (e) {
-     // Ignore errors during cleanup
-   }
- });
- activeObjectUrls.clear();
-});
-
-document.addEventListener('visibilitychange', () => {
- if (document.visibilityState === 'hidden' && abortController) {
-   abortController.abort();
- }
-});
-
-window.addEventListener('popstate', () => {
- if (videoModal.classList.contains('active')) {
-   closingFromPopState = true;
-   closeVideoModal();
-   closingFromPopState = false;
- }
-});
-
-videoModalClose.addEventListener('click', closeVideoModal);
-
-videoModal.addEventListener('click', (event) => {
- if (!videoModalContent.contains(event.target)) {
-   closeVideoModal();
- }
-});
-
-videoModalPlayer.addEventListener('error', () => {
- if (videoModal.classList.contains('active') && !isActivelyDownloading()) {
-   setMessage('Unable to preview this video.', 'error');
- }
-});
-
-videoModalPlayer.addEventListener('loadeddata', () => {
- const messageEl = document.getElementById('message');
- if (
-   videoModal.classList.contains('active') &&
-   messageEl?.classList.contains('loading') &&
-   messageEl.textContent === 'Loading preview...'
- ) {
-   setMessage('', '');
- }
-});
-
-// Initial render of downloads (in case we're on that tab or for count)
-renderDownloads();
-</script>
-
+    <ul class="menu-list" role="menubar">
+      <li>
+        <button class="menu-item" id="menuDownloads" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 4v10M8 10l4 4 4-4M5 19h14"/>
+          </svg>
+          <span>Downloads</span>
+        </button>
+      </li>
+      <li>
+        <button class="menu-item" id="menuShareApp" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="18" cy="5" r="2"/>
+            <circle cx="6" cy="12" r="2"/>
+            <circle cx="18" cy="19" r="2"/>
+            <path d="M8 12l8-6M8 12l8 6"/>
+          </svg>
+          <span>Share App</span>
+        </button>
+      </li>
+      <li>
+        <button class="menu-item" id="menuRateApp" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5-4.7-4.6 6.5-1z"/>
+          </svg>
+          <span>Rate App</span>
+        </button>
+      </li>
+      <li>
+        <button class="menu-item" id="menuHelp" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4M12 17h0"/>
+          </svg>
+          <span>Help</span>
+        </button>
+      </li>
+      <li>
+        <button class="menu-item" id="menuPrivacy" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6" y="11" width="12" height="9" rx="2"/>
+            <path d="M9 11V8a3 3 0 0 1 6 0v3"/>
+          </svg>
+          <span>Privacy</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="hamburgerMenu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+      </button>
+      <h1 class="app-title">Flash<span>Vidz</span></h1>
+      <span class="pro-badge">PRO</span>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+      <nav class="tabs-nav" role="tablist" aria-label="Main tabs">
+        <button class="tab-btn active" id="tabBtnEnterUrl" data-tab="enter-url" role="tab" aria-selected="true" aria-controls="tab-enter-url">
+          Enter URL
+        </button>
+        <button class="tab-btn" id="tabBtnDownloads" data-tab="downloads" role="tab" aria-selected="false" aria-controls="tab-downloads">
+          Downloads
+        </button>
+        <div class="tab-indicator" id="tabIndicator" aria-hidden="true"></div>
+      </nav>
+    </div>
+
+    <!-- Tab Content: Enter URL -->
+    <section class="tab-content active" id="tab-enter-url" role="tabpanel" aria-labelledby="tabBtnEnterUrl">
+      <!-- Input Bar -->
+      <div class="input-bar-container">
+        <form class="input-bar" id="downloadForm" onsubmit="return false;">
+          <!-- Format Selector -->
+          <div class="format-selector">
+            <button type="button" class="format-btn" id="formatBtn" aria-label="Select download format" aria-expanded="false" aria-haspopup="listbox">
+              <svg viewBox="0 0 24 24" id="formatIconVideo" aria-hidden="true">
+                <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+              </svg>
+              <svg viewBox="0 0 24 24" id="formatIconAudio" style="display:none" aria-hidden="true">
+                <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
+              </svg>
+              <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 10l5 5 5-5z"/>
+              </svg>
+            </button>
+            <div class="format-dropdown" id="formatDropdown" role="listbox" aria-label="Download format options">
+              <button type="button" class="format-option selected" data-format="video" id="optionVideo" role="option" aria-selected="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+                <span>Video</span>
+                <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+              </button>
+              <button type="button" class="format-option" data-format="audio" id="optionAudio" role="option" aria-selected="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
+                </svg>
+                <span>Audio</span>
+                <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Input Field -->
+          <div class="input-wrapper">
+            <label for="linkInput" class="sr-only">Video URL</label>
+            <input type="url" id="linkInput" placeholder="Paste link from TikTok, Instagram, YouTube..." 
+                   autocomplete="off" maxlength="2000" inputmode="url" aria-describedby="input-help">
+          </div>
+
+          <!-- Paste Button -->
+          <button type="button" class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">
+            Paste
+          </button>
+
+          <!-- Submit Button -->
+          <button type="submit" class="submit-btn" id="submitBtn" aria-label="Start download">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+            </svg>
+          </button>
+        </form>
+        <span id="input-help" class="sr-only">Supported platforms: TikTok, Instagram, YouTube, and Facebook</span>
+      </div>
+
+      <!-- Message -->
+      <div class="message-container">
+        <p id="message" role="status" aria-live="polite"></p>
+      </div>
+
+      <!-- User Guide -->
+      <div class="user-guide">
+        <div class="guide-card">
+          <div class="guide-title">Quick Guide</div>
+          <ol class="guide-list">
+            <li class="guide-item">
+              <span class="guide-number" aria-hidden="true">1</span>
+              <span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span>
+            </li>
+            <li class="guide-item">
+              <span class="guide-number" aria-hidden="true">2</span>
+              <span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span>
+            </li>
+            <li class="guide-item">
+              <span class="guide-number" aria-hidden="true">3</span>
+              <span class="guide-text"><strong>Download</strong> — Press the arrow button and wait for processing to complete</span>
+            </li>
+            <li class="guide-item">
+              <span class="guide-number" aria-hidden="true">4</span>
+              <span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab Content: Downloads -->
+    <section class="tab-content" id="tab-downloads" role="tabpanel" aria-labelledby="tabBtnDownloads" hidden>
+      <div class="downloads-container">
+        <div class="downloads-header">
+          <h2 class="downloads-title">Downloads</h2>
+          <span class="downloads-count" id="downloadsCount">0 items</span>
+        </div>
+        <div class="downloads-list" id="downloadsList" role="list" aria-label="Downloaded videos">
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyState">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            <h3>No downloads yet</h3>
+            <p>Your downloaded videos will appear here</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal" aria-hidden="true" role="dialog" aria-label="Video preview" aria-modal="true">
+      <div class="video-modal-content" id="videoModalContent">
+        <button class="video-modal-close" id="videoModalClose" aria-label="Close video preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+        <video class="video-modal-player" id="videoModalPlayer" controls playsinline preload="metadata"></video>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>FlashVidz &copy; 2024</p>
+    </footer>
+  </div>
+
+  <!-- Global Download Menu -->
+  <div class="menu-dropdown global-download-menu" id="globalDownloadMenu" role="menu" aria-hidden="true"></div>
+
+  <script>
+    // ==================== CONFIGURATION ====================
+    const CONFIG = Object.freeze({
+      API_URL: window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/download' 
+        : 'https://flashvidz-backend.onrender.com/download',
+      MAX_FILE_SIZE: 500 * 1024 * 1024,
+      MAX_FILENAME_LENGTH: 180,
+      STORAGE_KEY: 'flashvidz_downloads',
+      DIRECT_DOWNLOAD_THRESHOLD: 50 * 1024 * 1024,
+      MAX_DOWNLOADS_HISTORY: 50,
+      TOAST_DURATION: 4000,
+      SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook']
+    });
+
+    // ==================== STATE MANAGEMENT ====================
+    const state = {
+      selectedFormat: 'video',
+      abortController: null,
+      currentDownloadId: 0,
+      modalHistoryPushed: false,
+      closingFromPopState: false,
+      activeObjectUrls: new Set(),
+      activeDownloadMenuContext: null,
+      toastQueue: []
+    };
+
+    // ==================== DOM ELEMENTS CACHE ====================
+    const elements = {};
+
+    function cacheElements() {
+      const ids = [
+        'toastContainer', 'menuOverlay', 'hamburgerMenu', 'closeMenuBtn',
+        'hamburgerBtn', 'tabIndicator', 'tabBtnEnterUrl', 'tabBtnDownloads',
+        'tab-enter-url', 'tab-downloads', 'formatBtn', 'formatDropdown',
+        'formatIconVideo', 'formatIconAudio', 'optionVideo', 'optionAudio',
+        'linkInput', 'pasteBtn', 'submitBtn', 'downloadForm', 'message',
+        'downloadsCount', 'downloadsList', 'emptyState', 'videoModal',
+        'videoModalContent', 'videoModalPlayer', 'videoModalClose',
+        'globalDownloadMenu', 'menuDownloads', 'menuShareApp', 'menuRateApp',
+        'menuHelp', 'menuPrivacy'
+      ];
+      ids.forEach(id => {
+        elements[id] = document.getElementById(id);
+      });
+    }
+
+    // ==================== SECURITY UTILITIES ====================
+    const SecurityUtils = {
+      escapeHtml(str) {
+        if (typeof str !== 'string') return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      },
+
+      normalizeFileName(filename) {
+        if (typeof filename !== 'string') return 'flashvidz-download';
+        
+        let sanitized = filename
+          .replace(/[\\/:*?"<>|]/g, '_')
+          .replace(/[\x00-\x1f\x7f]/g, '')
+          .replace(/^\.+/, '')
+          .trim();
+        
+        if (sanitized.length > CONFIG.MAX_FILENAME_LENGTH) {
+          const ext = sanitized.lastIndexOf('.');
+          if (ext > 0 && ext > sanitized.length - 10) {
+            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH - (sanitized.length - ext)) + sanitized.slice(ext);
+          } else {
+            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH);
+          }
+        }
+        
+        return sanitized || 'flashvidz-download';
+      },
+
+      normalizeStoredUrl(value) {
+        const trimmed = typeof value === 'string' ? value.trim() : '';
+        if (!trimmed || trimmed.length > 2000) return null;
+        
+        try {
+          const parsed = new URL(trimmed);
+          if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+          
+          const hostname = parsed.hostname.toLowerCase();
+          if (hostname === 'localhost' || hostname.endsWith('.local')) return null;
+          if (/^127\./.test(hostname) || /^10\./.test(hostname) || /^192\.168\./.test(hostname)) return null;
+          if (hostname.startsWith('172.')) {
+            const secondOctet = parseInt(hostname.split('.')[1], 10);
+            if (secondOctet >= 16 && secondOctet <= 31) return null;
+          }
+          if (hostname.startsWith('169.254.')) return null;
+          if (hostname === '::1' || hostname.startsWith('fe80:') || hostname.startsWith('fc') || hostname.startsWith('fd')) return null;
+          
+          return trimmed;
+        } catch {
+          return null;
+        }
+      },
+
+      isValidHttpUrl(value) {
+        return this.normalizeStoredUrl(value) !== null;
+      }
+    };
+
+    // ==================== TOAST NOTIFICATION SYSTEM ====================
+    const Toast = {
+      icons: {
+        success: '<svg class="toast-icon success" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+        error: '<svg class="toast-icon error" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+        info: '<svg class="toast-icon info" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>'
+      },
+
+      show(message, type = 'info', duration = CONFIG.TOAST_DURATION) {
+        const container = elements.toastContainer;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'polite');
+        
+        toast.innerHTML = `
+          ${this.icons[type] || this.icons.info}
+          <span class="toast-message">${SecurityUtils.escapeHtml(message)}</span>
+          <button class="toast-close" aria-label="Dismiss notification">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        `;
+        
+        const closeBtn = toast.querySelector('.toast-close');
+        const closeToast = () => {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 300);
+        };
+        
+        closeBtn.addEventListener('click', closeToast);
+        container.appendChild(toast);
+        
+        if (duration > 0) {
+          setTimeout(closeToast, duration);
+        }
+        
+        return toast;
+      },
+
+      success(message) { return this.show(message, 'success'); },
+      error(message) { return this.show(message, 'error'); },
+      info(message) { return this.show(message, 'info'); }
+    };
+
+    // ==================== LOCAL STORAGE ====================
+    const Storage = {
+      loadDownloads() {
+        try {
+          const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+          return stored ? JSON.parse(stored) : [];
+        } catch {
+          localStorage.removeItem(CONFIG.STORAGE_KEY);
+          return [];
+        }
+      },
+
+      saveDownloads(downloads) {
+        try {
+          localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(downloads));
+        } catch (e) {
+          console.error('Failed to save downloads:', e);
+          Toast.error('Failed to save download history');
+        }
+      },
+
+      getSettings() {
+        const defaults = { format: 'video', quality: 'best', autoDownload: false };
+        try {
+          const stored = localStorage.getItem('flashvidz_settings');
+          if (!stored) return defaults;
+          const parsed = JSON.parse(stored);
+          return {
+            format: parsed.format === 'audio' ? 'audio' : 'video',
+            quality: ['best', 'medium', 'low'].includes(parsed.quality) ? parsed.quality : 'best',
+            autoDownload: parsed.autoDownload === true
+          };
+        } catch {
+          return defaults;
+        }
+      },
+
+      saveSettings(settings) {
+        try {
+          localStorage.setItem('flashvidz_settings', JSON.stringify(settings));
+        } catch (e) {
+          console.error('Failed to save settings:', e);
+        }
+      }
+    };
+
+    // ==================== FORMAT SELECTOR ====================
+    const FormatSelector = {
+      init() {
+        elements.formatBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggle();
+        });
+        
+        elements.optionVideo.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.select('video');
+        });
+        
+        elements.optionAudio.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.select('audio');
+        });
+        
+        document.addEventListener('click', (e) => {
+          if (!elements.formatBtn.contains(e.target) && !elements.formatDropdown.contains(e.target)) {
+            this.close();
+          }
+        });
+      },
+
+      toggle() {
+        const isOpen = elements.formatDropdown.classList.contains('active');
+        if (isOpen) {
+          this.close();
+        } else {
+          this.open();
+        }
+      },
+
+      open() {
+        elements.formatDropdown.classList.add('active');
+        elements.formatBtn.setAttribute('aria-expanded', 'true');
+      },
+
+      close() {
+        elements.formatDropdown.classList.remove('active');
+        elements.formatBtn.setAttribute('aria-expanded', 'false');
+      },
+
+      select(format) {
+        state.selectedFormat = format;
+        
+        if (format === 'video') {
+          elements.formatIconVideo.style.display = 'block';
+          elements.formatIconAudio.style.display = 'none';
+          elements.optionVideo.setAttribute('aria-selected', 'true');
+          elements.optionAudio.setAttribute('aria-selected', 'false');
+          elements.optionVideo.classList.add('selected');
+          elements.optionAudio.classList.remove('selected');
+        } else {
+          elements.formatIconVideo.style.display = 'none';
+          elements.formatIconAudio.style.display = 'block';
+          elements.optionVideo.setAttribute('aria-selected', 'false');
+          elements.optionAudio.setAttribute('aria-selected', 'true');
+          elements.optionAudio.classList.add('selected');
+          elements.optionVideo.classList.remove('selected');
+        }
+        
+        this.close();
+      }
+    };
+
+    // ==================== HAMBURGER MENU ====================
+    const HamburgerMenu = {
+      init() {
+        elements.hamburgerBtn.addEventListener('click', () => this.open());
+        elements.closeMenuBtn.addEventListener('click', () => this.close());
+        elements.menuOverlay.addEventListener('click', () => this.close());
+        
+        // Menu actions
+        elements.menuDownloads.addEventListener('click', () => {
+          this.close();
+          TabManager.switch('downloads');
+        });
+        
+        elements.menuShareApp.addEventListener('click', () => {
+          this.close();
+          this.shareApp();
+        });
+        
+        elements.menuRateApp.addEventListener('click', () => {
+          this.close();
+          Toast.info('Rate App - Feature coming soon');
+        });
+        
+        elements.menuHelp.addEventListener('click', () => {
+          this.close();
+          Toast.info('Help & Support\nContact: support@flashvidz.com', 'info', 6000);
+        });
+        
+        elements.menuPrivacy.addEventListener('click', () => {
+          this.close();
+          Toast.info('Privacy - Feature coming soon');
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) {
+            this.close();
+          }
+        });
+      },
+
+      open() {
+        elements.hamburgerMenu.classList.add('active');
+        elements.menuOverlay.classList.add('active');
+        elements.hamburgerMenu.setAttribute('aria-hidden', 'false');
+        elements.hamburgerBtn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+        elements.closeMenuBtn.focus();
+      },
+
+      close() {
+        elements.hamburgerMenu.classList.remove('active');
+        elements.menuOverlay.classList.remove('active');
+        elements.hamburgerMenu.setAttribute('aria-hidden', 'true');
+        elements.hamburgerBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        elements.hamburgerBtn.focus();
+      },
+
+      async shareApp() {
+        const shareData = {
+          title: 'FlashVidz',
+          text: 'Download videos from TikTok, Instagram, YouTube, and Facebook',
+          url: window.location.href
+        };
+        
+        if (navigator.share) {
+          try {
+            await navigator.share(shareData);
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              this.copyToClipboard(window.location.href);
+            }
+          }
+        } else {
+          this.copyToClipboard(window.location.href);
+        }
+      },
+
+      async copyToClipboard(text) {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'absolute';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+          }
+          Toast.success('Link copied to clipboard');
+        } catch {
+          Toast.error('Failed to copy link');
+        }
+      }
+    };
+
+    // ==================== TAB MANAGER ====================
+    const TabManager = {
+      init() {
+        elements.tabBtnEnterUrl.addEventListener('click', () => this.switch('enter-url'));
+        elements.tabBtnDownloads.addEventListener('click', () => this.switch('downloads'));
+      },
+
+      switch(tabId) {
+        setMessage('', '');
+        
+        // Update buttons
+        const isDownloads = tabId === 'downloads';
+        elements.tabBtnEnterUrl.setAttribute('aria-selected', !isDownloads);
+        elements.tabBtnDownloads.setAttribute('aria-selected', isDownloads);
+        elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads);
+        elements.tabBtnDownloads.classList.toggle('active', isDownloads);
+        
+        // Update indicator
+        elements.tabIndicator.classList.toggle('downloads', isDownloads);
+        
+        // Update content
+        elements['tab-enter-url'].classList.toggle('active', !isDownloads);
+        elements['tab-enter-url'].hidden = isDownloads;
+        elements['tab-downloads'].classList.toggle('active', isDownloads);
+        elements['tab-downloads'].hidden = !isDownloads;
+        
+        // Render downloads when switching to downloads tab
+        if (isDownloads) {
+          DownloadsManager.render();
+        }
+      }
+    };
+
+    // ==================== MESSAGE SYSTEM ====================
+    function setMessage(text, type = '') {
+      const msg = elements.message;
+      msg.textContent = text;
+      msg.className = type;
+    }
+
+    // ==================== DOWNLOADS MANAGER ====================
+    const DownloadsManager = {
+      DOWNLOAD_MENU_ACTIONS: [
+        { action: 'download', label: 'Save', className: 'save' },
+        { action: 'share', label: 'Share', className: 'share' },
+        { action: 'remove', label: 'Delete', className: 'delete' }
+      ],
+
+      init() {
+        this.populateMenu();
+        
+        // Global click to close menu
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.menu-wrapper') && !e.target.closest('#globalDownloadMenu')) {
+            this.hideMenu();
+          }
+        });
+
+        // Scroll to close menu
+        elements.downloadsList?.addEventListener('scroll', () => {
+          clearTimeout(this.scrollTimeout);
+          this.scrollTimeout = setTimeout(() => this.hideMenu(), 100);
+        });
+
+        // Menu actions
+        elements.globalDownloadMenu.addEventListener('click', (e) => this.handleMenuAction(e));
+      },
+
+      populateMenu() {
+        elements.globalDownloadMenu.innerHTML = this.DOWNLOAD_MENU_ACTIONS.map(({ action, label, className }) => 
+          `<button class="menu-item ${SecurityUtils.escapeHtml(className)}" data-action="${SecurityUtils.escapeHtml(action)}" role="menuitem">${SecurityUtils.escapeHtml(label)}</button>`
+        ).join('');
+      },
+
+      hideMenu() {
+        elements.globalDownloadMenu.classList.remove('active');
+        elements.globalDownloadMenu.setAttribute('aria-hidden', 'true');
+        state.activeDownloadMenuContext = null;
+      },
+
+      showMenu(anchorBtn, context) {
+        state.activeDownloadMenuContext = context;
+        elements.globalDownloadMenu.classList.add('active');
+        elements.globalDownloadMenu.setAttribute('aria-hidden', 'false');
+        
+        requestAnimationFrame(() => {
+          const rect = anchorBtn.getBoundingClientRect();
+          const menuWidth = elements.globalDownloadMenu.offsetWidth;
+          const menuHeight = elements.globalDownloadMenu.offsetHeight;
+          const viewportPadding = 8;
+          const gap = 6;
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          let top = rect.bottom + gap;
+          let left = rect.right - menuWidth;
+          
+          if (left < viewportPadding) left = viewportPadding;
+          if (left > viewportWidth - menuWidth - viewportPadding) {
+            left = viewportWidth - menuWidth - viewportPadding;
+          }
+          
+          if (top + menuHeight > viewportHeight - viewportPadding) {
+            top = rect.top - menuHeight - gap;
+          }
+          if (top < viewportPadding) top = viewportPadding;
+          
+          elements.globalDownloadMenu.style.top = `${top}px`;
+          elements.globalDownloadMenu.style.left = `${left}px`;
+        });
+      },
+
+      async handleMenuAction(e) {
+        e.stopPropagation();
+        const actionButton = e.target.closest('.menu-item');
+        if (!actionButton || !state.activeDownloadMenuContext) return;
+        
+        const { item, fileName, fileSize } = state.activeDownloadMenuContext;
+        const action = actionButton.dataset.action;
+        this.hideMenu();
+        
+        switch (action) {
+          case 'download':
+            await this.downloadItem(item, fileName, fileSize);
+            break;
+          case 'share':
+            await this.shareItem(item, fileName);
+            break;
+          case 'remove':
+            this.removeItem(item.id);
+            break;
+        }
+      },
+
+      async downloadItem(item, fileName, fileSize) {
+        if (isActivelyDownloading()) {
+          Toast.info('A download is already in progress');
+          return;
+        }
+        
+        try {
+          const itemDownloadUrl = item.downloadUrl;
+          if (!itemDownloadUrl) {
+            throw new Error('Missing download URL');
+          }
+          
+          Toast.info('Starting download...');
+          await DownloadFlow.runHybrid(itemDownloadUrl, fileName, fileSize, (progress) => {
+            setMessage(`Downloading... ${progress}%`, 'loading');
+          });
+          Toast.success('Download complete!');
+        } catch (error) {
+          Toast.error(error.message || 'Download failed');
+        }
+      },
+
+      async shareItem(item, fileName) {
+        const shareUrl = SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl :
+                        SecurityUtils.isValidHttpUrl(item.fileUrl) ? item.fileUrl : null;
+        
+        if (!shareUrl) {
+          Toast.error('Missing share URL for this item');
+          return;
+        }
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'FlashVidz Download',
+              text: fileName,
+              url: shareUrl
+            });
+          } catch (error) {
+            if (error.name !== 'AbortError') {
+              await HamburgerMenu.copyToClipboard(shareUrl);
+            }
+          }
+        } else {
+          await HamburgerMenu.copyToClipboard(shareUrl);
+        }
+      },
+
+      removeItem(id) {
+        if (confirm('Remove this download from history?')) {
+          const downloads = Storage.loadDownloads();
+          const index = downloads.findIndex(d => d.id === id);
+          if (index > -1) {
+            downloads.splice(index, 1);
+            Storage.saveDownloads(downloads);
+            this.render();
+            Toast.success('Download removed');
+          }
+        }
+      },
+
+      add(downloadUrl, fileUrl, format, fileName, fileSize, thumbnail, duration) {
+        const downloads = Storage.loadDownloads();
+        const now = Date.now();
+        
+        const download = {
+          id: now.toString(),
+          downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
+          fileUrl: SecurityUtils.normalizeStoredUrl(fileUrl),
+          format,
+          fileName: typeof fileName === 'string' ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH) : 'flashvidz_download',
+          fileSize: Number.isFinite(Number(fileSize)) && Number(fileSize) > 0 ? Number(fileSize) : null,
+          thumbnail: typeof thumbnail === 'string' && thumbnail.trim().length > 5 ? thumbnail.trim() : null,
+          duration: duration || null,
+          timestamp: now
+        };
+        
+        if (!download.downloadUrl) return null;
+        
+        downloads.unshift(download);
+        if (downloads.length > CONFIG.MAX_DOWNLOADS_HISTORY) {
+          downloads.pop();
+        }
+        
+        Storage.saveDownloads(downloads);
+        return download;
+      },
+
+      formatFileSize(bytes) {
+        const num = Number(bytes);
+        if (!Number.isFinite(num) || num <= 0) return '—';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(num) / Math.log(k));
+        return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      },
+
+      formatDate(timestamp) {
+        const parsed = Number(timestamp);
+        const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      },
+
+      getPlatformBadge(platform) {
+        const badges = {
+          tiktok: '<span class="platform-badge tiktok">TikTok</span>',
+          instagram: '<span class="platform-badge instagram">Instagram</span>',
+          youtube: '<span class="platform-badge youtube">YouTube</span>',
+          facebook: '<span class="platform-badge facebook">Facebook</span>'
+        };
+        return badges[platform] || '';
+      },
+
+      render() {
+        const downloads = Storage.loadDownloads();
+        this.hideMenu();
+        
+        if (downloads.length === 0) {
+          elements.downloadsList.innerHTML = `
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <h3>No downloads yet</h3>
+              <p>Your downloaded videos will appear here</p>
+            </div>
+          `;
+          elements.downloadsCount.textContent = '0 items';
+          return;
+        }
+        
+        elements.downloadsCount.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
+        elements.downloadsList.innerHTML = '';
+        
+        downloads.forEach(item => {
+          const card = this.createCard(item);
+          elements.downloadsList.appendChild(card);
+        });
+      },
+
+      createCard(item) {
+        const card = document.createElement('div');
+        card.className = 'download-card';
+        card.setAttribute('role', 'listitem');
+        card.setAttribute('tabindex', '0');
+        
+        const isVideo = (item.format || 'video').toLowerCase() === 'video';
+        const fileName = item.fileName || item.filename || 'flashvidz_download';
+        const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
+        const displayDate = this.formatDate(item.timestamp);
+        const thumbnailUrl = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 5 ? item.thumbnail.trim() : null;
+        
+        const mediaIconPath = isVideo
+          ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
+          : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
+        
+        const thumbnailMarkup = thumbnailUrl 
+          ? `<img src="${thumbnailUrl}" alt="" loading="lazy" onerror="this.onerror=null; this.closest('.download-thumbnail-small').classList.remove('has-thumbnail'); this.remove();">`
+          : '';
+        
+        const durationBadge = item.duration 
+          ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
+          : '';
+        
+        card.innerHTML = `
+          <div class="download-info-row">
+            <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">
+              ${thumbnailMarkup}
+              <svg class="thumbnail-fallback" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="${mediaIconPath}"/>
+              </svg>
+              ${durationBadge}
+            </div>
+            <div class="download-info">
+              <div class="download-filename" title="${SecurityUtils.escapeHtml(fileName)}">${SecurityUtils.escapeHtml(fileName)}</div>
+              <div class="download-meta">
+                <div class="meta-left">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+                  ${SecurityUtils.escapeHtml(displayDate)}
+                </div>
+                <span class="meta-size">${SecurityUtils.escapeHtml(this.formatFileSize(fileSize))}</span>
+              </div>
+            </div>
+            <div class="menu-wrapper">
+              <button class="menu-btn" aria-label="More options" title="More options">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        const menuBtn = card.querySelector('.menu-btn');
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const shouldClose = state.activeDownloadMenuContext?.id === item.id && elements.globalDownloadMenu.classList.contains('active');
+          if (shouldClose) {
+            this.hideMenu();
+          } else {
+            this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize });
+          }
+        });
+        
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          if (isActivelyDownloading()) {
+            Toast.info('Please wait for current download to complete');
+            return;
+          }
+          
+          if (!isVideo) {
+            Toast.info('Audio preview not supported yet');
+            return;
+          }
+          
+          if (!item.fileUrl) {
+            Toast.error('Video preview unavailable: missing URL');
+            return;
+          }
+          
+          VideoModal.open(item.fileUrl);
+        });
+        
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
+        });
+        
+        return card;
+      }
+    };
+
+    // ==================== VIDEO MODAL ====================
+    const VideoModal = {
+      init() {
+        elements.videoModalClose.addEventListener('click', () => this.close());
+        elements.videoModal.addEventListener('click', (e) => {
+          if (!elements.videoModalContent.contains(e.target)) {
+            this.close();
+          }
+        });
+        
+        window.addEventListener('popstate', () => {
+          if (elements.videoModal.classList.contains('active')) {
+            state.closingFromPopState = true;
+            this.close();
+            state.closingFromPopState = false;
+          }
+        });
+        
+        elements.videoModalPlayer.addEventListener('error', () => {
+          if (elements.videoModal.classList.contains('active') && !isActivelyDownloading()) {
+            Toast.error('Unable to preview this video');
+          }
+        });
+        
+        elements.videoModalPlayer.addEventListener('loadeddata', () => {
+          const msg = elements.message;
+          if (elements.videoModal.classList.contains('active') && 
+              msg?.classList.contains('loading') && 
+              msg.textContent === 'Loading preview...') {
+            setMessage('', '');
+          }
+        });
+      },
+
+      open(fileUrl) {
+        const normalizedUrl = SecurityUtils.normalizeStoredUrl(fileUrl);
+        if (!normalizedUrl) {
+          if (!isActivelyDownloading()) {
+            Toast.error('Video preview unavailable: missing URL');
+          }
+          return;
+        }
+        
+        setMessage('Loading preview...', 'loading');
+        elements.videoModalPlayer.pause();
+        elements.videoModalPlayer.removeAttribute('src');
+        elements.videoModalPlayer.src = normalizedUrl;
+        elements.videoModalPlayer.load();
+        elements.videoModal.classList.add('active');
+        elements.videoModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        
+        if (!state.modalHistoryPushed) {
+          history.pushState({ videoModal: true }, '');
+          state.modalHistoryPushed = true;
+        }
+        
+        const playPromise = elements.videoModalPlayer.play();
+        if (playPromise?.catch) {
+          playPromise.catch(() => {
+            const isModalActive = elements.videoModal.classList.contains('active');
+            const msg = elements.message;
+            if (isModalActive && !msg.classList.contains('error') && !isActivelyDownloading()) {
+              setMessage('Tap play to start video preview', 'loading');
+            }
+          });
+        }
+      },
+
+      close() {
+        elements.videoModal.classList.remove('active');
+        elements.videoModal.setAttribute('aria-hidden', 'true');
+        elements.videoModalPlayer.pause();
+        elements.videoModalPlayer.removeAttribute('src');
+        elements.videoModalPlayer.load();
+        document.body.style.overflow = '';
+        
+        if (state.modalHistoryPushed && history.state?.videoModal && !state.closingFromPopState) {
+          state.modalHistoryPushed = false;
+          history.back();
+        } else {
+          state.modalHistoryPushed = false;
+        }
+      }
+    };
+
+    // ==================== DOWNLOAD FLOW ====================
+    const DownloadFlow = {
+      run(downloadUrl, fileName, onProgress, signal) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', downloadUrl, true);
+          xhr.responseType = 'blob';
+          
+          let fakeProgress = 0;
+          let fakeInterval = null;
+          let objectUrl = null;
+          let finished = false;
+          
+          const finish = (fn) => {
+            if (finished) return;
+            finished = true;
+            fn();
+          };
+          
+          const cleanup = () => {
+            if (objectUrl) {
+              URL.revokeObjectURL(objectUrl);
+              state.activeObjectUrls.delete(objectUrl);
+              objectUrl = null;
+            }
+            if (fakeInterval) {
+              clearInterval(fakeInterval);
+              fakeInterval = null;
+            }
+          };
+          
+          const startFakeProgress = () => {
+            fakeProgress = 0;
+            onProgress?.(0);
+            fakeInterval = setInterval(() => {
+              if (fakeProgress < 90) {
+                fakeProgress += Math.random() * 6;
+                onProgress?.(Math.floor(fakeProgress));
+              }
+            }, 300);
+          };
+          
+          const abortHandler = () => {
+            finish(() => {
+              cleanup();
+              xhr.abort();
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          };
+          
+          if (signal) {
+            if (signal.aborted) {
+              abortHandler();
+              return;
+            }
+            signal.addEventListener('abort', abortHandler, { once: true });
+          }
+          
+          xhr.onprogress = (event) => {
+            if (event.lengthComputable && event.total > 0) {
+              if (fakeInterval) clearInterval(fakeInterval);
+              const percent = Math.round((event.loaded / event.total) * 100);
+              onProgress?.(Math.min(100, Math.max(0, percent)));
+            } else if (!fakeInterval) {
+              startFakeProgress();
+            }
+          };
+          
+          xhr.onload = () => {
+            finish(() => {
+              signal?.removeEventListener('abort', abortHandler);
+              
+              if (xhr.status < 200 || xhr.status >= 300) {
+                cleanup();
+                reject(new Error(`Download failed: ${xhr.status}`));
+                return;
+              }
+              
+              onProgress?.(100);
+              
+              const blob = xhr.response;
+              objectUrl = URL.createObjectURL(blob);
+              state.activeObjectUrls.add(objectUrl);
+              
+              const a = document.createElement('a');
+              a.href = objectUrl;
+              a.setAttribute('download', SecurityUtils.normalizeFileName(fileName));
+              a.rel = 'noopener';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              
+              setTimeout(() => {
+                if (objectUrl) {
+                  URL.revokeObjectURL(objectUrl);
+                  state.activeObjectUrls.delete(objectUrl);
+                }
+              }, 1000);
+              
+              resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
+            });
+          };
+          
+          xhr.onerror = () => {
+            finish(() => {
+              cleanup();
+              signal?.removeEventListener('abort', abortHandler);
+              reject(new Error('Download failed'));
+            });
+          };
+          
+          xhr.onabort = () => {
+            finish(() => {
+              cleanup();
+              signal?.removeEventListener('abort', abortHandler);
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          };
+          
+          xhr.send();
+        });
+      },
+
+      runHybrid(downloadUrl, fileName, fileSize, onProgress, signal) {
+        const normalizedSize = Number(fileSize) || 0;
+        
+        if (normalizedSize > CONFIG.DIRECT_DOWNLOAD_THRESHOLD) {
+          if (signal?.aborted) {
+            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+          }
+          
+          onProgress?.(0);
+          Toast.info('Large file detected. Starting browser download...');
+          
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.setAttribute('download', SecurityUtils.normalizeFileName(fileName));
+              a.rel = 'noopener';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              Toast.success('Download started in browser');
+              resolve(normalizedSize);
+            }, 120);
+          });
+        }
+        
+        return this.run(downloadUrl, fileName, onProgress, signal);
+      }
+    };
+
+    // ==================== PLATFORM DETECTION ====================
+    function detectPlatform(link) {
+      if (!SecurityUtils.isValidHttpUrl(link)) return 'unknown';
+      
+      const url = link.toLowerCase();
+      if (url.includes('tiktok.com')) return 'tiktok';
+      if (url.includes('instagram.com')) return 'instagram';
+      if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+      if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
+      return 'unknown';
+    }
+
+    // ==================== DOWNLOAD HANDLER ====================
+    async function pasteLink() {
+      const btn = elements.pasteBtn;
+      btn.disabled = true;
+      
+      try {
+        const text = await navigator.clipboard.readText();
+        const sanitized = text.trim().slice(0, 2000);
+        elements.linkInput.value = sanitized;
+        maybeAutoDownload();
+      } catch (error) {
+        const isSecureContextIssue = window.isSecureContext === false;
+        const message = isSecureContextIssue
+          ? 'Clipboard requires HTTPS or localhost'
+          : 'Could not read clipboard. Please paste manually.';
+        Toast.error(message);
+        console.error('Clipboard read failed:', error);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function maybeAutoDownload() {
+      const settings = Storage.getSettings();
+      const link = elements.linkInput.value.trim();
+      
+      if (!settings.autoDownload || !link || !SecurityUtils.isValidHttpUrl(link) || 
+          elements.submitBtn.disabled || isActivelyDownloading()) {
+        return;
+      }
+      
+      handleDownload();
+    }
+
+    function isActivelyDownloading() {
+      return elements.submitBtn.disabled && elements.message.classList.contains('loading');
+    }
+
+    function resetUI(delay = 2000) {
+      const downloadId = state.currentDownloadId;
+      setTimeout(() => {
+        if (downloadId !== state.currentDownloadId) return;
+        elements.submitBtn.disabled = false;
+        elements.submitBtn.classList.remove('loading');
+        elements.pasteBtn.disabled = false;
+      }, delay);
+    }
+
+    async function handleDownload() {
+      const downloadId = ++state.currentDownloadId;
+      const link = elements.linkInput.value.trim().slice(0, 2000);
+      const settings = Storage.getSettings();
+      
+      if (state.selectedFormat !== settings.format) {
+        FormatSelector.select(settings.format);
+      }
+      
+      if (elements.submitBtn.disabled) return;
+      
+      const updateMessage = (text, type = '') => {
+        if (downloadId !== state.currentDownloadId) return;
+        setMessage(text, type);
+      };
+      
+      elements.submitBtn.disabled = true;
+      elements.submitBtn.classList.add('loading');
+      elements.pasteBtn.disabled = true;
+      
+      if (!link) {
+        updateMessage('Enter a video link', 'error');
+        resetUI(0);
+        return;
+      }
+      
+      const platform = detectPlatform(link);
+      
+      if (platform === 'unknown') {
+        updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
+        resetUI(0);
+        return;
+      }
+      
+      updateMessage('Starting download...', 'loading');
+      
+      if (state.abortController) {
+        state.abortController.abort();
+      }
+      state.abortController = new AbortController();
+      
+      try {
+        const response = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: link,
+            format: state.selectedFormat,
+            quality: settings.quality
+          }),
+          signal: state.abortController.signal
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data?.success || !(data?.downloadUrl || data?.url)) {
+          throw new Error(data?.error || 'Invalid response from server');
+        }
+        
+        const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
+        if (!downloadUrl) {
+          throw new Error('Invalid response from server');
+        }
+        
+        const responseFormat = data.format || state.selectedFormat;
+        const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
+        const backendFileSize = Number(data.fileSizeBytes) || 0;
+        
+        updateMessage('Downloading... 0%', 'loading');
+        
+        const downloadedFileSize = await DownloadFlow.runHybrid(
+          downloadUrl, 
+          backendFileName, 
+          backendFileSize, 
+          (progress) => updateMessage(`Downloading... ${progress}%`, 'loading'),
+          state.abortController.signal
+        );
+        
+        const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize > 0 ? backendFileSize : null;
+        const safeFileUrl = SecurityUtils.normalizeStoredUrl(data.fileUrl);
+        
+        DownloadsManager.add(
+          downloadUrl,
+          safeFileUrl,
+          responseFormat,
+          backendFileName,
+          finalFileSize,
+          data.thumbnail,
+          data.duration
+        );
+        
+        if (downloadId !== state.currentDownloadId) return;
+        
+        setMessage('Download complete!', 'success');
+        Toast.success('Download complete!');
+        TabManager.switch('downloads');
+        elements.linkInput.value = '';
+        
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        
+        console.error('Download error:', err);
+        let errorMsg = err.message || 'Download failed';
+        
+        if (platform === 'instagram' || platform === 'facebook') {
+          if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
+            errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
+          } else if (errorMsg.includes('private')) {
+            errorMsg = `This ${platform} post is private.`;
+          }
+        } else if (platform === 'youtube') {
+          if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
+            errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
+          }
+        }
+        
+        updateMessage(errorMsg, 'error');
+        Toast.error(errorMsg);
+      } finally {
+        if (downloadId === state.currentDownloadId) {
+          state.abortController = null;
+        }
+        resetUI(2000);
+      }
+    }
+
+    // ==================== INITIALIZATION ====================
+    function init() {
+      cacheElements();
+      FormatSelector.init();
+      HamburgerMenu.init();
+      TabManager.init();
+      DownloadsManager.init();
+      VideoModal.init();
+      
+      // Event listeners
+      elements.pasteBtn.addEventListener('click', pasteLink);
+      elements.submitBtn.addEventListener('click', handleDownload);
+      elements.linkInput.addEventListener('input', maybeAutoDownload);
+      elements.downloadForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleDownload();
+      });
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + V to focus and paste
+        if ((e.ctrlKey || e.metaKey) && e.key === 'v' && document.activeElement !== elements.linkInput) {
+          elements.linkInput.focus();
+        }
+        
+        // Escape to close modals
+        if (e.key === 'Escape') {
+          if (elements.videoModal.classList.contains('active')) {
+            VideoModal.close();
+          }
+        }
+      });
+      
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', () => {
+        state.abortController?.abort();
+        state.activeObjectUrls.forEach(url => {
+          try { URL.revokeObjectURL(url); } catch {}
+        });
+        state.activeObjectUrls.clear();
+      });
+      
+      // Abort on visibility change
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && state.abortController) {
+          state.abortController.abort();
+        }
+      });
+      
+      // Initial render
+      DownloadsManager.render();
+      
+      // Welcome toast
+      setTimeout(() => {
+        Toast.info('Welcome to FlashVidz! Paste a video URL to get started.', 'info', 5000);
+      }, 1000);
+    }
+
+    // Start the app
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
 </body>
 </html>
