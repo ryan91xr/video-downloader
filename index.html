@@ -1854,9 +1854,16 @@ document.addEventListener('click', (event) => {
 });
 
 
-window.addEventListener('scroll', () => {
- hideGlobalDownloadMenu();
-});
+const downloadsList = document.querySelector('.downloads-list');
+let scrollTimeout;
+if (downloadsList) {
+ downloadsList.addEventListener('scroll', () => {
+   clearTimeout(scrollTimeout);
+   scrollTimeout = setTimeout(() => {
+    hideGlobalDownloadMenu();
+   }, 100);
+ });
+}
 
 globalDownloadMenu.addEventListener('click', async (event) => {
  event.stopPropagation();
