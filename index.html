@@ -1223,6 +1223,23 @@
         border-width: 2px;
       }
     }
+    
+    /* ==================== RETRY BUTTON ==================== */
+    .retry-btn {
+      background: transparent;
+      border: 1px solid var(--color-accent);
+      color: var(--color-accent);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-left: var(--space-sm);
+      transition: all var(--transition-fast);
+    }
+    
+    .retry-btn:hover {
+      background: rgba(0, 212, 170, 0.15);
+    }
   </style>
 </head>
 
@@ -1465,7 +1482,10 @@
       DIRECT_DOWNLOAD_THRESHOLD: 50 * 1024 * 1024,
       MAX_DOWNLOADS_HISTORY: 50,
       TOAST_DURATION: 4000,
-      SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook']
+      SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook'],
+      // FIX: Add retry configuration
+      MAX_RETRIES: 3,
+      RETRY_DELAY: 2000
     });
 
     // ==================== STATE MANAGEMENT ====================
@@ -1478,7 +1498,12 @@
       closingFromPopState: false,
       activeObjectUrls: new Set(),
       activeDownloadMenuContext: null,
-      toastQueue: []
+      toastQueue: [],
+      // FIX: Track if we're currently downloading to prevent double-clicks
+      isDownloading: false,
+      // FIX: Store last URL for retry functionality
+      lastUrl: null,
+      lastFormat: null
     };
 
     // ==================== DOM ELEMENTS CACHE ====================
@@ -2474,10 +2499,12 @@
       handleDownload();
     }
 
+    // FIX: Better check for active download state
     function isActivelyDownloading() {
-      return elements.submitBtn.disabled && elements.message.classList.contains('loading');
+      return state.isDownloading || (elements.submitBtn.disabled && elements.message.classList.contains('loading'));
     }
 
+    // FIX: Reset UI properly and clear isDownloading flag
     function resetUI(delay = 2000) {
       const downloadId = state.currentDownloadId;
       setTimeout(() => {
@@ -2485,21 +2512,71 @@
         elements.submitBtn.disabled = false;
         elements.submitBtn.classList.remove('loading');
         elements.pasteBtn.disabled = false;
+        state.isDownloading = false; // FIX: Clear the flag
       }, delay);
     }
+
+    // FIX: Add retry logic for server busy errors
+    async function handleDownloadWithRetry(retryCount = 0) {
+      const link = elements.linkInput.value.trim().slice(0, 2000);
+      const format = selectedFormat;
+      
+      // Store for potential retry
+      state.lastUrl = link;
+      state.lastFormat = format;
+      
+      try {
+        await handleDownload();
+      } catch (err) {
+        // Check if it's a server busy error and we haven't exceeded retries
+        if (err.message?.includes('try again later') && retryCount < CONFIG.MAX_RETRIES) {
+          const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount); // Exponential backoff
+          setMessage(`Server busy. Retrying in ${delay/1000}s... (${retryCount + 1}/${CONFIG.MAX_RETRIES})`, 'loading');
+          
+          setTimeout(() => {
+            handleDownloadWithRetry(retryCount + 1);
+          }, delay);
+          return;
+        }
+        
+        // If we get here, either it's not a retryable error or we've exhausted retries
+        throw err;
+      }
+    }
+
+    // FIX: Add retry button to error messages
+    function showErrorWithRetry(message) {
+      const msg = elements.message;
+      msg.innerHTML = `${SecurityUtils.escapeHtml(message)} <button class="retry-btn" onclick="retryLastDownload()">Retry</button>`;
+      msg.className = 'error';
+    }
+
+    // Global function for retry button
+    window.retryLastDownload = function() {
+      if (state.lastUrl && state.lastFormat) {
+        elements.linkInput.value = state.lastUrl;
+        selectedFormat = state.lastFormat;
+        handleDownloadWithRetry();
+      }
+    };
 
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
       const settings = Storage.getSettings();
       
-      if (elements.submitBtn.disabled) return;
+      // FIX: Prevent double-clicks
+      if (state.isDownloading || elements.submitBtn.disabled) {
+        return;
+      }
       
       const updateMessage = (text, type = '') => {
         if (downloadId !== state.currentDownloadId) return;
         setMessage(text, type);
       };
       
+      // FIX: Set isDownloading flag
+      state.isDownloading = true;
       elements.submitBtn.disabled = true;
       elements.submitBtn.classList.add('loading');
       elements.pasteBtn.disabled = true;
@@ -2537,8 +2614,21 @@
           signal: state.abortController.signal
         });
         
+        // FIX: Better error handling with specific messages
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
+          
+          // Handle specific status codes
+          if (response.status === 503) {
+            throw new Error('Server busy, try again later');
+          } else if (response.status === 429) {
+            throw new Error('Too many requests. Please wait a moment.');
+          } else if (response.status === 413) {
+            throw new Error('File too large');
+          } else if (response.status === 504) {
+            throw new Error('Download timeout. Server may be overloaded.');
+          }
+          
           throw new Error(errorData.error || `Server error: ${response.status}`);
         }
         
@@ -2605,8 +2695,18 @@
           }
         }
         
-        updateMessage(errorMsg, 'error');
+        // FIX: Use retry-enabled error display for server busy errors
+        if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
+          showErrorWithRetry(errorMsg);
+        } else {
+          updateMessage(errorMsg, 'error');
+        }
         Toast.error(errorMsg);
+        
+        // FIX: Re-throw so retry logic can catch it
+        if (errorMsg.includes('try again later')) {
+          throw err;
+        }
       } finally {
         if (downloadId === state.currentDownloadId) {
           state.abortController = null;
@@ -2629,11 +2729,11 @@
       
       // Event listeners
       elements.pasteBtn.addEventListener('click', pasteLink);
-      elements.submitBtn.addEventListener('click', handleDownload);
+      elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0)); // FIX: Use retry wrapper
       elements.linkInput.addEventListener('input', maybeAutoDownload);
       elements.downloadForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        handleDownload();
+        handleDownloadWithRetry(0); // FIX: Use retry wrapper
       });
       
       // Keyboard shortcuts
