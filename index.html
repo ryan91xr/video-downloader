@@ -1667,7 +1667,7 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
        const objectUrl = URL.createObjectURL(blob);
        const a = document.createElement('a');
        a.href = objectUrl;
-       a.download = fileName || 'flashvidz-download';
+       a.setAttribute('download', fileName || 'flashvidz-download');
        a.rel = 'noopener';
        document.body.appendChild(a);
        a.click();
@@ -1713,7 +1713,7 @@ function runHybridDownloadFlow(downloadUrl, fileName, fileSize, onProgress, sign
    setTimeout(() => {
      const a = document.createElement('a');
      a.href = downloadUrl;
-     a.download = fileName || 'flashvidz-download';
+     a.setAttribute('download', fileName || 'flashvidz-download');
      a.rel = 'noopener';
      document.body.appendChild(a);
      a.click();
