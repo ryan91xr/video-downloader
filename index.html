@@ -1111,7 +1111,7 @@ body {
      </div>
 
      <!-- Input Field -->
-     <input id="linkInput" placeholder="Paste link here..." autocomplete="off">
+     <input id="linkInput" placeholder="Paste link here..." autocomplete="off" maxlength="2000">
 
      <!-- Paste Button -->
      <button class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">Paste</button>
@@ -1185,6 +1185,81 @@ body {
 </div>
 
 <script>
+// ==================== SECURITY UTILITIES ====================
+/**
+ * Escape HTML to prevent XSS attacks
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string safe for HTML insertion
+ */
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/**
+ * Sanitize filename for safe download attribute
+ * Removes path traversal characters and limits length
+ * @param {string} filename - Original filename
+ * @returns {string} Sanitized filename
+ */
+function normalizeFileName(filename) {
+  if (typeof filename !== 'string') return 'flashvidz-download';
+  // Remove path traversal characters and control characters
+  let sanitized = filename
+    .replace(/[\\/:*?"<>|]/g, '_')  // Windows reserved chars
+    .replace(/[\x00-\x1f\x7f]/g, '') // Control characters
+    .replace(/^\.+/, '')             // Leading dots (hidden files)
+    .trim();
+  
+  // Limit length to prevent buffer issues
+  const MAX_LENGTH = 180;
+  if (sanitized.length > MAX_LENGTH) {
+    const ext = sanitized.lastIndexOf('.');
+    if (ext > 0 && ext > sanitized.length - 10) {
+      // Preserve extension
+      sanitized = sanitized.slice(0, MAX_LENGTH - (sanitized.length - ext)) + sanitized.slice(ext);
+    } else {
+      sanitized = sanitized.slice(0, MAX_LENGTH);
+    }
+  }
+  
+  return sanitized || 'flashvidz-download';
+}
+
+/**
+ * Validate and normalize URL with stricter checks
+ * @param {string} value - URL to validate
+ * @returns {string|null} Normalized URL or null if invalid
+ */
+function normalizeStoredUrl(value) {
+  const trimmed = (typeof value === 'string' ? value.trim() : '');
+  if (!trimmed) return null;
+  if (trimmed.length > 2000) return null; // Prevent abuse
+  
+  try {
+    const parsed = new URL(trimmed);
+    // Only allow http/https protocols
+    if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+    
+    // Block private IP ranges and localhost
+    const hostname = parsed.hostname.toLowerCase();
+    if (hostname === 'localhost' || hostname.endsWith('.local')) return null;
+    if (/^127\./.test(hostname) || /^10\./.test(hostname) || /^192\.168\./.test(hostname)) return null;
+    if (hostname.startsWith('172.')) {
+      const secondOctet = parseInt(hostname.split('.')[1], 10);
+      if (secondOctet >= 16 && secondOctet <= 31) return null;
+    }
+    if (hostname.startsWith('169.254.')) return null; // Link-local
+    if (hostname === '::1' || hostname.startsWith('fe80:') || hostname.startsWith('fc') || hostname.startsWith('fd')) return null;
+    
+    return trimmed;
+  } catch {
+    return null;
+  }
+}
+
 // ==================== FORMAT SELECTOR ====================
 let selectedFormat = 'video';
 const formatBtn = document.getElementById('formatBtn');
@@ -1364,6 +1439,9 @@ const videoModalPlayer = document.getElementById('videoModalPlayer');
 const videoModalClose = document.getElementById('videoModalClose');
 const DIRECT_DOWNLOAD_THRESHOLD = 50 * 1024 * 1024;
 
+// Track object URLs for cleanup
+const activeObjectUrls = new Set();
+
 // ==================== LOCAL STORAGE ====================
 function loadDownloads() {
  try {
@@ -1406,21 +1484,9 @@ function saveDownloads(downloads) {
  }
 }
 
-function normalizeStoredUrl(value) {
- const trimmed = (typeof value === 'string' ? value.trim() : '');
- if (!trimmed) return null;
- if (!isValidHttpUrl(trimmed)) return null;
- return trimmed.slice(0, 500);
-}
-
 function isValidHttpUrl(value) {
  if (!value) return false;
- try {
-   const parsed = new URL(value);
-   return parsed.protocol === 'http:' || parsed.protocol === 'https:';
- } catch {
-   return false;
- }
+ return normalizeStoredUrl(value) !== null;
 }
 
 function addDownload(downloadUrl, fileUrl, format, fileName, fileSize, thumbnail, duration) {
@@ -1539,7 +1605,7 @@ let activeDownloadMenuContext = null;
 
 function populateGlobalDownloadMenu() {
  globalDownloadMenu.innerHTML = DOWNLOAD_MENU_ACTIONS.map(({ action, label, className }) => `
-   <button class="menu-item ${className}" data-action="${action}">${label}</button>
+   <button class="menu-item ${escapeHtml(className)}" data-action="${escapeHtml(action)}">${escapeHtml(label)}</button>
  `).join('');
 }
 
@@ -1600,12 +1666,22 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
    xhr.responseType = 'blob';
    let fakeProgress = 0;
    let fakeInterval = null;
+   let objectUrl = null;
 
    let finished = false;
    const finish = (fn) => {
      if (finished) return;
      finished = true;
      fn();
+   };
+
+   const cleanup = () => {
+     if (objectUrl) {
+       URL.revokeObjectURL(objectUrl);
+       activeObjectUrls.delete(objectUrl);
+       objectUrl = null;
+     }
+     stopFakeProgress();
    };
 
    const startFakeProgress = () => {
@@ -1628,7 +1704,7 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
 
    const abortHandler = () => {
      finish(() => {
-       stopFakeProgress();
+       cleanup();
        xhr.abort();
        reject(new DOMException('The operation was aborted.', 'AbortError'));
      });
@@ -1654,12 +1730,12 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
 
    xhr.onload = function() {
      finish(() => {
-       stopFakeProgress();
        if (signal) {
          signal.removeEventListener('abort', abortHandler);
        }
 
        if (xhr.status < 200 || xhr.status >= 300) {
+         cleanup();
          reject(new Error(`Download failed: ${xhr.status}`));
          return;
        }
@@ -1667,15 +1743,25 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
        onProgress?.(100);
 
        const blob = xhr.response;
-       const objectUrl = URL.createObjectURL(blob);
+       objectUrl = URL.createObjectURL(blob);
+       activeObjectUrls.add(objectUrl);
+       
        const a = document.createElement('a');
        a.href = objectUrl;
-       a.setAttribute('download', fileName || 'flashvidz-download');
+       a.setAttribute('download', normalizeFileName(fileName));
        a.rel = 'noopener';
        document.body.appendChild(a);
        a.click();
        document.body.removeChild(a);
-       setTimeout(() => URL.revokeObjectURL(objectUrl), 300);
+       
+       // Delay cleanup to ensure download starts
+       setTimeout(() => {
+         if (objectUrl) {
+           URL.revokeObjectURL(objectUrl);
+           activeObjectUrls.delete(objectUrl);
+           objectUrl = null;
+         }
+       }, 1000);
 
        resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
      });
@@ -1683,7 +1769,7 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
 
    xhr.onerror = function() {
      finish(() => {
-       stopFakeProgress();
+       cleanup();
        if (signal) {
          signal.removeEventListener('abort', abortHandler);
        }
@@ -1693,7 +1779,7 @@ function runDownloadFlow(downloadUrl, fileName, onProgress, signal) {
 
    xhr.onabort = function() {
      finish(() => {
-       stopFakeProgress();
+       cleanup();
        if (signal) {
          signal.removeEventListener('abort', abortHandler);
        }
@@ -1713,17 +1799,20 @@ function runHybridDownloadFlow(downloadUrl, fileName, fileSize, onProgress, sign
    }
    onProgress?.(0);
    setMessage('Large file detected. Preparing browser download…', 'loading');
-   setTimeout(() => {
-     const a = document.createElement('a');
-     a.href = downloadUrl;
-     a.setAttribute('download', fileName || 'flashvidz-download');
-     a.rel = 'noopener';
-     document.body.appendChild(a);
-     a.click();
-     document.body.removeChild(a);
-     setMessage('Download started in browser', 'success');
-   }, 120);
-   return Promise.resolve(normalizedSize);
+   
+   return new Promise((resolve) => {
+     setTimeout(() => {
+       const a = document.createElement('a');
+       a.href = downloadUrl;
+       a.setAttribute('download', normalizeFileName(fileName));
+       a.rel = 'noopener';
+       document.body.appendChild(a);
+       a.click();
+       document.body.removeChild(a);
+       setMessage('Download started in browser', 'success');
+       resolve(normalizedSize);
+     }, 120);
+   });
  }
  return runDownloadFlow(downloadUrl, fileName, onProgress, signal);
 }
@@ -1772,45 +1861,59 @@ function createDownloadCard(item) {
  const fileName = item.fileName || item.filename || 'flashvidz_download';
  const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
  const displayDate = formatDownloadDate(item.timestamp);
- const thumbnailUrl =
-  typeof item.thumbnail === "string" && item.thumbnail.trim().length > 5
-   ? item.thumbnail.trim()
-   : null;
+ 
+ // Sanitize thumbnail URL - critical XSS fix
+ let thumbnailUrl = null;
+ if (typeof item.thumbnail === "string" && item.thumbnail.trim().length > 5) {
+   thumbnailUrl = normalizeStoredUrl(item.thumbnail.trim());
+ }
+ 
  const mediaIconPath = isVideo
    ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
    : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
- const thumbnailMarkup = thumbnailUrl
-  ? `<img src="${thumbnailUrl}"
-alt="thumbnail"
-loading="lazy"
-onerror="this.onerror=null; this.src='https://dummyimage.com/300x400/1c2b33/00d4aa&text=Preview';" />
-      <svg class="thumbnail-fallback" viewBox="0 0 24 24">
-        <path d="${mediaIconPath}"/>
-      </svg>`
-   : `<svg class="thumbnail-fallback" viewBox="0 0 24 24">
+ 
+ // Build thumbnail markup safely
+ let thumbnailMarkup;
+ if (thumbnailUrl) {
+   // Use safe URL in src, with fallback on error
+   const safeThumb = escapeHtml(thumbnailUrl);
+   thumbnailMarkup = `<img src="${safeThumb}" alt="thumbnail" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+      <svg class="thumbnail-fallback" viewBox="0 0 24 24" style="display:none; position:absolute;">
         <path d="${mediaIconPath}"/>
       </svg>`;
+ } else {
+   thumbnailMarkup = `<svg class="thumbnail-fallback" viewBox="0 0 24 24">
+        <path d="${mediaIconPath}"/>
+      </svg>`;
+ }
+
+ // Sanitize duration
+ const safeDuration = item.duration ? escapeHtml(String(item.duration)) : null;
+ const durationBadge = safeDuration ? `<span class="video-duration">${safeDuration}</span>` : '';
+
+ // Sanitize filename for display
+ const safeFileName = escapeHtml(fileName);
+ const safeFileSize = escapeHtml(formatFileSize(fileSize));
+ const safeDate = escapeHtml(displayDate);
 
  card.innerHTML = `
    <div class="download-info-row">
      <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">
        ${thumbnailMarkup}
-       ${item.duration
-         ? `<span class="video-duration">${item.duration}</span>`
-         : ``}
+       ${durationBadge}
      </div>
      <div class="download-info">
        <div class="download-header">
-         <div class="download-filename" title="${fileName}">${fileName}</div>
+         <div class="download-filename" title="${safeFileName}">${safeFileName}</div>
        </div>
        <div class="download-meta">
          <div class="meta-left">
            <span>
              <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
-             ${displayDate}
+             ${safeDate}
           </span>
          </div>
-          <span class="meta-size">${formatFileSize(fileSize)}</span>
+          <span class="meta-size">${safeFileSize}</span>
        </div>
      </div>
      <div class="menu-wrapper">
@@ -1839,7 +1942,6 @@ onerror="this.onerror=null; this.src='https://dummyimage.com/300x400/1c2b33/00d4
      return;
    }
 
-   // FIX: Use ONLY item.fileUrl for preview, with safety check
    if (!isVideo) {
      setMessage('Audio preview not supported yet.', 'loading');
      return;
@@ -1956,6 +2058,9 @@ globalDownloadMenu.addEventListener('click', async (event) => {
 // ==================== UTILS ====================
 function detectPlatform(link) {
  const url = link.toLowerCase();
+ // Stricter validation - must be proper URL format first
+ if (!isValidHttpUrl(link)) return 'unknown';
+ 
  if (url.includes('tiktok.com')) return 'tiktok';
  if (url.includes('instagram.com')) return 'instagram';
  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
@@ -2013,7 +2118,9 @@ async function pasteLink() {
 
  try {
    const text = await navigator.clipboard.readText();
-   document.getElementById('linkInput').value = text.trim();
+   // Sanitize pasted content
+   const sanitized = text.trim().slice(0, 2000);
+   document.getElementById('linkInput').value = sanitized;
    maybeAutoDownload();
  } catch (error) {
    const isSecureContextIssue = window.isSecureContext === false;
@@ -2041,7 +2148,7 @@ function maybeAutoDownload() {
 
 async function handleDownload() {
  const downloadId = ++currentDownloadId;
- const link = document.getElementById('linkInput').value.trim();
+ const link = document.getElementById('linkInput').value.trim().slice(0, 2000);
  const settings = getSettings();
  const selectedQuality = settings.quality;
  const selectedDownloadFormat = settings.format || selectedFormat;
@@ -2078,6 +2185,10 @@ async function handleDownload() {
 
  updateMessage('Starting download...', 'loading');
 
+ // Cleanup previous abort controller
+ if (abortController) {
+   abortController.abort();
+ }
  abortController = new AbortController();
 
  try {
@@ -2176,10 +2287,20 @@ async function handleDownload() {
 document.getElementById('submitBtn').addEventListener('click', handleDownload);
 document.getElementById('linkInput').addEventListener('input', maybeAutoDownload);
 
+// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
  if (abortController) {
    abortController.abort();
  }
+ // Cleanup any remaining object URLs
+ activeObjectUrls.forEach(url => {
+   try {
+     URL.revokeObjectURL(url);
+   } catch (e) {
+     // Ignore errors during cleanup
+   }
+ });
+ activeObjectUrls.clear();
 });
 
 document.addEventListener('visibilitychange', () => {
