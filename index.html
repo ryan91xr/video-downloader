@@ -1439,7 +1439,7 @@ function addDownload(downloadUrl, fileUrl, format, fileName, fileSize, thumbnail
  const download = {
    id: now.toString(),
    downloadUrl: normalizedDownloadUrl,
-   fileUrl: normalizedFileUrl || normalizedDownloadUrl,
+   fileUrl: normalizedFileUrl,
    format,
    fileName: normalizedFileName || 'flashvidz_download',
    fileSize: Number.isFinite(normalizedFileSize) && normalizedFileSize > 0 ? normalizedFileSize : null,
@@ -2115,7 +2115,7 @@ async function handleDownload() {
       ? backendFileSize
       : null;
 
-   const safeFileUrl = normalizeStoredUrl(data.fileUrl) || downloadUrl;
+   const safeFileUrl = normalizeStoredUrl(data.fileUrl);
    console.log('Thumbnail URL:', data.thumbnail);
 
    // Save to localStorage using backend metadata
