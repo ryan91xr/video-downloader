@@ -635,23 +635,6 @@ body {
  margin: 0;
 }
 
-/* ==================== DOWNLOAD PROGRESS BAR ==================== */
-.download-progress {
-  width: 100%;
-  height: 4px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 6px;
-}
-
-.download-progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #00d4aa, #00b894);
-  transition: width 0.2s ease;
-}
-
 /* ==================== UNIFIED INPUT BAR ==================== */
 .input-bar-container {
  width: 100%;
@@ -1459,9 +1442,6 @@ const DIRECT_DOWNLOAD_THRESHOLD = 50 * 1024 * 1024;
 // Track object URLs for cleanup
 const activeObjectUrls = new Set();
 
-// Track active download progress
-const activeDownloadProgress = new Map();
-
 // ==================== LOCAL STORAGE ====================
 function loadDownloads() {
  try {
@@ -1607,28 +1587,6 @@ function closeVideoModal() {
  } else {
    modalHistoryPushed = false;
  }
-}
-
-// ==================== DOWNLOAD PROGRESS ====================
-/**
- * Update download progress bar for a specific download item
- * @param {string} id - Download item ID
- * @param {number} percent - Progress percentage (0-100)
- */
-function updateDownloadProgress(id, percent) {
-  const card = document.querySelector(`.download-card[data-id="${id}"]`);
-  if (!card) return;
-
-  const bar = card.querySelector('.download-progress-bar');
-  if (!bar) return;
-
-  bar.style.width = percent + '%';
-
-  if (percent >= 100) {
-    setTimeout(() => {
-      bar.style.width = '0%';
-    }, 800);
-  }
 }
 
 // ==================== DOWNLOADS UI ====================
@@ -1897,7 +1855,6 @@ function renderDownloads() {
 function createDownloadCard(item) {
  const card = document.createElement('div');
  card.className = 'download-card';
- card.setAttribute('data-id', item.id); // ADDED: data-id for progress tracking
 
  const normalizedFormat = (item.format || 'video').toLowerCase();
  const isVideo = normalizedFormat === 'video';
@@ -1939,13 +1896,6 @@ function createDownloadCard(item) {
  const safeFileSize = escapeHtml(formatFileSize(fileSize));
  const safeDate = escapeHtml(displayDate);
 
- // ADDED: Progress bar HTML
- const progressBarHtml = `
-   <div class="download-progress">
-     <div class="download-progress-bar" style="width: 0%"></div>
-   </div>
- `;
-
  card.innerHTML = `
    <div class="download-info-row">
      <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">
@@ -1965,7 +1915,6 @@ function createDownloadCard(item) {
          </div>
           <span class="meta-size">${safeFileSize}</span>
        </div>
-       ${progressBarHtml}
      </div>
      <div class="menu-wrapper">
        <button class="menu-btn" aria-label="Open menu" title="More options">⋮</button>
@@ -2047,9 +1996,7 @@ globalDownloadMenu.addEventListener('click', async (event) => {
      if (!itemDownloadUrl) {
        throw new Error('Missing download URL');
      }
-     // ADDED: Track progress for this download
      await runHybridDownloadFlow(itemDownloadUrl, fileName, fileSize, (progress) => {
-       updateDownloadProgress(item.id, progress);
        setMessage(`Downloading... ${progress}%`, 'loading');
      }, undefined);
      setMessage('Download complete!', 'success');
@@ -2276,10 +2223,6 @@ async function handleDownload() {
    const backendFileSize = Number(data.fileSizeBytes) || 0;
 
    updateMessage('Downloading... 0%', 'loading');
-   
-   // ADDED: Create temporary ID for tracking new download progress
-   const tempDownloadId = Date.now().toString();
-   
    const downloadedFileSize = await runHybridDownloadFlow(downloadUrl, backendFileName, backendFileSize, (progress) => {
      updateMessage(`Downloading... ${progress}%`, 'loading');
    }, abortController.signal);
@@ -2296,7 +2239,7 @@ async function handleDownload() {
    console.log('Thumbnail URL:', data.thumbnail);
 
    // Save to localStorage using backend metadata
-   const newDownload = addDownload(
+   addDownload(
      downloadUrl,
      safeFileUrl,
      responseFormat,
