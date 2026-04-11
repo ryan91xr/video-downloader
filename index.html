@@ -1469,8 +1469,9 @@
     });
 
     // ==================== STATE MANAGEMENT ====================
+    let selectedFormat = 'video';
+
     const state = {
-      selectedFormat: 'video',
       abortController: null,
       currentDownloadId: 0,
       modalHistoryPushed: false,
@@ -1696,9 +1697,11 @@
       },
 
       select(format) {
-        state.selectedFormat = format;
+        selectedFormat = format === 'audio' ? 'audio' : 'video';
+        const settings = Storage.getSettings();
+        Storage.saveSettings({ ...settings, format: selectedFormat });
         
-        if (format === 'video') {
+        if (selectedFormat === 'video') {
           elements.formatIconVideo.style.display = 'block';
           elements.formatIconAudio.style.display = 'none';
           elements.optionVideo.setAttribute('aria-selected', 'true');
@@ -2490,10 +2493,6 @@
       const link = elements.linkInput.value.trim().slice(0, 2000);
       const settings = Storage.getSettings();
       
-      if (state.selectedFormat !== settings.format) {
-        FormatSelector.select(settings.format);
-      }
-      
       if (elements.submitBtn.disabled) return;
       
       const updateMessage = (text, type = '') => {
@@ -2532,7 +2531,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             url: link,
-            format: state.selectedFormat,
+            format: selectedFormat,
             quality: settings.quality
           }),
           signal: state.abortController.signal
@@ -2554,7 +2553,7 @@
           throw new Error('Invalid response from server');
         }
         
-        const responseFormat = data.format || state.selectedFormat;
+        const responseFormat = data.format || selectedFormat;
         const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
         const backendFileSize = Number(data.fileSizeBytes) || 0;
         
@@ -2620,6 +2619,9 @@
     function init() {
       cacheElements();
       FormatSelector.init();
+      const settings = Storage.getSettings();
+      selectedFormat = settings.format === 'audio' ? 'audio' : 'video';
+      FormatSelector.select(selectedFormat);
       HamburgerMenu.init();
       TabManager.init();
       DownloadsManager.init();
