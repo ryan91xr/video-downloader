@@ -572,7 +572,7 @@ body {
 }
 
 .menu-dropdown {
- position: fixed;
+ position: absolute;
  background: #222;
  border-radius: 8px;
  padding: 6px 0;
@@ -583,7 +583,7 @@ body {
 }
 
 .global-download-menu {
- position: fixed;
+ position: absolute;
 }
 
 .menu-dropdown .menu-item {
@@ -1530,7 +1530,7 @@ const globalDownloadMenu = document.createElement('div');
 globalDownloadMenu.className = 'menu-dropdown global-download-menu hidden';
 globalDownloadMenu.id = 'globalDownloadMenu';
 globalDownloadMenu.setAttribute('aria-hidden', 'true');
-globalDownloadMenu.style.position = 'fixed';
+globalDownloadMenu.style.position = 'absolute';
 document.body.appendChild(globalDownloadMenu);
 let activeDownloadMenuContext = null;
 
@@ -1552,21 +1552,31 @@ function showGlobalDownloadMenu(anchorBtn, context) {
  globalDownloadMenu.classList.remove('hidden');
  globalDownloadMenu.setAttribute('aria-hidden', 'false');
 
- const rect = anchorBtn.getBoundingClientRect();
- let top = rect.bottom + 6;
- let left = rect.right - globalDownloadMenu.offsetWidth;
+ requestAnimationFrame(() => {
+   const rect = anchorBtn.getBoundingClientRect();
+   const menuWidth = globalDownloadMenu.offsetWidth;
+   const menuHeight = globalDownloadMenu.offsetHeight;
+   const viewportPadding = 8;
+   const gap = 6;
 
- if (left < 8) left = 8;
- if (left + globalDownloadMenu.offsetWidth > window.innerWidth) {
-   left = window.innerWidth - globalDownloadMenu.offsetWidth - 8;
- }
- if (top + globalDownloadMenu.offsetHeight > window.innerHeight - 8) {
-   top = rect.top - globalDownloadMenu.offsetHeight - 6;
- }
- if (top < 8) top = 8;
+   let top = rect.bottom + window.scrollY + gap;
+   let left = rect.right + window.scrollX - menuWidth;
 
- globalDownloadMenu.style.top = `${top}px`;
- globalDownloadMenu.style.left = `${left}px`;
+   const minLeft = window.scrollX + viewportPadding;
+   const maxLeft = window.scrollX + window.innerWidth - menuWidth - viewportPadding;
+   if (left < minLeft) left = minLeft;
+   if (left > maxLeft) left = maxLeft;
+
+   const bottomLimit = window.scrollY + window.innerHeight - viewportPadding;
+   if (top + menuHeight > bottomLimit) {
+     top = rect.top + window.scrollY - menuHeight - gap;
+   }
+   const minTop = window.scrollY + viewportPadding;
+   if (top < minTop) top = minTop;
+
+   globalDownloadMenu.style.top = `${top}px`;
+   globalDownloadMenu.style.left = `${left}px`;
+ });
 }
 
 function formatFileSize(bytes) {
