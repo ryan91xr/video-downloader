@@ -1240,6 +1240,26 @@
     .retry-btn:hover {
       background: rgba(0, 212, 170, 0.15);
     }
+
+    /* ==================== iOS SAFARI HINT ==================== */
+    .ios-hint {
+      background: rgba(0, 212, 170, 0.1);
+      border: 1px solid rgba(0, 212, 170, 0.3);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      margin-top: var(--space-md);
+      font-size: 0.8125rem;
+      color: var(--color-text-secondary);
+      display: none;
+    }
+
+    .ios-hint.visible {
+      display: block;
+    }
+
+    .ios-hint strong {
+      color: var(--color-accent);
+    }
   </style>
 </head>
 
@@ -1360,7 +1380,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
                 </svg>
-                <span>Video</span>
+                <span>Video (MP4)</span>
                 <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
@@ -1369,7 +1389,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
                 </svg>
-                <span>Audio</span>
+                <span>Audio (M4A)</span>
                 <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
@@ -1402,6 +1422,11 @@
       <!-- Message -->
       <div class="message-container">
         <p id="message" role="status" aria-live="polite"></p>
+      </div>
+
+      <!-- iOS Safari Hint -->
+      <div class="ios-hint" id="iosHint">
+        <strong>iPhone/iPad:</strong> Videos open in Safari for playback. Tap the share button to save to Photos.
       </div>
 
       <!-- User Guide -->
@@ -1483,9 +1508,11 @@
       MAX_DOWNLOADS_HISTORY: 50,
       TOAST_DURATION: 4000,
       SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook'],
-      // FIX: Add retry configuration
       MAX_RETRIES: 3,
-      RETRY_DELAY: 2000
+      RETRY_DELAY: 2000,
+      // iOS detection for iPhone Safari optimization
+      IS_IOS: /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     });
 
     // ==================== STATE MANAGEMENT ====================
@@ -1499,9 +1526,7 @@
       activeObjectUrls: new Set(),
       activeDownloadMenuContext: null,
       toastQueue: [],
-      // FIX: Track if we're currently downloading to prevent double-clicks
       isDownloading: false,
-      // FIX: Store last URL for retry functionality
       lastUrl: null,
       lastFormat: null
     };
@@ -1519,7 +1544,7 @@
         'downloadsCount', 'downloadsList', 'emptyState', 'videoModal',
         'videoModalContent', 'videoModalPlayer', 'videoModalClose',
         'globalDownloadMenu', 'menuDownloads', 'menuShareApp', 'menuRateApp',
-        'menuHelp', 'menuPrivacy'
+        'menuHelp', 'menuPrivacy', 'iosHint'
       ];
       ids.forEach(id => {
         elements[id] = document.getElementById(id);
@@ -1753,7 +1778,6 @@
         elements.closeMenuBtn.addEventListener('click', () => this.close());
         elements.menuOverlay.addEventListener('click', () => this.close());
         
-        // Menu actions
         elements.menuDownloads.addEventListener('click', () => {
           this.close();
           TabManager.switch('downloads');
@@ -1779,7 +1803,6 @@
           Toast.info('Privacy - Feature coming soon');
         });
 
-        // Keyboard navigation
         document.addEventListener('keydown', (e) => {
           if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) {
             this.close();
@@ -1857,23 +1880,19 @@
       switch(tabId) {
         setMessage('', '');
         
-        // Update buttons
         const isDownloads = tabId === 'downloads';
         elements.tabBtnEnterUrl.setAttribute('aria-selected', !isDownloads);
         elements.tabBtnDownloads.setAttribute('aria-selected', isDownloads);
         elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads);
         elements.tabBtnDownloads.classList.toggle('active', isDownloads);
         
-        // Update indicator
         elements.tabIndicator.classList.toggle('downloads', isDownloads);
         
-        // Update content
         elements['tab-enter-url'].classList.toggle('active', !isDownloads);
         elements['tab-enter-url'].hidden = isDownloads;
         elements['tab-downloads'].classList.toggle('active', isDownloads);
         elements['tab-downloads'].hidden = !isDownloads;
         
-        // Render downloads when switching to downloads tab
         if (isDownloads) {
           DownloadsManager.render();
         }
@@ -1898,20 +1917,17 @@
       init() {
         this.populateMenu();
         
-        // Global click to close menu
         document.addEventListener('click', (e) => {
           if (!e.target.closest('.menu-wrapper') && !e.target.closest('#globalDownloadMenu')) {
             this.hideMenu();
           }
         });
 
-        // Scroll to close menu
         elements.downloadsList?.addEventListener('scroll', () => {
           clearTimeout(this.scrollTimeout);
           this.scrollTimeout = setTimeout(() => this.hideMenu(), 100);
         });
 
-        // Menu actions
         elements.globalDownloadMenu.addEventListener('click', (e) => this.handleMenuAction(e));
       },
 
@@ -1988,16 +2004,24 @@
         }
         
         try {
-          const itemDownloadUrl = item.downloadUrl;
+          const itemDownloadUrl = item.downloadUrl || item.url;
           if (!itemDownloadUrl) {
             throw new Error('Missing download URL');
           }
           
-          Toast.info('Starting download...');
+          // iOS: Show different message
+          const message = CONFIG.IS_IOS ? 'Opening in Safari...' : 'Starting download...';
+          Toast.info(message);
+          
           await DownloadFlow.runHybrid(itemDownloadUrl, fileName, fileSize, (progress) => {
-            setMessage(`Downloading... ${progress}%`, 'loading');
+            if (!CONFIG.IS_IOS) {
+              setMessage(`Downloading... ${progress}%`, 'loading');
+            }
           });
-          Toast.success('Download complete!');
+          
+          if (!CONFIG.IS_IOS) {
+            Toast.success('Download complete!');
+          }
         } catch (error) {
           Toast.error(error.message || 'Download failed');
         }
@@ -2191,7 +2215,12 @@
           }
           
           if (!isVideo) {
-            Toast.info('Audio preview not supported yet');
+            // Audio: Use same flow as video for iOS compatibility
+            if (CONFIG.IS_IOS) {
+              DownloadFlow.openForIOS(item.fileUrl || item.downloadUrl, fileName);
+            } else {
+              Toast.info('Audio preview not supported yet');
+            }
             return;
           }
           
@@ -2200,7 +2229,12 @@
             return;
           }
           
-          VideoModal.open(item.fileUrl);
+          // iOS: Open in Safari instead of modal
+          if (CONFIG.IS_IOS) {
+            DownloadFlow.openForIOS(item.fileUrl, fileName);
+          } else {
+            VideoModal.open(item.fileUrl);
+          }
         });
         
         card.addEventListener('keydown', (e) => {
@@ -2249,6 +2283,12 @@
       },
 
       open(fileUrl) {
+        // iOS: Never use modal, always open in Safari
+        if (CONFIG.IS_IOS) {
+          DownloadFlow.openForIOS(fileUrl, 'video');
+          return;
+        }
+
         const normalizedUrl = SecurityUtils.normalizeStoredUrl(fileUrl);
         if (!normalizedUrl) {
           if (!isActivelyDownloading()) {
@@ -2423,9 +2463,42 @@
         });
       },
 
+      // iPhone Safari: Open in browser for native playback
+      openForIOS(url, fileName) {
+        if (!url) {
+          Toast.error('Invalid URL');
+          return Promise.reject(new Error('Invalid URL'));
+        }
+
+        Toast.info('Opening in Safari...');
+        
+        // Use view URL for inline playback
+        const separator = url.includes('?') ? '&' : '?';
+        const viewUrl = `${url}${separator}view=1`;
+        
+        // Open in new tab - Safari handles MP4/M4A natively
+        const newWindow = window.open(viewUrl, '_blank');
+        
+        // If popup blocked, fallback to same window
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          window.location.href = viewUrl;
+        }
+        
+        return Promise.resolve(0);
+      },
+
       runHybrid(downloadUrl, fileName, fileSize, onProgress, signal) {
+        // iPhone/iPad: Always use open strategy, never force download
+        if (CONFIG.IS_IOS) {
+          if (signal?.aborted) {
+            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+          }
+          return this.openForIOS(downloadUrl, fileName);
+        }
+        
         const normalizedSize = Number(fileSize) || 0;
         
+        // Large files on desktop: direct download
         if (normalizedSize > CONFIG.DIRECT_DOWNLOAD_THRESHOLD) {
           if (signal?.aborted) {
             return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
@@ -2436,19 +2509,18 @@
           
           return new Promise((resolve) => {
             setTimeout(() => {
-              const a = document.createElement('a');
-              a.href = downloadUrl;
-              a.setAttribute('download', SecurityUtils.normalizeFileName(fileName));
-              a.rel = 'noopener';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
+              // Use download URL for forced download
+              const separator = downloadUrl.includes('?') ? '&' : '?';
+              const downloadUrlWithParam = `${downloadUrl}${separator}download=1`;
+              
+              window.location.href = downloadUrlWithParam;
               Toast.success('Download started in browser');
               resolve(normalizedSize);
             }, 120);
           });
         }
         
+        // Standard XHR download with progress
         return this.run(downloadUrl, fileName, onProgress, signal);
       }
     };
@@ -2499,12 +2571,10 @@
       handleDownload();
     }
 
-    // FIX: Better check for active download state
     function isActivelyDownloading() {
       return state.isDownloading || (elements.submitBtn.disabled && elements.message.classList.contains('loading'));
     }
 
-    // FIX: Reset UI properly and clear isDownloading flag
     function resetUI(delay = 2000) {
       const downloadId = state.currentDownloadId;
       setTimeout(() => {
@@ -2512,25 +2582,22 @@
         elements.submitBtn.disabled = false;
         elements.submitBtn.classList.remove('loading');
         elements.pasteBtn.disabled = false;
-        state.isDownloading = false; // FIX: Clear the flag
+        state.isDownloading = false;
       }, delay);
     }
 
-    // FIX: Add retry logic for server busy errors
     async function handleDownloadWithRetry(retryCount = 0) {
       const link = elements.linkInput.value.trim().slice(0, 2000);
       const format = selectedFormat;
       
-      // Store for potential retry
       state.lastUrl = link;
       state.lastFormat = format;
       
       try {
         await handleDownload();
       } catch (err) {
-        // Check if it's a server busy error and we haven't exceeded retries
         if (err.message?.includes('try again later') && retryCount < CONFIG.MAX_RETRIES) {
-          const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount); // Exponential backoff
+          const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
           setMessage(`Server busy. Retrying in ${delay/1000}s... (${retryCount + 1}/${CONFIG.MAX_RETRIES})`, 'loading');
           
           setTimeout(() => {
@@ -2539,19 +2606,16 @@
           return;
         }
         
-        // If we get here, either it's not a retryable error or we've exhausted retries
         throw err;
       }
     }
 
-    // FIX: Add retry button to error messages
     function showErrorWithRetry(message) {
       const msg = elements.message;
       msg.innerHTML = `${SecurityUtils.escapeHtml(message)} <button class="retry-btn" onclick="retryLastDownload()">Retry</button>`;
       msg.className = 'error';
     }
 
-    // Global function for retry button
     window.retryLastDownload = function() {
       if (state.lastUrl && state.lastFormat) {
         elements.linkInput.value = state.lastUrl;
@@ -2565,7 +2629,6 @@
       const link = elements.linkInput.value.trim().slice(0, 2000);
       const settings = Storage.getSettings();
       
-      // FIX: Prevent double-clicks
       if (state.isDownloading || elements.submitBtn.disabled) {
         return;
       }
@@ -2575,7 +2638,6 @@
         setMessage(text, type);
       };
       
-      // FIX: Set isDownloading flag
       state.isDownloading = true;
       elements.submitBtn.disabled = true;
       elements.submitBtn.classList.add('loading');
@@ -2593,6 +2655,11 @@
         updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
         resetUI(0);
         return;
+      }
+      
+      // iOS: Show hint
+      if (CONFIG.IS_IOS) {
+        elements.iosHint?.classList.add('visible');
       }
       
       updateMessage('Starting download...', 'loading');
@@ -2614,11 +2681,9 @@
           signal: state.abortController.signal
         });
         
-        // FIX: Better error handling with specific messages
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
           
-          // Handle specific status codes
           if (response.status === 503) {
             throw new Error('Server busy, try again later');
           } else if (response.status === 429) {
@@ -2644,16 +2709,25 @@
         }
         
         const responseFormat = data.format || selectedFormat;
-        const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'mp3' : 'mp4'}`;
+        const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
         const backendFileSize = Number(data.fileSizeBytes) || 0;
         
-        updateMessage('Downloading... 0%', 'loading');
+        // iOS: Different flow
+        if (CONFIG.IS_IOS) {
+          updateMessage('Opening in Safari...', 'loading');
+        } else {
+          updateMessage('Downloading... 0%', 'loading');
+        }
         
         const downloadedFileSize = await DownloadFlow.runHybrid(
           downloadUrl, 
           backendFileName, 
           backendFileSize, 
-          (progress) => updateMessage(`Downloading... ${progress}%`, 'loading'),
+          (progress) => {
+            if (!CONFIG.IS_IOS) {
+              updateMessage(`Downloading... ${progress}%`, 'loading');
+            }
+          },
           state.abortController.signal
         );
         
@@ -2672,8 +2746,14 @@
         
         if (downloadId !== state.currentDownloadId) return;
         
-        setMessage('Download complete!', 'success');
-        Toast.success('Download complete!');
+        if (CONFIG.IS_IOS) {
+          setMessage('Opened in Safari! Tap share button to save.', 'success');
+          Toast.success('Video opened in Safari');
+        } else {
+          setMessage('Download complete!', 'success');
+          Toast.success('Download complete!');
+        }
+        
         TabManager.switch('downloads');
         elements.linkInput.value = '';
         
@@ -2695,7 +2775,6 @@
           }
         }
         
-        // FIX: Use retry-enabled error display for server busy errors
         if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
           showErrorWithRetry(errorMsg);
         } else {
@@ -2703,7 +2782,6 @@
         }
         Toast.error(errorMsg);
         
-        // FIX: Re-throw so retry logic can catch it
         if (errorMsg.includes('try again later')) {
           throw err;
         }
@@ -2727,23 +2805,24 @@
       DownloadsManager.init();
       VideoModal.init();
       
-      // Event listeners
+      // Show iOS hint if on iOS
+      if (CONFIG.IS_IOS && elements.iosHint) {
+        elements.iosHint.classList.add('visible');
+      }
+      
       elements.pasteBtn.addEventListener('click', pasteLink);
-      elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0)); // FIX: Use retry wrapper
+      elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
       elements.linkInput.addEventListener('input', maybeAutoDownload);
       elements.downloadForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        handleDownloadWithRetry(0); // FIX: Use retry wrapper
+        handleDownloadWithRetry(0);
       });
       
-      // Keyboard shortcuts
       document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + V to focus and paste
         if ((e.ctrlKey || e.metaKey) && e.key === 'v' && document.activeElement !== elements.linkInput) {
           elements.linkInput.focus();
         }
         
-        // Escape to close modals
         if (e.key === 'Escape') {
           if (elements.videoModal.classList.contains('active')) {
             VideoModal.close();
@@ -2751,7 +2830,6 @@
         }
       });
       
-      // Cleanup on page unload
       window.addEventListener('beforeunload', () => {
         state.abortController?.abort();
         state.activeObjectUrls.forEach(url => {
@@ -2760,19 +2838,15 @@
         state.activeObjectUrls.clear();
       });
       
-      // Abort on visibility change
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden' && state.abortController) {
           state.abortController.abort();
         }
       });
       
-      // Initial render
       DownloadsManager.render();
-      
     }
 
-    // Start the app
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
