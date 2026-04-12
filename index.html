@@ -2366,6 +2366,36 @@
       msg.className = type;
     }
 
+    function setStep(step, status) {
+      const progressByStep = {
+        fetching: { active: 10, completed: 50 },
+        downloading: { active: 60, completed: 95 },
+        done: { completed: 100 }
+      };
+
+      if (step === 'error' && status === 'active') {
+        ProgressStages.setError();
+        return;
+      }
+
+      if (step === 'fetching') {
+        if (status === 'active') {
+          ProgressStages.setStage(0);
+        } else if (status === 'completed') {
+          ProgressStages.setStage(1);
+        }
+      } else if (step === 'downloading') {
+        ProgressStages.setStage(2);
+      } else if (step === 'done' && status === 'completed') {
+        ProgressStages.setSuccess();
+      }
+
+      const targetProgress = progressByStep[step]?.[status];
+      if (typeof targetProgress === 'number') {
+        ProgressStages.updateProgress(targetProgress);
+      }
+    }
+
     // ==================== DOWNLOADS MANAGER ====================
     const DownloadsManager = {
       DOWNLOAD_MENU_ACTIONS: [
@@ -2926,25 +2956,22 @@
         }
 
         Toast.info('Opening in Safari...');
-        
-        const separator = url.includes('?') ? '&' : '?';
-        const viewUrl = `${url}${separator}view=1`;
-        
-        const newWindow = window.open(viewUrl, '_blank');
+
+        const newWindow = window.open(url, '_blank');
         
         if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          window.location.href = viewUrl;
+          window.location.href = url;
         }
         
         return Promise.resolve(0);
       },
 
-      runHybrid(downloadUrl, fileName, fileSize, onProgress, signal) {
+      runHybrid(downloadUrl, fileName, fileSize, onProgress, signal, iosOpenUrl) {
         if (CONFIG.IS_IOS) {
           if (signal?.aborted) {
             return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
           }
-          return this.openForIOS(downloadUrl, fileName);
+          return this.openForIOS(iosOpenUrl || downloadUrl, fileName);
         }
         
         const normalizedSize = Number(fileSize) || 0;
@@ -3092,6 +3119,7 @@
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
       const settings = Storage.getSettings();
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       
       if (state.isDownloading || elements.submitBtn.disabled) {
         return;
@@ -3132,8 +3160,7 @@
       }
       
       // Stage 1: Fetching
-      ProgressStages.setStage(0);
-      ProgressStages.updateProgress(10);
+      setStep('fetching', 'active');
       
       if (CONFIG.IS_IOS) {
         elements.iosHint?.classList.add('visible');
@@ -3181,29 +3208,40 @@
           throw new Error(errorData.error || `Server error: ${response.status}`);
         }
         
-        // Stage 2: Processing
-        ProgressStages.setStage(1);
-        ProgressStages.updateProgress(50);
-        
         const data = await response.json();
-        
-        if (!data?.success || !(data?.downloadUrl || data?.url)) {
-          throw new Error(data?.error || 'Invalid response from server');
+
+        if (data?.warning) {
+          Toast.info(data.warning);
         }
-        
+
+        if (data?.success === false) {
+          throw new Error(data?.error || data?.message || 'Download failed');
+        }
+
+        if (!(data?.downloadUrl || data?.url)) {
+          throw new Error('Invalid response from server');
+        }
+
+        setStep('fetching', 'completed');
+        setStep('downloading', 'active');
+
         const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
+        const primaryUrl = SecurityUtils.normalizeStoredUrl(data.url);
+        const viewUrl = SecurityUtils.normalizeStoredUrl(data.viewUrl);
+        const playLink = isIOS ? (viewUrl || primaryUrl || downloadUrl) : (primaryUrl || viewUrl || downloadUrl);
+
         if (!downloadUrl) {
           throw new Error('Invalid response from server');
         }
-        
-        const responseFormat = data.format || selectedFormat;
+
+        if (!data.isIOSCompatible && isIOS) {
+          Toast.info(data.warning || 'This format may not play on iPhone');
+        }
+
+        const responseFormat = data.actualFormat || data.format || selectedFormat;
         const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
-        const backendFileSize = Number(data.fileSizeBytes) || 0;
-        
-        // Stage 3: Downloading
-        ProgressStages.setStage(2);
-        ProgressStages.updateProgress(60);
-        
+        const backendFileSize = Number(data.fileSize) || Number(data.fileSizeBytes) || 0;
+
         const downloadedFileSize = await DownloadFlow.runHybrid(
           downloadUrl, 
           backendFileName, 
@@ -3213,14 +3251,15 @@
             const mappedProgress = 60 + (progress * 0.35);
             ProgressStages.updateProgress(mappedProgress);
           },
-          state.abortController.signal
+          state.abortController.signal,
+          playLink
         );
         
-        // Stage 4: Complete
-        ProgressStages.setSuccess();
+        setStep('downloading', 'completed');
+        setStep('done', 'completed');
         
         const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize > 0 ? backendFileSize : null;
-        const safeFileUrl = SecurityUtils.normalizeStoredUrl(data.fileUrl);
+        const safeFileUrl = SecurityUtils.normalizeStoredUrl(playLink || data.fileUrl);
         
         DownloadsManager.add(
           downloadUrl,
@@ -3238,7 +3277,7 @@
         elements.submitBtn.classList.remove('loading');
         elements.submitBtn.classList.add('success');
         
-        if (CONFIG.IS_IOS) {
+        if (isIOS) {
           updateMessage('Opened in Safari! Tap share button to save.', 'success');
           Toast.success('Video opened in Safari');
         } else {
@@ -3270,7 +3309,7 @@
         elements.submitBtn.classList.remove('loading');
         elements.submitBtn.classList.add('error');
         elements.downloadForm.classList.add('error');
-        ProgressStages.setError();
+        setStep('error', 'active');
         
         if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
           showErrorWithRetry(errorMsg);
