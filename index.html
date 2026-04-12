@@ -15,7 +15,6 @@
   <style>
     /* ==================== CSS VARIABLES ==================== */
     :root {
-      /* Colors */
       --color-bg-primary: #0f2027;
       --color-bg-secondary: #1c2b33;
       --color-bg-tertiary: #2c5364;
@@ -30,21 +29,18 @@
       --color-success: #00d4aa;
       --color-warning: #ffa726;
       
-      /* Spacing */
       --space-xs: 4px;
       --space-sm: 8px;
       --space-md: 16px;
       --space-lg: 24px;
       --space-xl: 32px;
       
-      /* Border Radius */
       --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 16px;
       --radius-xl: 20px;
       --radius-full: 9999px;
       
-      /* Shadows */
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
       --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
       --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
@@ -52,7 +48,6 @@
       --shadow-error: 0 4px 15px rgba(255, 100, 100, 0.3);
       --shadow-success: 0 4px 15px rgba(0, 212, 170, 0.3);
       
-      /* Z-Index Scale */
       --z-base: 1;
       --z-dropdown: 100;
       --z-sticky: 200;
@@ -60,34 +55,19 @@
       --z-toast: 400;
       --z-menu: 500;
       
-      /* Transitions */
       --transition-fast: 150ms ease;
       --transition-base: 250ms ease;
       --transition-slow: 350ms ease;
       
-      /* Layout */
       --app-max-width: 420px;
       --header-height: 72px;
       --input-height: 56px;
     }
 
-    /* ==================== RESET & BASE ==================== */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      font-size: 16px;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-    }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
     body {
       margin: 0;
-      padding: 0;
       min-height: 100vh;
       min-height: 100dvh;
       background: linear-gradient(135deg, var(--color-bg-primary), var(--color-bg-secondary), var(--color-bg-tertiary));
@@ -97,36 +77,11 @@
       line-height: 1.5;
     }
 
-    /* Focus Styles */
-    :focus-visible {
-      outline: 2px solid var(--color-accent);
-      outline-offset: 2px;
-    }
+    :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
-    /* Screen Reader Only */
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
+    .app-container { max-width: var(--app-max-width); margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; }
 
-    /* ==================== APP CONTAINER ==================== */
-    .app-container {
-      max-width: var(--app-max-width);
-      margin: 0 auto;
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ==================== HEADER ==================== */
     .app-header {
       width: 100%;
       display: flex;
@@ -138,7 +93,6 @@
       z-index: var(--z-sticky);
       background: rgba(15, 32, 39, 0.85);
       backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
       height: var(--header-height);
     }
 
@@ -146,7 +100,6 @@
       width: 44px;
       height: 44px;
       background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(10px);
       border: none;
       border-radius: var(--radius-md);
       cursor: pointer;
@@ -157,29 +110,11 @@
       color: var(--color-accent);
       font-size: 20px;
     }
+    .hamburger-btn:hover { background: rgba(255, 255, 255, 0.12); transform: scale(1.05); }
+    .hamburger-btn:active { transform: scale(0.95); }
 
-    .hamburger-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      transform: scale(1.05);
-    }
-
-    .hamburger-btn:active {
-      transform: scale(0.95);
-    }
-
-    .app-title {
-      font-size: 1.375rem;
-      font-weight: 700;
-      color: var(--color-text-primary);
-      margin: 0;
-      flex: 1;
-      text-align: center;
-    }
-
-    .app-title span {
-      color: var(--color-accent);
-    }
-
+    .app-title { font-size: 1.375rem; font-weight: 700; color: var(--color-text-primary); margin: 0; flex: 1; text-align: center; }
+    .app-title span { color: var(--color-accent); }
     .pro-badge {
       background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
       color: #000;
@@ -191,7 +126,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* ==================== HAMBURGER MENU ==================== */
     .menu-overlay {
       position: fixed;
       inset: 0;
@@ -201,11 +135,7 @@
       visibility: hidden;
       transition: all var(--transition-base);
     }
-
-    .menu-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
+    .menu-overlay.active { opacity: 1; visibility: visible; }
 
     .hamburger-menu-container {
       position: fixed;
@@ -222,35 +152,12 @@
       box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
       overflow-y: auto;
     }
+    .hamburger-menu-container.active { left: 0; }
 
-    .hamburger-menu-container.active {
-      left: 0;
-    }
-
-    .menu-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: var(--space-lg);
-    }
-
-    .menu-title-group {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xs);
-    }
-
-    .menu-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--color-text-primary);
-      line-height: 1.3;
-    }
-
-    .menu-subtitle {
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-    }
+    .menu-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--space-lg); }
+    .menu-title-group { display: flex; flex-direction: column; gap: var(--space-xs); }
+    .menu-title { font-size: 1.125rem; font-weight: 600; color: var(--color-text-primary); }
+    .menu-subtitle { font-size: 0.75rem; color: var(--color-text-muted); }
 
     .close-menu-btn {
       width: 36px;
@@ -266,19 +173,9 @@
       justify-content: center;
       transition: all var(--transition-fast);
     }
+    .close-menu-btn:hover { background: var(--color-error-bg); color: var(--color-error); }
 
-    .close-menu-btn:hover {
-      background: var(--color-error-bg);
-      color: var(--color-error);
-    }
-
-    .menu-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-sm);
-    }
-
+    .menu-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-sm); }
     .menu-item {
       display: flex;
       align-items: center;
@@ -295,48 +192,13 @@
       width: 100%;
       text-align: left;
     }
+    .menu-item:hover, .menu-item:focus-visible { background: rgba(0, 212, 170, 0.12); color: var(--color-accent); }
+    .menu-item:active { transform: scale(0.98); }
+    .menu-item.active { background: rgba(0, 212, 170, 0.12); color: var(--color-accent); }
+    .menu-item .menu-icon { width: 24px; height: 24px; flex-shrink: 0; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
 
-    .menu-item:hover,
-    .menu-item:focus-visible {
-      background: rgba(0, 212, 170, 0.12);
-      color: var(--color-accent);
-    }
-
-    .menu-item:active {
-      transform: scale(0.98);
-    }
-
-    .menu-item.active {
-      background: rgba(0, 212, 170, 0.12);
-      color: var(--color-accent);
-    }
-
-    .menu-item .menu-icon {
-      width: 24px;
-      height: 24px;
-      flex-shrink: 0;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
-    }
-
-    /* ==================== TABS ==================== */
-    .tabs-container {
-      width: 100%;
-      max-width: 360px;
-      margin: var(--space-sm) auto var(--space-lg);
-      padding: 0 var(--space-lg);
-    }
-
-    .tabs-nav {
-      display: flex;
-      background: transparent;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      position: relative;
-    }
-
+    .tabs-container { width: 100%; max-width: 360px; margin: var(--space-sm) auto var(--space-lg); padding: 0 var(--space-lg); }
+    .tabs-nav { display: flex; background: transparent; border-bottom: 1px solid rgba(255, 255, 255, 0.1); position: relative; }
     .tab-btn {
       flex: 1;
       padding: 14px var(--space-md);
@@ -351,59 +213,16 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
+    .tab-btn:hover { color: var(--color-text-secondary); background: rgba(255, 255, 255, 0.03); }
+    .tab-btn[aria-selected="true"] { color: var(--color-accent); font-weight: 600; }
+    .tab-indicator { position: absolute; bottom: 0; left: 0; height: 3px; width: 50%; background: var(--color-accent); transition: transform var(--transition-base); border-radius: 3px 3px 0 0; }
+    .tab-indicator.downloads { transform: translateX(100%); }
 
-    .tab-btn:hover {
-      color: var(--color-text-secondary);
-      background: rgba(255, 255, 255, 0.03);
-    }
+    .tab-content { display: none; width: 100%; max-width: 360px; margin: 0 auto; padding: 0 var(--space-lg); flex: 1; }
+    .tab-content.active { display: block; animation: fadeIn var(--transition-base); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    .tab-btn[aria-selected="true"] {
-      color: var(--color-accent);
-      font-weight: 600;
-    }
-
-    .tab-indicator {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      height: 3px;
-      width: 50%;
-      background: var(--color-accent);
-      transition: transform var(--transition-base);
-      border-radius: 3px 3px 0 0;
-    }
-
-    .tab-indicator.downloads {
-      transform: translateX(100%);
-    }
-
-    /* ==================== TAB CONTENT ==================== */
-    .tab-content {
-      display: none;
-      width: 100%;
-      max-width: 360px;
-      margin: 0 auto;
-      padding: 0 var(--space-lg);
-      flex: 1;
-    }
-
-    .tab-content.active {
-      display: block;
-      animation: fadeIn var(--transition-base);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ==================== INPUT BAR ==================== */
-    .input-bar-container {
-      width: 100%;
-      position: relative;
-      z-index: var(--z-dropdown);
-    }
-
+    .input-bar-container { width: 100%; position: relative; z-index: var(--z-dropdown); }
     .input-bar {
       display: flex;
       align-items: center;
@@ -415,37 +234,12 @@
       box-shadow: var(--shadow-md);
       transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     }
+    .input-bar:focus-within { border-color: rgba(0, 212, 170, 0.4); box-shadow: var(--shadow-md), 0 0 0 3px rgba(0, 212, 170, 0.1); }
+    .input-bar.processing { border-color: rgba(0, 212, 170, 0.3); box-shadow: var(--shadow-glow); pointer-events: none; opacity: 0.8; }
+    .input-bar.error { border-color: rgba(255, 100, 100, 0.5); box-shadow: var(--shadow-md), 0 0 0 3px rgba(255, 100, 100, 0.1); animation: shake 0.5s ease; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 
-    .input-bar:focus-within {
-      border-color: rgba(0, 212, 170, 0.4);
-      box-shadow: var(--shadow-md), 0 0 0 3px rgba(0, 212, 170, 0.1);
-    }
-
-    .input-bar.processing {
-      border-color: rgba(0, 212, 170, 0.3);
-      box-shadow: var(--shadow-glow);
-      pointer-events: none;
-      opacity: 0.8;
-    }
-
-    .input-bar.error {
-      border-color: rgba(255, 100, 100, 0.5);
-      box-shadow: var(--shadow-md), 0 0 0 3px rgba(255, 100, 100, 0.1);
-      animation: shake 0.5s ease;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
-    }
-
-    /* Format Selector */
-    .format-selector {
-      position: relative;
-      flex-shrink: 0;
-    }
-
+    .format-selector { position: relative; flex-shrink: 0; }
     .format-btn {
       display: flex;
       align-items: center;
@@ -461,28 +255,10 @@
       transition: all var(--transition-fast);
       white-space: nowrap;
     }
-
-    .format-btn:hover {
-      background: rgba(0, 212, 170, 0.2);
-    }
-
-    .format-btn svg {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
-      flex-shrink: 0;
-    }
-
-    .format-btn .arrow-icon {
-      width: 14px;
-      height: 14px;
-      opacity: 0.7;
-      transition: transform var(--transition-fast);
-    }
-
-    .format-btn[aria-expanded="true"] .arrow-icon {
-      transform: rotate(180deg);
-    }
+    .format-btn:hover { background: rgba(0, 212, 170, 0.2); }
+    .format-btn svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+    .format-btn .arrow-icon { width: 14px; height: 14px; opacity: 0.7; transition: transform var(--transition-fast); }
+    .format-btn[aria-expanded="true"] .arrow-icon { transform: rotate(180deg); }
 
     .format-dropdown {
       position: absolute;
@@ -501,12 +277,7 @@
       border: 1px solid rgba(0, 212, 170, 0.4);
       z-index: calc(var(--z-dropdown) + 10);
     }
-
-    .format-dropdown.active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
+    .format-dropdown.active { opacity: 1; visibility: visible; transform: translateY(0); }
 
     .format-option {
       display: flex;
@@ -523,57 +294,16 @@
       width: 100%;
       text-align: left;
     }
+    .format-option:hover, .format-option:focus-visible { background: rgba(0, 212, 170, 0.2); color: var(--color-accent); }
+    .format-option svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+    .format-option .check-icon { margin-left: auto; opacity: 0; width: 14px; height: 14px; }
+    .format-option[aria-selected="true"] .check-icon { opacity: 1; }
 
-    .format-option:hover,
-    .format-option:focus-visible {
-      background: rgba(0, 212, 170, 0.2);
-      color: var(--color-accent);
-    }
+    .input-wrapper { flex: 1; min-width: 0; position: relative; }
+    .input-bar input { width: 100%; border: none; background: transparent; color: var(--color-text-primary); font-size: 0.9375rem; padding: 10px 12px; outline: none; }
+    .input-bar input::placeholder { color: var(--color-text-muted); }
+    .input-bar input:disabled { cursor: not-allowed; }
 
-    .format-option svg {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
-      flex-shrink: 0;
-    }
-
-    .format-option .check-icon {
-      margin-left: auto;
-      opacity: 0;
-      width: 14px;
-      height: 14px;
-    }
-
-    .format-option[aria-selected="true"] .check-icon {
-      opacity: 1;
-    }
-
-    /* Input Field */
-    .input-wrapper {
-      flex: 1;
-      min-width: 0;
-      position: relative;
-    }
-
-    .input-bar input {
-      width: 100%;
-      border: none;
-      background: transparent;
-      color: var(--color-text-primary);
-      font-size: 0.9375rem;
-      padding: 10px 12px;
-      outline: none;
-    }
-
-    .input-bar input::placeholder {
-      color: var(--color-text-muted);
-    }
-
-    .input-bar input:disabled {
-      cursor: not-allowed;
-    }
-
-    /* Paste Button */
     .paste-btn-bar {
       padding: 10px 14px;
       border-radius: var(--radius-full);
@@ -587,17 +317,9 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
+    .paste-btn-bar:hover:not(:disabled) { background: rgba(0, 212, 170, 0.15); }
+    .paste-btn-bar:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .paste-btn-bar:hover:not(:disabled) {
-      background: rgba(0, 212, 170, 0.15);
-    }
-
-    .paste-btn-bar:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    /* Submit Button */
     .submit-btn {
       width: 44px;
       height: 44px;
@@ -615,37 +337,12 @@
       position: relative;
       overflow: hidden;
     }
-
-    .submit-btn:hover:not(:disabled) {
-      transform: scale(1.05);
-      box-shadow: var(--shadow-glow);
-    }
-
-    .submit-btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    .submit-btn svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-      transition: transform var(--transition-base), opacity var(--transition-base);
-    }
-
-    .submit-btn.loading svg {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-
-    .submit-btn.success {
-      background: linear-gradient(135deg, var(--color-success), #00b894);
-    }
-
-    .submit-btn.error {
-      background: linear-gradient(135deg, var(--color-error), #ff4757);
-    }
-
+    .submit-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: var(--shadow-glow); }
+    .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .submit-btn svg { width: 20px; height: 20px; fill: currentColor; transition: transform var(--transition-base), opacity var(--transition-base); }
+    .submit-btn.loading svg { opacity: 0; transform: scale(0.5); }
+    .submit-btn.success { background: linear-gradient(135deg, var(--color-success), #00b894); }
+    .submit-btn.error { background: linear-gradient(135deg, var(--color-error), #ff4757); }
     .submit-btn::after {
       content: "";
       position: absolute;
@@ -658,18 +355,9 @@
       transform: scale(0.5);
       transition: all var(--transition-base);
     }
+    .submit-btn.loading::after { opacity: 1; transform: scale(1); animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .submit-btn.loading::after {
-      opacity: 1;
-      transform: scale(1);
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* ==================== PROGRESS STAGES ==================== */
     .progress-stages {
       margin-top: var(--space-lg);
       background: rgba(255, 255, 255, 0.03);
@@ -682,46 +370,14 @@
       visibility: hidden;
       transition: all var(--transition-base);
     }
+    .progress-stages.active { opacity: 1; transform: translateY(0); visibility: visible; }
 
-    .progress-stages.active {
-      opacity: 1;
-      transform: translateY(0);
-      visibility: visible;
-    }
+    .stages-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
+    .stages-title { font-size: 0.875rem; font-weight: 600; color: var(--color-text-secondary); }
+    .stages-percentage { font-size: 0.875rem; font-weight: 700; color: var(--color-accent); font-variant-numeric: tabular-nums; }
 
-    .stages-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: var(--space-md);
-    }
-
-    .stages-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--color-text-secondary);
-    }
-
-    .stages-percentage {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--color-accent);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .stages-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-md);
-    }
-
-    .stage-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      position: relative;
-    }
-
+    .stages-list { display: flex; flex-direction: column; gap: var(--space-md); }
+    .stage-item { display: flex; align-items: center; gap: var(--space-md); position: relative; }
     .stage-item:not(:last-child)::after {
       content: "";
       position: absolute;
@@ -732,10 +388,7 @@
       background: rgba(255, 255, 255, 0.1);
       transition: background var(--transition-base);
     }
-
-    .stage-item.completed:not(:last-child)::after {
-      background: var(--color-accent);
-    }
+    .stage-item.completed:not(:last-child)::after { background: var(--color-accent); }
 
     .stage-icon {
       width: 24px;
@@ -749,143 +402,32 @@
       z-index: 1;
       transition: all var(--transition-base);
     }
+    .stage-item.pending .stage-icon { background: rgba(255, 255, 255, 0.1); color: var(--color-text-muted); }
+    .stage-item.active .stage-icon { background: rgba(0, 212, 170, 0.2); color: var(--color-accent); animation: pulse 2s infinite; }
+    .stage-item.completed .stage-icon { background: var(--color-accent); color: #000; }
+    .stage-item.error .stage-icon { background: var(--color-error); color: #fff; }
+    @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(0, 212, 170, 0); } }
 
-    .stage-item.pending .stage-icon {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--color-text-muted);
-    }
+    .stage-icon svg { width: 14px; height: 14px; fill: currentColor; }
+    .stage-content { flex: 1; }
+    .stage-label { font-size: 0.875rem; font-weight: 500; color: var(--color-text-secondary); transition: color var(--transition-base); }
+    .stage-item.active .stage-label { color: var(--color-text-primary); }
+    .stage-item.completed .stage-label { color: var(--color-accent); }
+    .stage-item.error .stage-label { color: var(--color-error); }
+    .stage-description { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px; }
 
-    .stage-item.active .stage-icon {
-      background: rgba(0, 212, 170, 0.2);
-      color: var(--color-accent);
-      animation: pulse 2s infinite;
-    }
+    .progress-bar-container { margin-top: var(--space-md); height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: var(--radius-full); overflow: hidden; position: relative; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light)); border-radius: var(--radius-full); transition: width 0.3s ease; position: relative; overflow: hidden; }
+    .progress-bar-fill::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 1.5s infinite; }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-    .stage-item.completed .stage-icon {
-      background: var(--color-accent);
-      color: #000;
-    }
+    .message-container { width: 100%; margin-top: var(--space-md); text-align: center; min-height: 24px; }
+    #message { font-size: 0.875rem; margin: 0; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; gap: var(--space-sm); min-height: 24px; }
+    #message.error { color: var(--color-error); font-weight: 500; }
+    #message.success { color: var(--color-success); font-weight: 600; }
+    #message.loading { color: var(--color-text-secondary); }
+    .message-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
-    .stage-item.error .stage-icon {
-      background: var(--color-error);
-      color: #fff;
-    }
-
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); }
-      50% { box-shadow: 0 0 0 8px rgba(0, 212, 170, 0); }
-    }
-
-    .stage-icon svg {
-      width: 14px;
-      height: 14px;
-      fill: currentColor;
-    }
-
-    .stage-content {
-      flex: 1;
-    }
-
-    .stage-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--color-text-secondary);
-      transition: color var(--transition-base);
-    }
-
-    .stage-item.active .stage-label {
-      color: var(--color-text-primary);
-    }
-
-    .stage-item.completed .stage-label {
-      color: var(--color-accent);
-    }
-
-    .stage-item.error .stage-label {
-      color: var(--color-error);
-    }
-
-    .stage-description {
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-      margin-top: 2px;
-    }
-
-    /* Progress Bar */
-    .progress-bar-container {
-      margin-top: var(--space-md);
-      height: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: var(--radius-full);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
-      border-radius: var(--radius-full);
-      transition: width 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      animation: shimmer 1.5s infinite;
-    }
-
-    @keyframes shimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-
-    /* ==================== MESSAGE AREA ==================== */
-    .message-container {
-      width: 100%;
-      margin-top: var(--space-md);
-      text-align: center;
-      min-height: 24px;
-    }
-
-    #message {
-      font-size: 0.875rem;
-      margin: 0;
-      transition: all var(--transition-fast);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-sm);
-      min-height: 24px;
-    }
-
-    #message.error { 
-      color: var(--color-error); 
-      font-weight: 500;
-    }
-    
-    #message.success { 
-      color: var(--color-success); 
-      font-weight: 600;
-    }
-    
-    #message.loading { 
-      color: var(--color-text-secondary); 
-    }
-
-    .message-icon {
-      width: 18px;
-      height: 18px;
-      flex-shrink: 0;
-    }
-
-    /* ==================== TOAST NOTIFICATIONS ==================== */
     .toast-container {
       position: fixed;
       top: calc(var(--header-height) + var(--space-md));
@@ -899,7 +441,6 @@
       max-width: 360px;
       pointer-events: none;
     }
-
     .toast {
       background: rgba(30, 45, 55, 0.98);
       backdrop-filter: blur(12px);
@@ -913,46 +454,15 @@
       animation: toastSlideIn var(--transition-base);
       pointer-events: auto;
     }
-
-    .toast.hiding {
-      animation: toastSlideOut var(--transition-base) forwards;
-    }
-
-    @keyframes toastSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    @keyframes toastSlideOut {
-      to {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-      }
-    }
-
-    .toast-icon {
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-    }
-
+    .toast.hiding { animation: toastSlideOut var(--transition-base) forwards; }
+    @keyframes toastSlideIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes toastSlideOut { to { opacity: 0; transform: translateY(-20px) scale(0.95); } }
+    .toast-icon { width: 20px; height: 20px; flex-shrink: 0; }
     .toast-icon.success { color: var(--color-success); }
     .toast-icon.error { color: var(--color-error); }
     .toast-icon.info { color: var(--color-text-secondary); }
     .toast-icon.warning { color: var(--color-warning); }
-
-    .toast-message {
-      flex: 1;
-      font-size: 0.875rem;
-      color: var(--color-text-primary);
-    }
-
+    .toast-message { flex: 1; font-size: 0.875rem; color: var(--color-text-primary); }
     .toast-close {
       width: 24px;
       height: 24px;
@@ -966,130 +476,26 @@
       border-radius: var(--radius-sm);
       transition: all var(--transition-fast);
     }
+    .toast-close:hover { background: rgba(255, 255, 255, 0.1); color: var(--color-text-primary); }
 
-    .toast-close:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--color-text-primary);
-    }
+    .user-guide { margin-top: var(--space-xl); width: 100%; transition: opacity var(--transition-base), transform var(--transition-base); }
+    .user-guide.hidden { opacity: 0; transform: translateY(20px); pointer-events: none; }
+    .guide-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border-radius: var(--radius-lg); padding: var(--space-lg); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .guide-title { font-size: 0.875rem; font-weight: 600; color: var(--color-accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-md); text-align: center; }
+    .guide-list { list-style: none; display: flex; flex-direction: column; }
+    .guide-item { display: flex; align-items: flex-start; gap: var(--space-md); padding: var(--space-md) 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.8125rem; color: var(--color-text-secondary); line-height: 1.5; }
+    .guide-item:last-child { border-bottom: none; }
+    .guide-number { width: 24px; height: 24px; background: rgba(0, 212, 170, 0.15); color: var(--color-accent); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .guide-text strong { color: var(--color-text-primary); font-weight: 600; }
 
-    /* ==================== USER GUIDE ==================== */
-    .user-guide {
-      margin-top: var(--space-xl);
-      width: 100%;
-      transition: opacity var(--transition-base), transform var(--transition-base);
-    }
-
-    .user-guide.hidden {
-      opacity: 0;
-      transform: translateY(20px);
-      pointer-events: none;
-    }
-
-    .guide-card {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .guide-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--color-accent);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: var(--space-md);
-      text-align: center;
-    }
-
-    .guide-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .guide-item {
-      display: flex;
-      align-items: flex-start;
-      gap: var(--space-md);
-      padding: var(--space-md) 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.8125rem;
-      color: var(--color-text-secondary);
-      line-height: 1.5;
-    }
-
-    .guide-item:last-child {
-      border-bottom: none;
-    }
-
-    .guide-number {
-      width: 24px;
-      height: 24px;
-      background: rgba(0, 212, 170, 0.15);
-      color: var(--color-accent);
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    .guide-text strong {
-      color: var(--color-text-primary);
-      font-weight: 600;
-    }
-
-    /* ==================== DOWNLOADS TAB ==================== */
-    .downloads-container {
-      padding: 0;
-    }
-
-    .downloads-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: var(--space-md);
-    }
-
-    .downloads-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--color-text-primary);
-    }
-
-    .downloads-count {
-      font-size: 0.8125rem;
-      color: var(--color-text-muted);
-      background: rgba(255, 255, 255, 0.06);
-      padding: var(--space-xs) 12px;
-      border-radius: var(--radius-full);
-    }
-
-    .downloads-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-sm);
-      max-height: calc(100vh - 280px);
-      overflow-y: auto;
-      padding-right: 6px;
-    }
-
-    .downloads-list::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .downloads-list::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .downloads-list::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.18);
-      border-radius: var(--radius-full);
-    }
+    .downloads-container { padding: 0; }
+    .downloads-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
+    .downloads-title { font-size: 1.125rem; font-weight: 600; color: var(--color-text-primary); }
+    .downloads-count { font-size: 0.8125rem; color: var(--color-text-muted); background: rgba(255, 255, 255, 0.06); padding: var(--space-xs) 12px; border-radius: var(--radius-full); }
+    .downloads-list { display: flex; flex-direction: column; gap: var(--space-sm); max-height: calc(100vh - 280px); overflow-y: auto; padding-right: 6px; }
+    .downloads-list::-webkit-scrollbar { width: 6px; }
+    .downloads-list::-webkit-scrollbar-track { background: transparent; }
+    .downloads-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: var(--radius-full); }
 
     .download-card {
       display: flex;
@@ -1103,143 +509,27 @@
       transition: all var(--transition-fast);
       cursor: pointer;
     }
+    .download-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+    .download-card:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
-    .download-card:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateY(-2px);
-    }
+    .download-info-row { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .download-thumbnail-small { width: 110px; height: 80px; border-radius: var(--radius-sm); overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
+    .download-thumbnail-small img { width: 100%; height: 100%; object-fit: cover; }
+    .download-thumbnail-small svg { width: 24px; height: 24px; fill: rgba(255, 255, 255, 0.4); }
+    .download-thumbnail-small.has-thumbnail svg { display: none; }
+    .video-duration { position: absolute; bottom: 4px; right: 4px; background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 0.625rem; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: 600; }
 
-    .download-card:focus-visible {
-      outline: 2px solid var(--color-accent);
-      outline-offset: 2px;
-    }
+    .download-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: var(--space-xs); }
+    .download-filename { font-size: 0.9375rem; font-weight: 600; line-height: 1.2; color: var(--color-text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; overflow-wrap: anywhere; }
+    .download-meta { font-size: 0.75rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 2px; }
+    .meta-left { display: flex; align-items: center; gap: var(--space-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .meta-size { flex-shrink: 0; margin-top: 2px; }
+    .download-meta svg { width: 12px; height: 12px; fill: currentColor; }
 
-    .download-info-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      min-width: 0;
-    }
+    .menu-wrapper { position: relative; flex-shrink: 0; }
+    .menu-btn { width: 36px; height: 36px; background: transparent; border: none; color: var(--color-text-muted); font-size: 20px; line-height: 1; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); }
+    .menu-btn:hover { background: rgba(255, 255, 255, 0.08); color: var(--color-text-primary); }
 
-    .download-thumbnail-small {
-      width: 110px;
-      height: 80px;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      background: #111;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      position: relative;
-    }
-
-    .download-thumbnail-small img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .download-thumbnail-small svg {
-      width: 24px;
-      height: 24px;
-      fill: rgba(255, 255, 255, 0.4);
-    }
-
-    .download-thumbnail-small.has-thumbnail svg {
-      display: none;
-    }
-
-    .video-duration {
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #fff;
-      font-size: 0.625rem;
-      padding: 2px 6px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
-    }
-
-    .download-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-width: 0;
-      gap: var(--space-xs);
-    }
-
-    .download-filename {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      line-height: 1.2;
-      color: var(--color-text-primary);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-    }
-
-    .download-meta {
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .meta-left {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .meta-size {
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .download-meta svg {
-      width: 12px;
-      height: 12px;
-      fill: currentColor;
-    }
-
-    .menu-wrapper {
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .menu-btn {
-      width: 36px;
-      height: 36px;
-      background: transparent;
-      border: none;
-      color: var(--color-text-muted);
-      font-size: 20px;
-      line-height: 1;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--transition-fast);
-    }
-
-    .menu-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--color-text-primary);
-    }
-
-    /* Dropdown Menu */
     .menu-dropdown {
       position: fixed;
       background: rgba(30, 40, 50, 0.98);
@@ -1255,245 +545,39 @@
       transform: scale(0.95);
       transition: all var(--transition-fast);
     }
+    .menu-dropdown.active { opacity: 1; visibility: visible; transform: scale(1); }
+    .menu-dropdown .menu-item { width: 100%; padding: 10px 14px; background: none; border: none; color: var(--color-text-primary); text-align: left; cursor: pointer; font-size: 0.8125rem; transition: all var(--transition-fast); }
+    .menu-dropdown .menu-item:hover { background: rgba(255, 255, 255, 0.08); }
+    .menu-dropdown .menu-item.delete:hover { background: var(--color-error-bg); color: var(--color-error); }
 
-    .menu-dropdown.active {
-      opacity: 1;
-      visibility: visible;
-      transform: scale(1);
-    }
+    .empty-state { text-align: center; color: var(--color-text-muted); padding: 60px var(--space-lg); background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(18px); border-radius: var(--radius-xl); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .empty-state svg { width: 64px; height: 64px; fill: rgba(255, 255, 255, 0.15); margin-bottom: var(--space-md); }
+    .empty-state h3 { font-size: 1.125rem; font-weight: 600; color: var(--color-text-primary); margin: 0 0 var(--space-xs) 0; }
+    .empty-state p { font-size: 0.875rem; margin: 0; }
 
-    .menu-dropdown .menu-item {
-      width: 100%;
-      padding: 10px 14px;
-      background: none;
-      border: none;
-      color: var(--color-text-primary);
-      text-align: left;
-      cursor: pointer;
-      font-size: 0.8125rem;
-      transition: all var(--transition-fast);
-    }
+    .video-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); display: none; align-items: center; justify-content: center; z-index: var(--z-modal); padding: var(--space-lg); }
+    .video-modal.active { display: flex; animation: modalFadeIn var(--transition-base); }
+    @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .video-modal-content { position: relative; width: min(900px, 100%); max-height: 90vh; animation: modalContentIn var(--transition-base); }
+    @keyframes modalContentIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .video-modal-player { width: 100%; max-width: 100%; max-height: 80vh; border-radius: var(--radius-md); background: #000; outline: none; }
+    .video-modal-close { position: absolute; top: -40px; right: 0; width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(255, 255, 255, 0.15); color: #fff; font-size: 24px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast); }
+    .video-modal-close:hover { background: rgba(255, 255, 255, 0.3); }
 
-    .menu-dropdown .menu-item:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
+    .footer { margin-top: auto; font-size: 0.75rem; color: var(--color-text-muted); text-align: center; padding: var(--space-lg) var(--space-md); }
 
-    .menu-dropdown .menu-item.delete:hover {
-      background: var(--color-error-bg);
-      color: var(--color-error);
-    }
-
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      color: var(--color-text-muted);
-      padding: 60px var(--space-lg);
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(18px);
-      border-radius: var(--radius-xl);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      fill: rgba(255, 255, 255, 0.15);
-      margin-bottom: var(--space-md);
-    }
-
-    .empty-state h3 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--color-text-primary);
-      margin: 0 0 var(--space-xs) 0;
-    }
-
-    .empty-state p {
-      font-size: 0.875rem;
-      margin: 0;
-    }
-
-    /* ==================== VIDEO MODAL ==================== */
-    .video-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.9);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: var(--z-modal);
-      padding: var(--space-lg);
-    }
-
-    .video-modal.active {
-      display: flex;
-      animation: modalFadeIn var(--transition-base);
-    }
-
-    @keyframes modalFadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .video-modal-content {
-      position: relative;
-      width: min(900px, 100%);
-      max-height: 90vh;
-      animation: modalContentIn var(--transition-base);
-    }
-
-    @keyframes modalContentIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .video-modal-player {
-      width: 100%;
-      max-width: 100%;
-      max-height: 80vh;
-      border-radius: var(--radius-md);
-      background: #000;
-      outline: none;
-    }
-
-    .video-modal-close {
-      position: absolute;
-      top: -40px;
-      right: 0;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff;
-      font-size: 24px;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--transition-fast);
-    }
-
-    .video-modal-close:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    /* ==================== FOOTER ==================== */
-    .footer {
-      margin-top: auto;
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-      text-align: center;
-      padding: var(--space-lg) var(--space-md);
-    }
-
-    /* ==================== PLATFORM BADGES ==================== */
-    .platform-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 2px 8px;
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--color-text-secondary);
-    }
-
+    .platform-badge { display: inline-flex; align-items: center; gap: var(--space-xs); font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.1); color: var(--color-text-secondary); }
     .platform-badge.tiktok { background: rgba(0, 0, 0, 0.5); color: #fff; }
     .platform-badge.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
     .platform-badge.youtube { background: #ff0000; color: #fff; }
     .platform-badge.facebook { background: #1877f2; color: #fff; }
 
-    /* ==================== LOADING SKELETON ==================== */
-    .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
-      background-size: 200% 100%;
-      animation: skeleton-loading 1.5s infinite;
-      border-radius: var(--radius-sm);
-    }
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: var(--radius-sm); }
+    @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-    @keyframes skeleton-loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .retry-btn { background: transparent; border: 1px solid var(--color-accent); color: var(--color-accent); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem; margin-left: var(--space-sm); transition: all var(--transition-fast); }
+    .retry-btn:hover { background: rgba(0, 212, 170, 0.15); }
 
-    /* ==================== RESPONSIVE ==================== */
-    @media (max-width: 480px) {
-      :root {
-        --space-lg: 16px;
-        --space-xl: 24px;
-      }
-
-      .app-header {
-        padding: var(--space-sm) var(--space-md);
-      }
-
-      .tab-content,
-      .tabs-container {
-        padding-left: var(--space-md);
-        padding-right: var(--space-md);
-      }
-
-      .download-thumbnail-small {
-        width: 90px;
-        height: 65px;
-      }
-    }
-
-    @media (min-width: 768px) {
-      .app-container {
-        --app-max-width: 480px;
-      }
-    }
-
-    /* ==================== REDUCED MOTION ==================== */
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    /* ==================== HIGH CONTRAST ==================== */
-    @media (prefers-contrast: high) {
-      :root {
-        --color-accent: #00ffcc;
-        --color-text-primary: #ffffff;
-        --color-text-secondary: #cccccc;
-      }
-
-      .input-bar,
-      .download-card,
-      .guide-card {
-        border-width: 2px;
-      }
-    }
-    
-    /* ==================== RETRY BUTTON ==================== */
-    .retry-btn {
-      background: transparent;
-      border: 1px solid var(--color-accent);
-      color: var(--color-accent);
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-size: 0.75rem;
-      margin-left: var(--space-sm);
-      transition: all var(--transition-fast);
-    }
-    
-    .retry-btn:hover {
-      background: rgba(0, 212, 170, 0.15);
-    }
-
-    /* ==================== iOS SAFARI HINT ==================== */
     .ios-hint {
       background: rgba(0, 212, 170, 0.1);
       border: 1px solid rgba(0, 212, 170, 0.3);
@@ -1505,77 +589,20 @@
       display: none;
       text-align: center;
     }
+    .ios-hint.visible { display: block; animation: fadeIn var(--transition-base); }
+    .ios-hint strong { color: var(--color-accent); }
 
-    .ios-hint.visible {
-      display: block;
-      animation: fadeIn var(--transition-base);
+    @media (max-width: 480px) {
+      :root { --space-lg: 16px; --space-xl: 24px; }
+      .app-header { padding: var(--space-sm) var(--space-md); }
+      .tab-content, .tabs-container { padding-left: var(--space-md); padding-right: var(--space-md); }
+      .download-thumbnail-small { width: 90px; height: 65px; }
     }
-
-    .ios-hint strong {
-      color: var(--color-accent);
-    }
-
-    /* ==================== SUCCESS CHECKMARK ==================== */
-    .success-animation {
-      width: 60px;
-      height: 60px;
-      margin: 0 auto var(--space-md);
-      position: relative;
-    }
-
-    .success-checkmark {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: rgba(0, 212, 170, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: scaleIn 0.3s ease;
-    }
-
-    .success-checkmark svg {
-      width: 32px;
-      height: 32px;
-      color: var(--color-success);
-      stroke-dasharray: 20;
-      stroke-dashoffset: 20;
-      animation: drawCheck 0.4s ease 0.2s forwards;
-    }
-
-    @keyframes scaleIn {
-      from { transform: scale(0); }
-      to { transform: scale(1); }
-    }
-
-    @keyframes drawCheck {
-      to { stroke-dashoffset: 0; }
-    }
-
-    /* ==================== ERROR STATE ==================== */
-    .error-state {
-      text-align: center;
-      padding: var(--space-lg);
-    }
-
-    .error-icon {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto var(--space-md);
-      color: var(--color-error);
-      animation: shake 0.5s ease;
-    }
-
-    .error-state h3 {
-      color: var(--color-error);
-      font-size: 1rem;
-      margin-bottom: var(--space-sm);
-    }
-
-    .error-state p {
-      color: var(--color-text-secondary);
-      font-size: 0.875rem;
-      margin-bottom: var(--space-md);
+    @media (min-width: 768px) { .app-container { --app-max-width: 480px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
+    @media (prefers-contrast: high) {
+      :root { --color-accent: #00ffcc; --color-text-primary: #ffffff; --color-text-secondary: #cccccc; }
+      .input-bar, .download-card, .guide-card { border-width: 2px; }
     }
   </style>
 </head>
@@ -1603,46 +630,33 @@
     <ul class="menu-list" role="menubar">
       <li>
         <button class="menu-item" id="menuDownloads" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 4v10M8 10l4 4 4-4M5 19h14"/>
-          </svg>
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg>
           <span>Downloads</span>
         </button>
       </li>
       <li>
         <button class="menu-item" id="menuShareApp" role="menuitem">
           <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="18" cy="5" r="2"/>
-            <circle cx="6" cy="12" r="2"/>
-            <circle cx="18" cy="19" r="2"/>
-            <path d="M8 12l8-6M8 12l8 6"/>
+            <circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 12l8-6M8 12l8 6"/>
           </svg>
           <span>Share App</span>
         </button>
       </li>
       <li>
         <button class="menu-item" id="menuRateApp" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5-4.7-4.6 6.5-1z"/>
-          </svg>
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5-4.7-4.6 6.5-1z"/></svg>
           <span>Rate App</span>
         </button>
       </li>
       <li>
         <button class="menu-item" id="menuHelp" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"/>
-            <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4M12 17h0"/>
-          </svg>
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4M12 17h0"/></svg>
           <span>Help</span>
         </button>
       </li>
       <li>
         <button class="menu-item" id="menuPrivacy" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="6" y="11" width="12" height="9" rx="2"/>
-            <path d="M9 11V8a3 3 0 0 1 6 0v3"/>
-          </svg>
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="11" width="12" height="9" rx="2"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/></svg>
           <span>Privacy</span>
         </button>
       </li>
@@ -1653,9 +667,7 @@
     <!-- Header -->
     <header class="app-header">
       <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="hamburgerMenu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 12h18M3 6h18M3 18h18"/>
-        </svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
       </button>
       <h1 class="app-title">Flash<span>Vidz</span></h1>
       <span class="pro-badge">PRO</span>
@@ -1664,123 +676,70 @@
     <!-- Tabs -->
     <div class="tabs-container">
       <nav class="tabs-nav" role="tablist" aria-label="Main tabs">
-        <button class="tab-btn active" id="tabBtnEnterUrl" data-tab="enter-url" role="tab" aria-selected="true" aria-controls="tab-enter-url">
-          Enter URL
-        </button>
-        <button class="tab-btn" id="tabBtnDownloads" data-tab="downloads" role="tab" aria-selected="false" aria-controls="tab-downloads">
-          Downloads
-        </button>
+        <button class="tab-btn active" id="tabBtnEnterUrl" data-tab="enter-url" role="tab" aria-selected="true" aria-controls="tab-enter-url">Enter URL</button>
+        <button class="tab-btn" id="tabBtnDownloads" data-tab="downloads" role="tab" aria-selected="false" aria-controls="tab-downloads">Downloads</button>
         <div class="tab-indicator" id="tabIndicator" aria-hidden="true"></div>
       </nav>
     </div>
 
     <!-- Tab Content: Enter URL -->
     <section class="tab-content active" id="tab-enter-url" role="tabpanel" aria-labelledby="tabBtnEnterUrl">
-      <!-- Input Bar -->
       <div class="input-bar-container">
         <form class="input-bar" id="downloadForm" onsubmit="return false;">
-          <!-- Format Selector -->
           <div class="format-selector">
             <button type="button" class="format-btn" id="formatBtn" aria-label="Select download format" aria-expanded="false" aria-haspopup="listbox">
-              <svg viewBox="0 0 24 24" id="formatIconVideo" aria-hidden="true">
-                <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-              </svg>
-              <svg viewBox="0 0 24 24" id="formatIconAudio" style="display:none" aria-hidden="true">
-                <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
-              </svg>
-              <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 10l5 5 5-5z"/>
-              </svg>
+              <svg viewBox="0 0 24 24" id="formatIconVideo" aria-hidden="true"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+              <svg viewBox="0 0 24 24" id="formatIconAudio" style="display:none" aria-hidden="true"><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
+              <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg>
             </button>
             <div class="format-dropdown" id="formatDropdown" role="listbox" aria-label="Download format options">
               <button type="button" class="format-option selected" data-format="video" id="optionVideo" role="option" aria-selected="true">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-                </svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
                 <span>Video (MP4)</span>
-                <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
+                <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
               </button>
               <button type="button" class="format-option" data-format="audio" id="optionAudio" role="option" aria-selected="false">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
-                </svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/></svg>
                 <span>Audio (M4A)</span>
-                <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
+                <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
               </button>
             </div>
           </div>
 
-          <!-- Input Field -->
           <div class="input-wrapper">
             <label for="linkInput" class="sr-only">Video URL</label>
-            <input type="url" id="linkInput" placeholder="Paste link from TikTok, Instagram, YouTube..." 
-                   autocomplete="off" maxlength="2000" inputmode="url" aria-describedby="input-help">
+            <input type="url" id="linkInput" placeholder="Paste link from TikTok, Instagram, YouTube..." autocomplete="off" maxlength="2000" inputmode="url" aria-describedby="input-help">
           </div>
 
-          <!-- Paste Button -->
-          <button type="button" class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">
-            Paste
-          </button>
-
-          <!-- Submit Button -->
+          <button type="button" class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">Paste</button>
           <button type="submit" class="submit-btn" id="submitBtn" aria-label="Start download">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-            </svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
           </button>
         </form>
         <span id="input-help" class="sr-only">Supported platforms: TikTok, Instagram, YouTube, and Facebook</span>
       </div>
 
-      <!-- Message -->
-      <div class="message-container">
-        <p id="message" role="status" aria-live="polite"></p>
-      </div>
+      <div class="message-container"><p id="message" role="status" aria-live="polite"></p></div>
 
-      <!-- iOS Safari Hint -->
-      <div class="ios-hint" id="iosHint">
-        <strong>iPhone/iPad:</strong> Videos open in Safari for playback. Tap the share button to save to Photos.
-      </div>
+      <div class="ios-hint" id="iosHint"><strong>iPhone/iPad:</strong> Videos open in Safari for playback. Tap the share button to save to Photos.</div>
 
-      <!-- Progress Stages -->
       <div class="progress-stages" id="progressStages" aria-live="polite" aria-label="Download progress">
         <div class="stages-header">
           <span class="stages-title" id="stagesTitle">Processing...</span>
           <span class="stages-percentage" id="stagesPercentage">0%</span>
         </div>
-        <div class="stages-list" id="stagesList">
-          <!-- Stages injected by JS -->
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
-        </div>
+        <div class="stages-list" id="stagesList"></div>
+        <div class="progress-bar-container"><div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div></div>
       </div>
 
-      <!-- User Guide -->
       <div class="user-guide" id="userGuide">
         <div class="guide-card">
           <div class="guide-title">Quick Guide</div>
           <ol class="guide-list">
-            <li class="guide-item">
-              <span class="guide-number" aria-hidden="true">1</span>
-              <span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span>
-            </li>
-            <li class="guide-item">
-              <span class="guide-number" aria-hidden="true">2</span>
-              <span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span>
-            </li>
-            <li class="guide-item">
-              <span class="guide-number" aria-hidden="true">3</span>
-              <span class="guide-text"><strong>Download</strong> — Press the arrow button and wait for processing to complete</span>
-            </li>
-            <li class="guide-item">
-              <span class="guide-number" aria-hidden="true">4</span>
-              <span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span>
-            </li>
+            <li class="guide-item"><span class="guide-number" aria-hidden="true">1</span><span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span></li>
+            <li class="guide-item"><span class="guide-number" aria-hidden="true">2</span><span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span></li>
+            <li class="guide-item"><span class="guide-number" aria-hidden="true">3</span><span class="guide-text"><strong>Download</strong> — Press the arrow button and wait for processing to complete</span></li>
+            <li class="guide-item"><span class="guide-number" aria-hidden="true">4</span><span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span></li>
           </ol>
         </div>
       </div>
@@ -1794,11 +753,8 @@
           <span class="downloads-count" id="downloadsCount">0 items</span>
         </div>
         <div class="downloads-list" id="downloadsList" role="list" aria-label="Downloaded videos">
-          <!-- Empty State -->
           <div class="empty-state" id="emptyState">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-            </svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             <h3>No downloads yet</h3>
             <p>Your downloaded videos will appear here</p>
           </div>
@@ -1810,28 +766,21 @@
     <div class="video-modal" id="videoModal" aria-hidden="true" role="dialog" aria-label="Video preview" aria-modal="true">
       <div class="video-modal-content" id="videoModalContent">
         <button class="video-modal-close" id="videoModalClose" aria-label="Close video preview">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
         <video class="video-modal-player" id="videoModalPlayer" controls playsinline preload="metadata"></video>
       </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-    </footer>
+    <footer class="footer"></footer>
   </div>
 
-  <!-- Global Download Menu -->
   <div class="menu-dropdown global-download-menu" id="globalDownloadMenu" role="menu" aria-hidden="true"></div>
 
   <script>
     // ==================== CONFIGURATION ====================
     const CONFIG = Object.freeze({
-      API_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000/download' 
-        : 'https://flashvidz-backend.onrender.com/download',
+      API_URL: window.location.hostname === 'localhost' ? 'http://localhost:3000/download' : 'https://flashvidz-backend.onrender.com/download',
       MAX_FILE_SIZE: 500 * 1024 * 1024,
       MAX_FILENAME_LENGTH: 180,
       STORAGE_KEY: 'flashvidz_downloads',
@@ -1841,41 +790,19 @@
       SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook'],
       MAX_RETRIES: 3,
       RETRY_DELAY: 2000,
-      IS_IOS: /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      IS_IOS: /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     });
 
     // ==================== STAGE DEFINITIONS ====================
     const DOWNLOAD_STAGES = [
-      {
-        id: 'fetch',
-        label: 'Fetching video info',
-        description: 'Connecting to platform...',
-        icon: 'search'
-      },
-      {
-        id: 'process',
-        label: 'Processing',
-        description: 'Preparing download...',
-        icon: 'cog'
-      },
-      {
-        id: 'download',
-        label: 'Downloading',
-        description: 'Saving to device...',
-        icon: 'download'
-      },
-      {
-        id: 'complete',
-        label: 'Complete',
-        description: 'Ready to view',
-        icon: 'check'
-      }
+      { id: 'fetch', label: 'Fetching video info', description: 'Connecting to platform...', icon: 'search' },
+      { id: 'process', label: 'Processing', description: 'Preparing download...', icon: 'cog' },
+      { id: 'download', label: 'Downloading', description: 'Saving to device...', icon: 'download' },
+      { id: 'complete', label: 'Complete', description: 'Ready to view', icon: 'check' }
     ];
 
     // ==================== STATE MANAGEMENT ====================
     let selectedFormat = 'video';
-
     const state = {
       abortController: null,
       currentDownloadId: 0,
@@ -1893,82 +820,40 @@
 
     // ==================== DOM ELEMENTS CACHE ====================
     const elements = {};
-
     function cacheElements() {
-      const ids = [
-        'toastContainer', 'menuOverlay', 'hamburgerMenu', 'closeMenuBtn',
-        'hamburgerBtn', 'tabIndicator', 'tabBtnEnterUrl', 'tabBtnDownloads',
-        'tab-enter-url', 'tab-downloads', 'formatBtn', 'formatDropdown',
-        'formatIconVideo', 'formatIconAudio', 'optionVideo', 'optionAudio',
-        'linkInput', 'pasteBtn', 'submitBtn', 'downloadForm', 'message',
-        'downloadsCount', 'downloadsList', 'emptyState', 'videoModal',
-        'videoModalContent', 'videoModalPlayer', 'videoModalClose',
-        'globalDownloadMenu', 'menuDownloads', 'menuShareApp', 'menuRateApp',
-        'menuHelp', 'menuPrivacy', 'iosHint', 'progressStages', 'stagesList',
-        'stagesTitle', 'stagesPercentage', 'progressBarFill', 'userGuide'
-      ];
-      ids.forEach(id => {
-        elements[id] = document.getElementById(id);
-      });
+      const ids = ['toastContainer', 'menuOverlay', 'hamburgerMenu', 'closeMenuBtn', 'hamburgerBtn', 'tabIndicator', 'tabBtnEnterUrl', 'tabBtnDownloads', 'tab-enter-url', 'tab-downloads', 'formatBtn', 'formatDropdown', 'formatIconVideo', 'formatIconAudio', 'optionVideo', 'optionAudio', 'linkInput', 'pasteBtn', 'submitBtn', 'downloadForm', 'message', 'downloadsCount', 'downloadsList', 'emptyState', 'videoModal', 'videoModalContent', 'videoModalPlayer', 'videoModalClose', 'globalDownloadMenu', 'menuDownloads', 'menuShareApp', 'menuRateApp', 'menuHelp', 'menuPrivacy', 'iosHint', 'progressStages', 'stagesList', 'stagesTitle', 'stagesPercentage', 'progressBarFill', 'userGuide'];
+      ids.forEach(id => elements[id] = document.getElementById(id));
     }
 
     // ==================== SECURITY UTILITIES ====================
     const SecurityUtils = {
-      escapeHtml(str) {
-        if (typeof str !== 'string') return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-      },
-
+      escapeHtml(str) { if (typeof str !== 'string') return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; },
       normalizeFileName(filename) {
         if (typeof filename !== 'string') return 'flashvidz-download';
-        
-        let sanitized = filename
-          .replace(/[\\/:*?"<>|]/g, '_')
-          .replace(/[\x00-\x1f\x7f]/g, '')
-          .replace(/^\.+/, '')
-          .trim();
-        
+        let sanitized = filename.replace(/[\\/:*?"<>|]/g, '_').replace(/[\x00-\x1f\x7f]/g, '').replace(/^\.+/, '').trim();
         if (sanitized.length > CONFIG.MAX_FILENAME_LENGTH) {
           const ext = sanitized.lastIndexOf('.');
-          if (ext > 0 && ext > sanitized.length - 10) {
-            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH - (sanitized.length - ext)) + sanitized.slice(ext);
-          } else {
-            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH);
-          }
+          if (ext > 0 && ext > sanitized.length - 10) sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH - (sanitized.length - ext)) + sanitized.slice(ext);
+          else sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH);
         }
-        
         return sanitized || 'flashvidz-download';
       },
-
       normalizeStoredUrl(value) {
         const trimmed = typeof value === 'string' ? value.trim() : '';
         if (!trimmed || trimmed.length > 2000) return null;
-        
         try {
           const parsed = new URL(trimmed);
           if (!['http:', 'https:'].includes(parsed.protocol)) return null;
-          
           const hostname = parsed.hostname.toLowerCase();
           if (hostname === 'localhost' || hostname.endsWith('.local')) return null;
           if (/^127\./.test(hostname) || /^10\./.test(hostname) || /^192\.168\./.test(hostname)) return null;
-          if (hostname.startsWith('172.')) {
-            const secondOctet = parseInt(hostname.split('.')[1], 10);
-            if (secondOctet >= 16 && secondOctet <= 31) return null;
-          }
+          if (hostname.startsWith('172.')) { const secondOctet = parseInt(hostname.split('.')[1], 10); if (secondOctet >= 16 && secondOctet <= 31) return null; }
           if (hostname.startsWith('169.254.')) return null;
           if (hostname === '::1' || hostname.startsWith('fe80:') || hostname.startsWith('fc') || hostname.startsWith('fd')) return null;
-          
           return trimmed;
-        } catch {
-          return null;
-        }
+        } catch { return null; }
       },
-
-      isValidHttpUrl(value) {
-        return this.normalizeStoredUrl(value) !== null;
-      }
+      isValidHttpUrl(value) { return this.normalizeStoredUrl(value) !== null; }
     };
 
     // ==================== TOAST NOTIFICATION SYSTEM ====================
@@ -1979,40 +864,20 @@
         info: '<svg class="toast-icon info" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
         warning: '<svg class="toast-icon warning" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>'
       },
-
       show(message, type = 'info', duration = CONFIG.TOAST_DURATION) {
         const container = elements.toastContainer;
         const toast = document.createElement('div');
         toast.className = 'toast';
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'polite');
-        
-        toast.innerHTML = `
-          ${this.icons[type] || this.icons.info}
-          <span class="toast-message">${SecurityUtils.escapeHtml(message)}</span>
-          <button class="toast-close" aria-label="Dismiss notification">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
-          </button>
-        `;
-        
+        toast.innerHTML = `${this.icons[type] || this.icons.info}<span class="toast-message">${SecurityUtils.escapeHtml(message)}</span><button class="toast-close" aria-label="Dismiss notification"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`;
         const closeBtn = toast.querySelector('.toast-close');
-        const closeToast = () => {
-          toast.classList.add('hiding');
-          setTimeout(() => toast.remove(), 300);
-        };
-        
+        const closeToast = () => { toast.classList.add('hiding'); setTimeout(() => toast.remove(), 300); };
         closeBtn.addEventListener('click', closeToast);
         container.appendChild(toast);
-        
-        if (duration > 0) {
-          setTimeout(closeToast, duration);
-        }
-        
+        if (duration > 0) setTimeout(closeToast, duration);
         return toast;
       },
-
       success(message) { return this.show(message, 'success'); },
       error(message) { return this.show(message, 'error'); },
       info(message) { return this.show(message, 'info'); },
@@ -2021,62 +886,27 @@
 
     // ==================== LOCAL STORAGE ====================
     const Storage = {
-      loadDownloads() {
-        try {
-          const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
-          return stored ? JSON.parse(stored) : [];
-        } catch {
-          localStorage.removeItem(CONFIG.STORAGE_KEY);
-          return [];
-        }
-      },
-
-      saveDownloads(downloads) {
-        try {
-          localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(downloads));
-        } catch (e) {
-          console.error('Failed to save downloads:', e);
-          Toast.error('Failed to save download history');
-        }
-      },
-
+      loadDownloads() { try { const stored = localStorage.getItem(CONFIG.STORAGE_KEY); return stored ? JSON.parse(stored) : []; } catch { localStorage.removeItem(CONFIG.STORAGE_KEY); return []; } },
+      saveDownloads(downloads) { try { localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(downloads)); } catch (e) { console.error('Failed to save downloads:', e); Toast.error('Failed to save download history'); } },
       getSettings() {
         const defaults = { format: 'video', quality: 'best', autoDownload: false };
         try {
           const stored = localStorage.getItem('flashvidz_settings');
           if (!stored) return defaults;
           const parsed = JSON.parse(stored);
-          return {
-            format: parsed.format === 'audio' ? 'audio' : 'video',
-            quality: ['best', 'medium', 'low'].includes(parsed.quality) ? parsed.quality : 'best',
-            autoDownload: parsed.autoDownload === true
-          };
-        } catch {
-          return defaults;
-        }
+          return { format: parsed.format === 'audio' ? 'audio' : 'video', quality: ['best', 'medium', 'low'].includes(parsed.quality) ? parsed.quality : 'best', autoDownload: parsed.autoDownload === true };
+        } catch { return defaults; }
       },
-
-      saveSettings(settings) {
-        try {
-          localStorage.setItem('flashvidz_settings', JSON.stringify(settings));
-        } catch (e) {
-          console.error('Failed to save settings:', e);
-        }
-      }
+      saveSettings(settings) { try { localStorage.setItem('flashvidz_settings', JSON.stringify(settings)); } catch (e) { console.error('Failed to save settings:', e); } }
     };
 
     // ==================== PROGRESS STAGES MANAGER ====================
     const ProgressStages = {
-      init() {
-        this.renderStages();
-      },
-
+      init() { this.renderStages(); },
       renderStages() {
         elements.stagesList.innerHTML = DOWNLOAD_STAGES.map((stage, index) => `
           <div class="stage-item pending" data-stage="${stage.id}" data-index="${index}">
-            <div class="stage-icon">
-              ${this.getIcon(stage.icon)}
-            </div>
+            <div class="stage-icon">${this.getIcon(stage.icon)}</div>
             <div class="stage-content">
               <div class="stage-label">${SecurityUtils.escapeHtml(stage.label)}</div>
               <div class="stage-description">${SecurityUtils.escapeHtml(stage.description)}</div>
@@ -2084,7 +914,6 @@
           </div>
         `).join('');
       },
-
       getIcon(type) {
         const icons = {
           search: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>',
@@ -2094,141 +923,55 @@
         };
         return icons[type] || icons.check;
       },
-
-      show() {
-        elements.progressStages.classList.add('active');
-        elements.userGuide.classList.add('hidden');
-        state.currentStage = -1;
-        state.stageProgress = 0;
-        this.updateProgress(0);
-        this.setStage(0);
-      },
-
-      hide() {
-        elements.progressStages.classList.remove('active');
-        elements.userGuide.classList.remove('hidden');
-        state.currentStage = -1;
-      },
-
+      show() { elements.progressStages.classList.add('active'); elements.userGuide.classList.add('hidden'); state.currentStage = -1; state.stageProgress = 0; this.updateProgress(0); this.setStage(0); },
+      hide() { elements.progressStages.classList.remove('active'); elements.userGuide.classList.remove('hidden'); state.currentStage = -1; },
       setStage(stageIndex) {
         const stages = elements.stagesList.querySelectorAll('.stage-item');
         stages.forEach((stage, index) => {
           stage.classList.remove('pending', 'active', 'completed', 'error');
-          
-          if (index < stageIndex) {
-            stage.classList.add('completed');
-          } else if (index === stageIndex) {
-            stage.classList.add('active');
-            state.currentStage = stageIndex;
-          } else {
-            stage.classList.add('pending');
-          }
+          if (index < stageIndex) stage.classList.add('completed');
+          else if (index === stageIndex) { stage.classList.add('active'); state.currentStage = stageIndex; }
+          else stage.classList.add('pending');
         });
-
-        if (stageIndex < DOWNLOAD_STAGES.length - 1) {
-          elements.stagesTitle.textContent = DOWNLOAD_STAGES[stageIndex].label + '...';
-        } else {
-          elements.stagesTitle.textContent = 'Complete!';
-        }
+        if (stageIndex < DOWNLOAD_STAGES.length - 1) elements.stagesTitle.textContent = DOWNLOAD_STAGES[stageIndex].label + '...';
+        else elements.stagesTitle.textContent = 'Complete!';
       },
-
-      updateProgress(percent) {
-        state.stageProgress = Math.min(100, Math.max(0, percent));
-        elements.progressBarFill.style.width = state.stageProgress + '%';
-        elements.stagesPercentage.textContent = Math.round(state.stageProgress) + '%';
-      },
-
+      updateProgress(percent) { state.stageProgress = Math.min(100, Math.max(0, percent)); elements.progressBarFill.style.width = state.stageProgress + '%'; elements.stagesPercentage.textContent = Math.round(state.stageProgress) + '%'; },
       setError() {
         const stages = elements.stagesList.querySelectorAll('.stage-item');
         const currentStage = stages[state.currentStage];
-        if (currentStage) {
-          currentStage.classList.remove('active');
-          currentStage.classList.add('error');
-        }
+        if (currentStage) { currentStage.classList.remove('active'); currentStage.classList.add('error'); }
         elements.stagesTitle.textContent = 'Failed';
         elements.progressBarFill.style.background = 'var(--color-error)';
       },
-
-      setSuccess() {
-        this.setStage(DOWNLOAD_STAGES.length - 1);
-        this.updateProgress(100);
-        elements.stagesTitle.textContent = 'Complete!';
-        elements.stagesTitle.style.color = 'var(--color-success)';
-      },
-
-      reset() {
-        this.hide();
-        elements.progressBarFill.style.background = '';
-        elements.stagesTitle.style.color = '';
-        this.renderStages();
-      }
+      setSuccess() { this.setStage(DOWNLOAD_STAGES.length - 1); this.updateProgress(100); elements.stagesTitle.textContent = 'Complete!'; elements.stagesTitle.style.color = 'var(--color-success)'; },
+      reset() { this.hide(); elements.progressBarFill.style.background = ''; elements.stagesTitle.style.color = ''; this.renderStages(); }
     };
 
     // ==================== FORMAT SELECTOR ====================
     const FormatSelector = {
       init() {
-        elements.formatBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.toggle();
-        });
-        
-        elements.optionVideo.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.select('video');
-        });
-        
-        elements.optionAudio.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.select('audio');
-        });
-        
-        document.addEventListener('click', (e) => {
-          if (!elements.formatBtn.contains(e.target) && !elements.formatDropdown.contains(e.target)) {
-            this.close();
-          }
-        });
+        elements.formatBtn.addEventListener('click', (e) => { e.stopPropagation(); this.toggle(); });
+        elements.optionVideo.addEventListener('click', (e) => { e.stopPropagation(); this.select('video'); });
+        elements.optionAudio.addEventListener('click', (e) => { e.stopPropagation(); this.select('audio'); });
+        document.addEventListener('click', (e) => { if (!elements.formatBtn.contains(e.target) && !elements.formatDropdown.contains(e.target)) this.close(); });
       },
-
-      toggle() {
-        const isOpen = elements.formatDropdown.classList.contains('active');
-        if (isOpen) {
-          this.close();
-        } else {
-          this.open();
-        }
-      },
-
-      open() {
-        elements.formatDropdown.classList.add('active');
-        elements.formatBtn.setAttribute('aria-expanded', 'true');
-      },
-
-      close() {
-        elements.formatDropdown.classList.remove('active');
-        elements.formatBtn.setAttribute('aria-expanded', 'false');
-      },
-
+      toggle() { const isOpen = elements.formatDropdown.classList.contains('active'); isOpen ? this.close() : this.open(); },
+      open() { elements.formatDropdown.classList.add('active'); elements.formatBtn.setAttribute('aria-expanded', 'true'); },
+      close() { elements.formatDropdown.classList.remove('active'); elements.formatBtn.setAttribute('aria-expanded', 'false'); },
       select(format) {
         selectedFormat = format === 'audio' ? 'audio' : 'video';
         const settings = Storage.getSettings();
         Storage.saveSettings({ ...settings, format: selectedFormat });
-        
         if (selectedFormat === 'video') {
-          elements.formatIconVideo.style.display = 'block';
-          elements.formatIconAudio.style.display = 'none';
-          elements.optionVideo.setAttribute('aria-selected', 'true');
-          elements.optionAudio.setAttribute('aria-selected', 'false');
-          elements.optionVideo.classList.add('selected');
-          elements.optionAudio.classList.remove('selected');
+          elements.formatIconVideo.style.display = 'block'; elements.formatIconAudio.style.display = 'none';
+          elements.optionVideo.setAttribute('aria-selected', 'true'); elements.optionAudio.setAttribute('aria-selected', 'false');
+          elements.optionVideo.classList.add('selected'); elements.optionAudio.classList.remove('selected');
         } else {
-          elements.formatIconVideo.style.display = 'none';
-          elements.formatIconAudio.style.display = 'block';
-          elements.optionVideo.setAttribute('aria-selected', 'false');
-          elements.optionAudio.setAttribute('aria-selected', 'true');
-          elements.optionAudio.classList.add('selected');
-          elements.optionVideo.classList.remove('selected');
+          elements.formatIconVideo.style.display = 'none'; elements.formatIconAudio.style.display = 'block';
+          elements.optionVideo.setAttribute('aria-selected', 'false'); elements.optionAudio.setAttribute('aria-selected', 'true');
+          elements.optionAudio.classList.add('selected'); elements.optionVideo.classList.remove('selected');
         }
-        
         this.close();
       }
     };
@@ -2239,96 +982,29 @@
         elements.hamburgerBtn.addEventListener('click', () => this.open());
         elements.closeMenuBtn.addEventListener('click', () => this.close());
         elements.menuOverlay.addEventListener('click', () => this.close());
-        
-        elements.menuDownloads.addEventListener('click', () => {
-          this.close();
-          TabManager.switch('downloads');
-        });
-        
-        elements.menuShareApp.addEventListener('click', () => {
-          this.close();
-          this.shareApp();
-        });
-        
-        elements.menuRateApp.addEventListener('click', () => {
-          this.close();
-          Toast.info('Rate App - Feature coming soon');
-        });
-        
-        elements.menuHelp.addEventListener('click', () => {
-          this.close();
-          Toast.info('Help & Support\nContact: support@flashvidz.com', 'info', 6000);
-        });
-        
-        elements.menuPrivacy.addEventListener('click', () => {
-          this.close();
-          Toast.info('Privacy - Feature coming soon');
-        });
-
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) {
-            this.close();
-          }
-        });
+        elements.menuDownloads.addEventListener('click', () => { this.close(); TabManager.switch('downloads'); });
+        elements.menuShareApp.addEventListener('click', () => { this.close(); this.shareApp(); });
+        elements.menuRateApp.addEventListener('click', () => { this.close(); Toast.info('Rate App - Feature coming soon'); });
+        elements.menuHelp.addEventListener('click', () => { this.close(); Toast.info('Help & Support\\nContact: support@flashvidz.com', 'info', 6000); });
+        elements.menuPrivacy.addEventListener('click', () => { this.close(); Toast.info('Privacy - Feature coming soon'); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) this.close(); });
       },
-
-      open() {
-        elements.hamburgerMenu.classList.add('active');
-        elements.menuOverlay.classList.add('active');
-        elements.hamburgerMenu.setAttribute('aria-hidden', 'false');
-        elements.hamburgerBtn.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-        elements.closeMenuBtn.focus();
-      },
-
-      close() {
-        elements.hamburgerMenu.classList.remove('active');
-        elements.menuOverlay.classList.remove('active');
-        elements.hamburgerMenu.setAttribute('aria-hidden', 'true');
-        elements.hamburgerBtn.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-        elements.hamburgerBtn.focus();
-      },
-
+      open() { elements.hamburgerMenu.classList.add('active'); elements.menuOverlay.classList.add('active'); elements.hamburgerMenu.setAttribute('aria-hidden', 'false'); elements.hamburgerBtn.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden'; elements.closeMenuBtn.focus(); },
+      close() { elements.hamburgerMenu.classList.remove('active'); elements.menuOverlay.classList.remove('active'); elements.hamburgerMenu.setAttribute('aria-hidden', 'true'); elements.hamburgerBtn.setAttribute('aria-expanded', 'false'); document.body.style.overflow = ''; elements.hamburgerBtn.focus(); },
       async shareApp() {
-        const shareData = {
-          title: 'FlashVidz',
-          text: 'Download videos from TikTok, Instagram, YouTube, and Facebook',
-          url: window.location.href
-        };
-        
-        if (navigator.share) {
-          try {
-            await navigator.share(shareData);
-          } catch (err) {
-            if (err.name !== 'AbortError') {
-              this.copyToClipboard(window.location.href);
-            }
-          }
-        } else {
-          this.copyToClipboard(window.location.href);
-        }
+        const shareData = { title: 'FlashVidz', text: 'Download videos from TikTok, Instagram, YouTube, and Facebook', url: window.location.href };
+        if (navigator.share) { try { await navigator.share(shareData); } catch (err) { if (err.name !== 'AbortError') this.copyToClipboard(window.location.href); } }
+        else this.copyToClipboard(window.location.href);
       },
-
       async copyToClipboard(text) {
         try {
-          if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(text);
-          } else {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.setAttribute('readonly', '');
-            textarea.style.position = 'absolute';
-            textarea.style.left = '-9999px';
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
+          if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+          else {
+            const textarea = document.createElement('textarea'); textarea.value = text; textarea.setAttribute('readonly', ''); textarea.style.position = 'absolute'; textarea.style.left = '-9999px';
+            document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea);
           }
           Toast.success('Link copied to clipboard');
-        } catch {
-          Toast.error('Failed to copy link');
-        }
+        } catch { Toast.error('Failed to copy link'); }
       }
     };
 
@@ -2338,204 +1014,83 @@
         elements.tabBtnEnterUrl.addEventListener('click', () => this.switch('enter-url'));
         elements.tabBtnDownloads.addEventListener('click', () => this.switch('downloads'));
       },
-
       switch(tabId) {
         setMessage('', '');
-        
         const isDownloads = tabId === 'downloads';
-        elements.tabBtnEnterUrl.setAttribute('aria-selected', !isDownloads);
-        elements.tabBtnDownloads.setAttribute('aria-selected', isDownloads);
-        elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads);
-        elements.tabBtnDownloads.classList.toggle('active', isDownloads);
-        
+        elements.tabBtnEnterUrl.setAttribute('aria-selected', !isDownloads); elements.tabBtnDownloads.setAttribute('aria-selected', isDownloads);
+        elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads); elements.tabBtnDownloads.classList.toggle('active', isDownloads);
         elements.tabIndicator.classList.toggle('downloads', isDownloads);
-        
-        elements['tab-enter-url'].classList.toggle('active', !isDownloads);
-        elements['tab-enter-url'].hidden = isDownloads;
-        elements['tab-downloads'].classList.toggle('active', isDownloads);
-        elements['tab-downloads'].hidden = !isDownloads;
-        
-        if (isDownloads) {
-          DownloadsManager.render();
-        }
+        elements['tab-enter-url'].classList.toggle('active', !isDownloads); elements['tab-enter-url'].hidden = isDownloads;
+        elements['tab-downloads'].classList.toggle('active', isDownloads); elements['tab-downloads'].hidden = !isDownloads;
+        if (isDownloads) DownloadsManager.render();
       }
     };
 
     // ==================== MESSAGE SYSTEM ====================
-    function setMessage(text, type = '') {
-      const msg = elements.message;
-      msg.textContent = text;
-      msg.className = type;
-    }
+    function setMessage(text, type = '') { const msg = elements.message; msg.textContent = text; msg.className = type; }
 
     // ==================== DOWNLOADS MANAGER ====================
     const DownloadsManager = {
-      DOWNLOAD_MENU_ACTIONS: [
-        { action: 'download', label: 'Save', className: 'save' },
-        { action: 'share', label: 'Share', className: 'share' },
-        { action: 'remove', label: 'Delete', className: 'delete' }
-      ],
-
+      DOWNLOAD_MENU_ACTIONS: [{ action: 'download', label: 'Save', className: 'save' }, { action: 'share', label: 'Share', className: 'share' }, { action: 'remove', label: 'Delete', className: 'delete' }],
       init() {
         this.populateMenu();
-        
-        document.addEventListener('click', (e) => {
-          if (!e.target.closest('.menu-wrapper') && !e.target.closest('#globalDownloadMenu')) {
-            this.hideMenu();
-          }
-        });
-
-        elements.downloadsList?.addEventListener('scroll', () => {
-          clearTimeout(this.scrollTimeout);
-          this.scrollTimeout = setTimeout(() => this.hideMenu(), 100);
-        });
-
+        document.addEventListener('click', (e) => { if (!e.target.closest('.menu-wrapper') && !e.target.closest('#globalDownloadMenu')) this.hideMenu(); });
+        elements.downloadsList?.addEventListener('scroll', () => { clearTimeout(this.scrollTimeout); this.scrollTimeout = setTimeout(() => this.hideMenu(), 100); });
         elements.globalDownloadMenu.addEventListener('click', (e) => this.handleMenuAction(e));
       },
-
-      populateMenu() {
-        elements.globalDownloadMenu.innerHTML = this.DOWNLOAD_MENU_ACTIONS.map(({ action, label, className }) => 
-          `<button class="menu-item ${SecurityUtils.escapeHtml(className)}" data-action="${SecurityUtils.escapeHtml(action)}" role="menuitem">${SecurityUtils.escapeHtml(label)}</button>`
-        ).join('');
-      },
-
-      hideMenu() {
-        elements.globalDownloadMenu.classList.remove('active');
-        elements.globalDownloadMenu.setAttribute('aria-hidden', 'true');
-        state.activeDownloadMenuContext = null;
-      },
-
+      populateMenu() { elements.globalDownloadMenu.innerHTML = this.DOWNLOAD_MENU_ACTIONS.map(({ action, label, className }) => `<button class="menu-item ${SecurityUtils.escapeHtml(className)}" data-action="${SecurityUtils.escapeHtml(action)}" role="menuitem">${SecurityUtils.escapeHtml(label)}</button>`).join(''); },
+      hideMenu() { elements.globalDownloadMenu.classList.remove('active'); elements.globalDownloadMenu.setAttribute('aria-hidden', 'true'); state.activeDownloadMenuContext = null; },
       showMenu(anchorBtn, context) {
-        state.activeDownloadMenuContext = context;
-        elements.globalDownloadMenu.classList.add('active');
-        elements.globalDownloadMenu.setAttribute('aria-hidden', 'false');
-        
+        state.activeDownloadMenuContext = context; elements.globalDownloadMenu.classList.add('active'); elements.globalDownloadMenu.setAttribute('aria-hidden', 'false');
         requestAnimationFrame(() => {
-          const rect = anchorBtn.getBoundingClientRect();
-          const menuWidth = elements.globalDownloadMenu.offsetWidth;
-          const menuHeight = elements.globalDownloadMenu.offsetHeight;
-          const viewportPadding = 8;
-          const gap = 6;
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-          
-          let top = rect.bottom + gap;
-          let left = rect.right - menuWidth;
-          
-          if (left < viewportPadding) left = viewportPadding;
-          if (left > viewportWidth - menuWidth - viewportPadding) {
-            left = viewportWidth - menuWidth - viewportPadding;
-          }
-          
-          if (top + menuHeight > viewportHeight - viewportPadding) {
-            top = rect.top - menuHeight - gap;
-          }
-          if (top < viewportPadding) top = viewportPadding;
-          
-          elements.globalDownloadMenu.style.top = `${top}px`;
-          elements.globalDownloadMenu.style.left = `${left}px`;
+          const rect = anchorBtn.getBoundingClientRect(), menuWidth = elements.globalDownloadMenu.offsetWidth, menuHeight = elements.globalDownloadMenu.offsetHeight;
+          const viewportPadding = 8, gap = 6, viewportWidth = window.innerWidth, viewportHeight = window.innerHeight;
+          let top = rect.bottom + gap, left = rect.right - menuWidth;
+          if (left < viewportPadding) left = viewportPadding; if (left > viewportWidth - menuWidth - viewportPadding) left = viewportWidth - menuWidth - viewportPadding;
+          if (top + menuHeight > viewportHeight - viewportPadding) top = rect.top - menuHeight - gap; if (top < viewportPadding) top = viewportPadding;
+          elements.globalDownloadMenu.style.top = `${top}px`; elements.globalDownloadMenu.style.left = `${left}px`;
         });
       },
-
       async handleMenuAction(e) {
         e.stopPropagation();
         const actionButton = e.target.closest('.menu-item');
         if (!actionButton || !state.activeDownloadMenuContext) return;
-        
-        const { item, fileName, fileSize } = state.activeDownloadMenuContext;
-        const action = actionButton.dataset.action;
+        const { item, fileName, fileSize } = state.activeDownloadMenuContext, action = actionButton.dataset.action;
         this.hideMenu();
-        
         switch (action) {
-          case 'download':
-            await this.downloadItem(item, fileName, fileSize);
-            break;
-          case 'share':
-            await this.shareItem(item, fileName);
-            break;
-          case 'remove':
-            this.removeItem(item.id);
-            break;
+          case 'download': await this.downloadItem(item, fileName, fileSize); break;
+          case 'share': await this.shareItem(item, fileName); break;
+          case 'remove': this.removeItem(item.id); break;
         }
       },
-
       async downloadItem(item, fileName, fileSize) {
-        if (isActivelyDownloading()) {
-          Toast.info('A download is already in progress');
-          return;
-        }
-        
+        if (isActivelyDownloading()) { Toast.info('A download is already in progress'); return; }
         try {
           // ✅ FIX: iOS needs viewUrl (streaming), Android/Desktop can use downloadUrl
           const isIOS = CONFIG.IS_IOS;
-          const playLink = isIOS 
-            ? (item.viewUrl || item.fileUrl || item.downloadUrl || item.url)
-            : (item.downloadUrl || item.fileUrl || item.url);
-            
-          if (!playLink) {
-            throw new Error('Missing download URL');
-          }
-          
+          const playLink = isIOS ? (item.viewUrl || item.fileUrl || item.downloadUrl || item.url) : (item.downloadUrl || item.fileUrl || item.url);
+          if (!playLink) throw new Error('Missing download URL');
           const message = isIOS ? 'Opening in Safari...' : 'Starting download...';
           Toast.info(message);
-          
-          await DownloadFlow.runHybrid(playLink, fileName, fileSize, (progress) => {
-            if (!isIOS) {
-              setMessage(`Downloading... ${progress}%`, 'loading');
-            }
-          });
-          
-          if (!isIOS) {
-            Toast.success('Download complete!');
-          }
-        } catch (error) {
-          Toast.error(error.message || 'Download failed');
-        }
+          await DownloadFlow.runHybrid(playLink, fileName, fileSize, (progress) => { if (!isIOS) setMessage(`Downloading... ${progress}%`, 'loading'); });
+          if (!isIOS) Toast.success('Download complete!');
+        } catch (error) { Toast.error(error.message || 'Download failed'); }
       },
-
       async shareItem(item, fileName) {
-        const shareUrl = SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl :
-                        SecurityUtils.isValidHttpUrl(item.fileUrl) ? item.fileUrl : null;
-        
-        if (!shareUrl) {
-          Toast.error('Missing share URL for this item');
-          return;
-        }
-        
+        const shareUrl = SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl : SecurityUtils.isValidHttpUrl(item.fileUrl) ? item.fileUrl : null;
+        if (!shareUrl) { Toast.error('Missing share URL for this item'); return; }
         if (navigator.share) {
-          try {
-            await navigator.share({
-              title: 'FlashVidz Download',
-              text: fileName,
-              url: shareUrl
-            });
-          } catch (error) {
-            if (error.name !== 'AbortError') {
-              await HamburgerMenu.copyToClipboard(shareUrl);
-            }
-          }
-        } else {
-          await HamburgerMenu.copyToClipboard(shareUrl);
-        }
+          try { await navigator.share({ title: 'FlashVidz Download', text: fileName, url: shareUrl }); } catch (error) { if (error.name !== 'AbortError') await HamburgerMenu.copyToClipboard(shareUrl); }
+        } else await HamburgerMenu.copyToClipboard(shareUrl);
       },
-
       removeItem(id) {
         if (confirm('Remove this download from history?')) {
-          const downloads = Storage.loadDownloads();
-          const index = downloads.findIndex(d => d.id === id);
-          if (index > -1) {
-            downloads.splice(index, 1);
-            Storage.saveDownloads(downloads);
-            this.render();
-            Toast.success('Download removed');
-          }
+          const downloads = Storage.loadDownloads(), index = downloads.findIndex(d => d.id === id);
+          if (index > -1) { downloads.splice(index, 1); Storage.saveDownloads(downloads); this.render(); Toast.success('Download removed'); }
         }
       },
-
       add(downloadUrl, fileUrl, format, fileName, fileSize, thumbnail, duration) {
-        const downloads = Storage.loadDownloads();
-        const now = Date.now();
-        
+        const downloads = Storage.loadDownloads(), now = Date.now();
         const download = {
           id: now.toString(),
           downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
@@ -2547,169 +1102,56 @@
           duration: duration || null,
           timestamp: now
         };
-        
         if (!download.downloadUrl) return null;
-        
-        downloads.unshift(download);
-        if (downloads.length > CONFIG.MAX_DOWNLOADS_HISTORY) {
-          downloads.pop();
-        }
-        
-        Storage.saveDownloads(downloads);
-        return download;
+        downloads.unshift(download); if (downloads.length > CONFIG.MAX_DOWNLOADS_HISTORY) downloads.pop();
+        Storage.saveDownloads(downloads); return download;
       },
-
-      formatFileSize(bytes) {
-        const num = Number(bytes);
-        if (!Number.isFinite(num) || num <= 0) return '—';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(num) / Math.log(k));
-        return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-      },
-
-      formatDate(timestamp) {
-        const parsed = Number(timestamp);
-        const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      },
-
-      getPlatformBadge(platform) {
-        const badges = {
-          tiktok: '<span class="platform-badge tiktok">TikTok</span>',
-          instagram: '<span class="platform-badge instagram">Instagram</span>',
-          youtube: '<span class="platform-badge youtube">YouTube</span>',
-          facebook: '<span class="platform-badge facebook">Facebook</span>'
-        };
-        return badges[platform] || '';
-      },
-
+      formatFileSize(bytes) { const num = Number(bytes); if (!Number.isFinite(num) || num <= 0) return '—'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB']; const i = Math.floor(Math.log(num) / Math.log(k)); return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]; },
+      formatDate(timestamp) { const parsed = Number(timestamp); const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date(); return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); },
+      getPlatformBadge(platform) { const badges = { tiktok: '<span class="platform-badge tiktok">TikTok</span>', instagram: '<span class="platform-badge instagram">Instagram</span>', youtube: '<span class="platform-badge youtube">YouTube</span>', facebook: '<span class="platform-badge facebook">Facebook</span>' }; return badges[platform] || ''; },
       render() {
-        const downloads = Storage.loadDownloads();
-        this.hideMenu();
-        
+        const downloads = Storage.loadDownloads(); this.hideMenu();
         if (downloads.length === 0) {
-          elements.downloadsList.innerHTML = `
-            <div class="empty-state">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-              <h3>No downloads yet</h3>
-              <p>Your downloaded videos will appear here</p>
-            </div>
-          `;
-          elements.downloadsCount.textContent = '0 items';
-          return;
+          elements.downloadsList.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg><h3>No downloads yet</h3><p>Your downloaded videos will appear here</p></div>`;
+          elements.downloadsCount.textContent = '0 items'; return;
         }
-        
-        elements.downloadsCount.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
-        elements.downloadsList.innerHTML = '';
-        
-        downloads.forEach(item => {
-          const card = this.createCard(item);
-          elements.downloadsList.appendChild(card);
-        });
+        elements.downloadsCount.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`; elements.downloadsList.innerHTML = '';
+        downloads.forEach(item => { const card = this.createCard(item); elements.downloadsList.appendChild(card); });
       },
-
       createCard(item) {
-        const card = document.createElement('div');
-        card.className = 'download-card';
-        card.setAttribute('role', 'listitem');
-        card.setAttribute('tabindex', '0');
-        
-        const isVideo = (item.format || 'video').toLowerCase() === 'video';
-        const fileName = item.fileName || item.filename || 'flashvidz_download';
-        const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
-        const displayDate = this.formatDate(item.timestamp);
+        const card = document.createElement('div'); card.className = 'download-card'; card.setAttribute('role', 'listitem'); card.setAttribute('tabindex', '0');
+        const isVideo = (item.format || 'video').toLowerCase() === 'video', fileName = item.fileName || item.filename || 'flashvidz_download';
+        const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0), displayDate = this.formatDate(item.timestamp);
         const thumbnailUrl = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 5 ? item.thumbnail.trim() : null;
-        
-        const mediaIconPath = isVideo
-          ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
-          : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
-        
-        const thumbnailMarkup = thumbnailUrl 
-          ? `<img src="${thumbnailUrl}" alt="thumbnail" loading="lazy" onerror="this.onerror=null; this.closest('.download-thumbnail-small').classList.remove('has-thumbnail'); this.style.display='none';">`
-          : '';
-        
-        const durationBadge = item.duration 
-          ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
-          : '';
-        
+        const mediaIconPath = isVideo ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z' : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
+        const thumbnailMarkup = thumbnailUrl ? `<img src="${thumbnailUrl}" alt="thumbnail" loading="lazy" onerror="this.onerror=null; this.closest('.download-thumbnail-small').classList.remove('has-thumbnail'); this.style.display='none';">` : '';
+        const durationBadge = item.duration ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` : '';
         card.innerHTML = `
           <div class="download-info-row">
-            <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">
-              ${thumbnailMarkup}
-              <svg class="thumbnail-fallback" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="${mediaIconPath}"/>
-              </svg>
-              ${durationBadge}
-            </div>
+            <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">${thumbnailMarkup}<svg class="thumbnail-fallback" viewBox="0 0 24 24" aria-hidden="true"><path d="${mediaIconPath}"/></svg>${durationBadge}</div>
             <div class="download-info">
               <div class="download-filename" title="${SecurityUtils.escapeHtml(fileName)}">${SecurityUtils.escapeHtml(fileName)}</div>
               <div class="download-meta">
-                <div class="meta-left">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
-                  ${SecurityUtils.escapeHtml(displayDate)}
-                </div>
+                <div class="meta-left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>${SecurityUtils.escapeHtml(displayDate)}</div>
                 <span class="meta-size">${SecurityUtils.escapeHtml(this.formatFileSize(fileSize))}</span>
               </div>
             </div>
-            <div class="menu-wrapper">
-              <button class="menu-btn" aria-label="More options" title="More options">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                </svg>
-              </button>
-            </div>
+            <div class="menu-wrapper"><button class="menu-btn" aria-label="More options" title="More options"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></button></div>
           </div>
         `;
-        
         const menuBtn = card.querySelector('.menu-btn');
         menuBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           const shouldClose = state.activeDownloadMenuContext?.id === item.id && elements.globalDownloadMenu.classList.contains('active');
-          if (shouldClose) {
-            this.hideMenu();
-          } else {
-            this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize });
-          }
+          shouldClose ? this.hideMenu() : this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize });
         });
-        
         card.addEventListener('click', (e) => {
-          if (e.target.closest('button')) return;
-          if (isActivelyDownloading()) {
-            Toast.info('Please wait for current download to complete');
-            return;
-          }
-          
-          if (!isVideo) {
-            if (CONFIG.IS_IOS) {
-              const playLink = item.viewUrl || item.fileUrl || item.downloadUrl;
-              DownloadFlow.openForIOS(playLink, fileName);
-            } else {
-              Toast.info('Audio preview not supported yet');
-            }
-            return;
-          }
-          
-          if (!item.fileUrl && !item.viewUrl) {
-            Toast.error('Video preview unavailable: missing URL');
-            return;
-          }
-          
-          if (CONFIG.IS_IOS) {
-            const playLink = item.viewUrl || item.fileUrl;
-            DownloadFlow.openForIOS(playLink, fileName);
-          } else {
-            VideoModal.open(item.fileUrl || item.viewUrl);
-          }
+          if (e.target.closest('button')) return; if (isActivelyDownloading()) { Toast.info('Please wait for current download to complete'); return; }
+          if (!isVideo) { if (CONFIG.IS_IOS) { const playLink = item.viewUrl || item.fileUrl || item.downloadUrl; DownloadFlow.openForIOS(playLink, fileName); } else Toast.info('Audio preview not supported yet'); return; }
+          if (!item.fileUrl && !item.viewUrl) { Toast.error('Video preview unavailable: missing URL'); return; }
+          if (CONFIG.IS_IOS) { const playLink = item.viewUrl || item.fileUrl; DownloadFlow.openForIOS(playLink, fileName); } else VideoModal.open(item.fileUrl || item.viewUrl);
         });
-        
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            card.click();
-          }
-        });
-        
+        card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); } });
         return card;
       }
     };
@@ -2718,91 +1160,26 @@
     const VideoModal = {
       init() {
         elements.videoModalClose.addEventListener('click', () => this.close());
-        elements.videoModal.addEventListener('click', (e) => {
-          if (!elements.videoModalContent.contains(e.target)) {
-            this.close();
-          }
-        });
-        
-        window.addEventListener('popstate', () => {
-          if (elements.videoModal.classList.contains('active')) {
-            state.closingFromPopState = true;
-            this.close();
-            state.closingFromPopState = false;
-          }
-        });
-        
-        elements.videoModalPlayer.addEventListener('error', () => {
-          if (elements.videoModal.classList.contains('active') && !isActivelyDownloading()) {
-            Toast.error('Unable to preview this video');
-          }
-        });
-        
-        elements.videoModalPlayer.addEventListener('loadeddata', () => {
-          const msg = elements.message;
-          if (elements.videoModal.classList.contains('active') && 
-              msg?.classList.contains('loading') && 
-              msg.textContent === 'Loading preview...') {
-            setMessage('', '');
-          }
-        });
+        elements.videoModal.addEventListener('click', (e) => { if (!elements.videoModalContent.contains(e.target)) this.close(); });
+        window.addEventListener('popstate', () => { if (elements.videoModal.classList.contains('active')) { state.closingFromPopState = true; this.close(); state.closingFromPopState = false; } });
+        elements.videoModalPlayer.addEventListener('error', () => { if (elements.videoModal.classList.contains('active') && !isActivelyDownloading()) Toast.error('Unable to preview this video'); });
+        elements.videoModalPlayer.addEventListener('loadeddata', () => { const msg = elements.message; if (elements.videoModal.classList.contains('active') && msg?.classList.contains('loading') && msg.textContent === 'Loading preview...') setMessage('', ''); });
       },
-
       open(fileUrl) {
-        if (CONFIG.IS_IOS) {
-          const playLink = fileUrl;
-          DownloadFlow.openForIOS(playLink, 'video');
-          return;
-        }
-
+        if (CONFIG.IS_IOS) { DownloadFlow.openForIOS(fileUrl, 'video'); return; }
         const normalizedUrl = SecurityUtils.normalizeStoredUrl(fileUrl);
-        if (!normalizedUrl) {
-          if (!isActivelyDownloading()) {
-            Toast.error('Video preview unavailable: missing URL');
-          }
-          return;
-        }
-        
+        if (!normalizedUrl) { if (!isActivelyDownloading()) Toast.error('Video preview unavailable: missing URL'); return; }
         setMessage('Loading preview...', 'loading');
-        elements.videoModalPlayer.pause();
-        elements.videoModalPlayer.removeAttribute('src');
-        elements.videoModalPlayer.src = normalizedUrl;
-        elements.videoModalPlayer.load();
-        elements.videoModal.classList.add('active');
-        elements.videoModal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-        
-        if (!state.modalHistoryPushed) {
-          history.pushState({ videoModal: true }, '');
-          state.modalHistoryPushed = true;
-        }
-        
+        elements.videoModalPlayer.pause(); elements.videoModalPlayer.removeAttribute('src'); elements.videoModalPlayer.src = normalizedUrl; elements.videoModalPlayer.load();
+        elements.videoModal.classList.add('active'); elements.videoModal.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden';
+        if (!state.modalHistoryPushed) { history.pushState({ videoModal: true }, ''); state.modalHistoryPushed = true; }
         const playPromise = elements.videoModalPlayer.play();
-        if (playPromise?.catch) {
-          playPromise.catch(() => {
-            const isModalActive = elements.videoModal.classList.contains('active');
-            const msg = elements.message;
-            if (isModalActive && !msg.classList.contains('error') && !isActivelyDownloading()) {
-              setMessage('Tap play to start video preview', 'loading');
-            }
-          });
-        }
+        if (playPromise?.catch) playPromise.catch(() => { const isModalActive = elements.videoModal.classList.contains('active'), msg = elements.message; if (isModalActive && !msg.classList.contains('error') && !isActivelyDownloading()) setMessage('Tap play to start video preview', 'loading'); });
       },
-
       close() {
-        elements.videoModal.classList.remove('active');
-        elements.videoModal.setAttribute('aria-hidden', 'true');
-        elements.videoModalPlayer.pause();
-        elements.videoModalPlayer.removeAttribute('src');
-        elements.videoModalPlayer.load();
-        document.body.style.overflow = '';
-        
-        if (state.modalHistoryPushed && history.state?.videoModal && !state.closingFromPopState) {
-          state.modalHistoryPushed = false;
-          history.back();
-        } else {
-          state.modalHistoryPushed = false;
-        }
+        elements.videoModal.classList.remove('active'); elements.videoModal.setAttribute('aria-hidden', 'true');
+        elements.videoModalPlayer.pause(); elements.videoModalPlayer.removeAttribute('src'); elements.videoModalPlayer.load(); document.body.style.overflow = '';
+        if (state.modalHistoryPushed && history.state?.videoModal && !state.closingFromPopState) { state.modalHistoryPushed = false; history.back(); } else state.modalHistoryPushed = false;
       }
     };
 
@@ -2810,169 +1187,49 @@
     const DownloadFlow = {
       run(downloadUrl, fileName, onProgress, signal) {
         return new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('GET', downloadUrl, true);
-          xhr.responseType = 'blob';
-          
-          let fakeProgress = 0;
-          let fakeInterval = null;
-          let objectUrl = null;
-          let finished = false;
-          
-          const finish = (fn) => {
-            if (finished) return;
-            finished = true;
-            fn();
-          };
-          
+          const xhr = new XMLHttpRequest(); xhr.open('GET', downloadUrl, true); xhr.responseType = 'blob';
+          let fakeProgress = 0, fakeInterval = null, objectUrl = null, finished = false;
+          const finish = (fn) => { if (finished) return; finished = true; fn(); };
           const cleanup = () => {
-            if (objectUrl) {
-              URL.revokeObjectURL(objectUrl);
-              state.activeObjectUrls.delete(objectUrl);
-              objectUrl = null;
-            }
-            if (fakeInterval) {
-              clearInterval(fakeInterval);
-              fakeInterval = null;
-            }
+            if (objectUrl) { URL.revokeObjectURL(objectUrl); state.activeObjectUrls.delete(objectUrl); objectUrl = null; }
+            if (fakeInterval) { clearInterval(fakeInterval); fakeInterval = null; }
           };
-          
-          const startFakeProgress = () => {
-            fakeProgress = 0;
-            onProgress?.(0);
-            fakeInterval = setInterval(() => {
-              if (fakeProgress < 90) {
-                fakeProgress += Math.random() * 6;
-                onProgress?.(Math.floor(fakeProgress));
-              }
-            }, 300);
-          };
-          
-          const abortHandler = () => {
-            finish(() => {
-              cleanup();
-              xhr.abort();
-              reject(new DOMException('The operation was aborted.', 'AbortError'));
-            });
-          };
-          
-          if (signal) {
-            if (signal.aborted) {
-              abortHandler();
-              return;
-            }
-            signal.addEventListener('abort', abortHandler, { once: true });
-          }
-          
-          xhr.onprogress = (event) => {
-            if (event.lengthComputable && event.total > 0) {
-              if (fakeInterval) clearInterval(fakeInterval);
-              const percent = Math.round((event.loaded / event.total) * 100);
-              onProgress?.(Math.min(100, Math.max(0, percent)));
-            } else if (!fakeInterval) {
-              startFakeProgress();
-            }
-          };
-          
+          const startFakeProgress = () => { fakeProgress = 0; onProgress?.(0); fakeInterval = setInterval(() => { if (fakeProgress < 90) { fakeProgress += Math.random() * 6; onProgress?.(Math.floor(fakeProgress)); } }, 300); };
+          const abortHandler = () => { finish(() => { cleanup(); xhr.abort(); reject(new DOMException('The operation was aborted.', 'AbortError')); }); };
+          if (signal) { if (signal.aborted) { abortHandler(); return; } signal.addEventListener('abort', abortHandler, { once: true }); }
+          xhr.onprogress = (event) => { if (event.lengthComputable && event.total > 0) { if (fakeInterval) clearInterval(fakeInterval); const percent = Math.round((event.loaded / event.total) * 100); onProgress?.(Math.min(100, Math.max(0, percent))); } else if (!fakeInterval) startFakeProgress(); };
           xhr.onload = () => {
             finish(() => {
               signal?.removeEventListener('abort', abortHandler);
-              
-              if (xhr.status < 200 || xhr.status >= 300) {
-                cleanup();
-                reject(new Error(`Download failed: ${xhr.status}`));
-                return;
-              }
-              
+              if (xhr.status < 200 || xhr.status >= 300) { cleanup(); reject(new Error(`Download failed: ${xhr.status}`)); return; }
               onProgress?.(100);
-              
-              const blob = xhr.response;
-              objectUrl = URL.createObjectURL(blob);
-              state.activeObjectUrls.add(objectUrl);
-              
-              const a = document.createElement('a');
-              a.href = objectUrl;
-              a.setAttribute('download', SecurityUtils.normalizeFileName(fileName));
-              a.rel = 'noopener';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              
-              setTimeout(() => {
-                if (objectUrl) {
-                  URL.revokeObjectURL(objectUrl);
-                  state.activeObjectUrls.delete(objectUrl);
-                }
-              }, 1000);
-              
+              const blob = xhr.response; objectUrl = URL.createObjectURL(blob); state.activeObjectUrls.add(objectUrl);
+              const a = document.createElement('a'); a.href = objectUrl; a.setAttribute('download', SecurityUtils.normalizeFileName(fileName)); a.rel = 'noopener';
+              document.body.appendChild(a); a.click(); document.body.removeChild(a);
+              setTimeout(() => { if (objectUrl) { URL.revokeObjectURL(objectUrl); state.activeObjectUrls.delete(objectUrl); } }, 1000);
               resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
             });
           };
-          
-          xhr.onerror = () => {
-            finish(() => {
-              cleanup();
-              signal?.removeEventListener('abort', abortHandler);
-              reject(new Error('Download failed'));
-            });
-          };
-          
-          xhr.onabort = () => {
-            finish(() => {
-              cleanup();
-              signal?.removeEventListener('abort', abortHandler);
-              reject(new DOMException('The operation was aborted.', 'AbortError'));
-            });
-          };
-          
+          xhr.onerror = () => { finish(() => { cleanup(); signal?.removeEventListener('abort', abortHandler); reject(new Error('Download failed')); }); };
+          xhr.onabort = () => { finish(() => { cleanup(); signal?.removeEventListener('abort', abortHandler); reject(new DOMException('The operation was aborted.', 'AbortError')); }); };
           xhr.send();
         });
       },
-
       openForIOS(url, fileName) {
-        if (!url) {
-          Toast.error('Invalid URL');
-          return Promise.reject(new Error('Invalid URL'));
-        }
-
+        if (!url) { Toast.error('Invalid URL'); return Promise.reject(new Error('Invalid URL')); }
         Toast.info('Opening in Safari...');
-        
         const newWindow = window.open(url, '_blank');
-        
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          window.location.href = url;
-        }
-        
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') window.location.href = url;
         return Promise.resolve(0);
       },
-
       runHybrid(downloadUrl, fileName, fileSize, onProgress, signal) {
-        if (CONFIG.IS_IOS) {
-          if (signal?.aborted) {
-            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
-          }
-          return this.openForIOS(downloadUrl, fileName);
-        }
-        
+        if (CONFIG.IS_IOS) { if (signal?.aborted) return Promise.reject(new DOMException('The operation was aborted.', 'AbortError')); return this.openForIOS(downloadUrl, fileName); }
         const normalizedSize = Number(fileSize) || 0;
-        
         if (normalizedSize > CONFIG.DIRECT_DOWNLOAD_THRESHOLD) {
-          if (signal?.aborted) {
-            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
-          }
-          
-          onProgress?.(0);
-          Toast.info('Large file detected. Starting browser download...');
-          
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              window.location.href = downloadUrl;
-              Toast.success('Download started in browser');
-              resolve(normalizedSize);
-            }, 120);
-          });
+          if (signal?.aborted) return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+          onProgress?.(0); Toast.info('Large file detected. Starting browser download...');
+          return new Promise((resolve) => { setTimeout(() => { window.location.href = downloadUrl; Toast.success('Download started in browser'); resolve(normalizedSize); }, 120); });
         }
-        
         return this.run(downloadUrl, fileName, onProgress, signal);
       }
     };
@@ -2980,7 +1237,6 @@
     // ==================== PLATFORM DETECTION ====================
     function detectPlatform(link) {
       if (!SecurityUtils.isValidHttpUrl(link)) return 'unknown';
-      
       const url = link.toLowerCase();
       if (url.includes('tiktok.com')) return 'tiktok';
       if (url.includes('instagram.com')) return 'instagram';
@@ -2991,88 +1247,67 @@
 
     // ==================== DOWNLOAD HANDLER ====================
     async function pasteLink() {
-      const btn = elements.pasteBtn;
-      btn.disabled = true;
-      
+      const btn = elements.pasteBtn; btn.disabled = true;
       try {
         const text = await navigator.clipboard.readText();
-        const sanitized = text.trim().slice(0, 2000);
-        elements.linkInput.value = sanitized;
-        maybeAutoDownload();
+        const sanitized = text.trim().slice(0, 2000); elements.linkInput.value = sanitized; maybeAutoDownload();
       } catch (error) {
         const isSecureContextIssue = window.isSecureContext === false;
-        const message = isSecureContextIssue
-          ? 'Clipboard requires HTTPS or localhost'
-          : 'Could not read clipboard. Please paste manually.';
-        Toast.error(message);
-        console.error('Clipboard read failed:', error);
-      } finally {
-        btn.disabled = false;
-      }
+        const message = isSecureContextIssue ? 'Clipboard requires HTTPS or localhost' : 'Could not read clipboard. Please paste manually.';
+        Toast.error(message); console.error('Clipboard read failed:', error);
+      } finally { btn.disabled = false; }
     }
 
     function maybeAutoDownload() {
-      const settings = Storage.getSettings();
-      const link = elements.linkInput.value.trim();
-      
-      if (!settings.autoDownload || !link || !SecurityUtils.isValidHttpUrl(link) || 
-          elements.submitBtn.disabled || isActivelyDownloading()) {
-        return;
-      }
-      
+      const settings = Storage.getSettings(), link = elements.linkInput.value.trim();
+      if (!settings.autoDownload || !link || !SecurityUtils.isValidHttpUrl(link) || elements.submitBtn.disabled || isActivelyDownloading()) return;
       handleDownload();
     }
 
-    function isActivelyDownloading() {
-      return state.isDownloading || (elements.submitBtn.disabled && elements.message.classList.contains('loading'));
-    }
+    function isActivelyDownloading() { return state.isDownloading || (elements.submitBtn.disabled && elements.message.classList.contains('loading')); }
 
     function resetUI(delay = 2000) {
       const downloadId = state.currentDownloadId;
       setTimeout(() => {
         if (downloadId !== state.currentDownloadId) return;
-        
-        // ✅ ALWAYS reset these, even if there was an error
-        elements.submitBtn.disabled = false;
-        elements.submitBtn.classList.remove('loading', 'success', 'error');
-        elements.pasteBtn.disabled = false;
-        elements.linkInput.disabled = false;
-        elements.downloadForm.classList.remove('processing', 'error');
-        state.isDownloading = false;
-        
-        // Hide progress after a moment so user can see completion
-        if (elements.message.classList.contains('success')) {
-          setTimeout(() => ProgressStages.hide(), 1000);
-          elements.linkInput.value = ''; // Clear on success
-        } else {
-          ProgressStages.hide();
-        }
+        elements.submitBtn.disabled = false; elements.submitBtn.classList.remove('loading', 'success', 'error');
+        elements.pasteBtn.disabled = false; elements.linkInput.disabled = false;
+        elements.downloadForm.classList.remove('processing', 'error'); state.isDownloading = false;
+        if (elements.message.classList.contains('success')) { setTimeout(() => ProgressStages.hide(), 1000); elements.linkInput.value = ''; }
+        else ProgressStages.hide();
       }, delay);
     }
 
+    // ✅ FIX 3: PROPER RETRY SYSTEM
+    async function fetchWithRetry(url, options, retries = CONFIG.MAX_RETRIES) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          return await fetch(url, options);
+        } catch (err) {
+          console.warn(`Fetch attempt ${i + 1} failed:`, err.message);
+          if (i === retries - 1) throw err;
+          // Exponential backoff: 2s, 4s, 8s
+          const delay = CONFIG.RETRY_DELAY * Math.pow(2, i);
+          Toast.info(`Retrying in ${delay/1000}s... (${i + 1}/${retries})`);
+          await new Promise(r => setTimeout(r, delay));
+        }
+      }
+      throw new Error('All retry attempts failed');
+    }
+
     async function handleDownloadWithRetry(retryCount = 0) {
-      const link = elements.linkInput.value.trim().slice(0, 2000);
-      const format = selectedFormat;
-      
-      state.lastUrl = link;
-      state.lastFormat = format;
-      
+      const link = elements.linkInput.value.trim().slice(0, 2000), format = selectedFormat;
+      state.lastUrl = link; state.lastFormat = format;
       try {
         await handleDownload();
       } catch (err) {
         if (err.message?.includes('try again later') && retryCount < CONFIG.MAX_RETRIES) {
           const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
-          
-          ProgressStages.setStage(0);
-          ProgressStages.updateProgress(0);
+          ProgressStages.setStage(0); ProgressStages.updateProgress(0);
           elements.stagesTitle.textContent = `Retrying in ${delay/1000}s... (${retryCount + 1}/${CONFIG.MAX_RETRIES})`;
-          
-          setTimeout(() => {
-            handleDownloadWithRetry(retryCount + 1);
-          }, delay);
+          setTimeout(() => handleDownloadWithRetry(retryCount + 1), delay);
           return;
         }
-        
         throw err;
       }
     }
@@ -3083,99 +1318,85 @@
       msg.className = 'error';
     }
 
-    window.retryLastDownload = function() {
-      if (state.lastUrl && state.lastFormat) {
-        elements.linkInput.value = state.lastUrl;
-        selectedFormat = state.lastFormat;
-        handleDownloadWithRetry();
-      }
-    };
+    window.retryLastDownload = function() { if (state.lastUrl && state.lastFormat) { elements.linkInput.value = state.lastUrl; selectedFormat = state.lastFormat; handleDownloadWithRetry(); } };
 
+    // ✅ FIX 1, 2, 4, 5: PROPER BACKEND RESPONSE HANDLING + PROGRESS STAGES + ERROR HANDLING + IOS HINT
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
       const isIOS = CONFIG.IS_IOS;
-      
-      if (state.isDownloading || elements.submitBtn.disabled) {
-        return;
-      }
-      
-      const updateMessage = (text, type = '') => {
-        if (downloadId !== state.currentDownloadId) return;
-        setMessage(text, type);
-      };
-      
-      state.isDownloading = true;
-      elements.submitBtn.disabled = true;
-      elements.submitBtn.classList.add('loading');
-      elements.pasteBtn.disabled = true;
-      elements.linkInput.disabled = true;
-      elements.downloadForm.classList.add('processing');
-      
-      // ✅ STAGE 1: Fetching (0-25%)
-      ProgressStages.show();
-      ProgressStages.setStage(0); // "Fetching video info"
-      ProgressStages.updateProgress(10);
 
-      if (!link) {
-        updateMessage('Enter a video link', 'error');
-        elements.downloadForm.classList.add('error');
-        ProgressStages.setError();
-        resetUI(0);
-        return;
+      // ✅ FIX 5: Show iOS hint immediately if on iOS
+      if (isIOS && elements.iosHint) {
+        elements.iosHint.classList.add('visible');
       }
-      
-      const platform = detectPlatform(link);
-      
-      if (platform === 'unknown') {
-        updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
-        elements.downloadForm.classList.add('error');
-        ProgressStages.setError();
-        resetUI(0);
-        return;
-      }
-      
-      if (state.abortController) {
-        state.abortController.abort();
-      }
-      state.abortController = new AbortController();
-      
+
+      if (state.isDownloading || elements.submitBtn.disabled) return;
+
+      const updateMessage = (text, type = '') => { if (downloadId !== state.currentDownloadId) return; setMessage(text, type); };
+
+      // ✅ FIX 4: ALWAYS reset UI with finally block
       try {
-        const response = await fetch(CONFIG.API_URL, {
+        state.isDownloading = true;
+        elements.submitBtn.disabled = true; elements.submitBtn.classList.add('loading');
+        elements.pasteBtn.disabled = true; elements.linkInput.disabled = true;
+        elements.downloadForm.classList.add('processing');
+
+        // ✅ FIX 2: Show progress stages immediately
+        ProgressStages.show();
+        ProgressStages.setStage(0); // Fetch
+        ProgressStages.updateProgress(5);
+
+        if (!link) {
+          updateMessage('Enter a video link', 'error');
+          elements.downloadForm.classList.add('error');
+          ProgressStages.setError();
+          return;
+        }
+
+        const platform = detectPlatform(link);
+        if (platform === 'unknown') {
+          updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
+          elements.downloadForm.classList.add('error');
+          ProgressStages.setError();
+          return;
+        }
+
+        if (state.abortController) state.abortController.abort();
+        state.abortController = new AbortController();
+
+        // ✅ FIX 3: Use retry-enabled fetch
+        const response = await fetchWithRetry(CONFIG.API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: link,
-            format: selectedFormat
-          }),
+          body: JSON.stringify({ url: link, format: selectedFormat }),
           signal: state.abortController.signal
-        });
-        
+        }, CONFIG.MAX_RETRIES);
+
         ProgressStages.updateProgress(25);
-        
+
         const data = await response.json();
-        
+
         if (!response.ok || !data.success) {
           ProgressStages.setError();
           const errorMsg = data.error || `Server error: ${response.status}`;
           updateMessage(errorMsg, 'error');
           Toast.error(errorMsg);
-          resetUI(3000);
           return;
         }
-        
-        // ✅ STAGE 2: Processing (25-60%)
-        ProgressStages.setStage(0); // Mark fetch as completed
+
+        // ✅ FIX 2: Stage 1 completed, move to Stage 2 (Processing)
         document.querySelector('[data-stage="fetch"]').classList.add('completed');
-        ProgressStages.setStage(1); // "Processing"
+        ProgressStages.setStage(1); // Process
         ProgressStages.updateProgress(40);
 
-        // ✅ FIX: Handle warnings from backend IMMEDIATELY
+        // ✅ FIX 1: PROPER BACKEND RESPONSE HANDLING
+        // Handle warnings from backend IMMEDIATELY
         if (data.warning) {
           Toast.warning(data.warning);
         }
-        
-        // ✅ FIX: Extra iOS compatibility check
+
+        // iPhone compatibility notice
         if (!data.isIOSCompatible && isIOS) {
           Toast.warning("This format may not play on iPhone. Try downloading and using a converter app.");
         }
@@ -3183,46 +1404,46 @@
         const downloadUrl = data.downloadUrl || data.url;
         const viewUrl = data.viewUrl || data.url;
         const fileUrl = data.fileUrl || data.url;
-        
+
         if (!downloadUrl) {
           throw new Error('No download URL received');
         }
 
         ProgressStages.updateProgress(60);
 
-        // ✅ STAGE 3: Downloading (60-95%)
+        // ✅ FIX 2: Stage 2 completed, move to Stage 3 (Downloading)
         document.querySelector('[data-stage="process"]').classList.add('completed');
-        ProgressStages.setStage(2); // "Downloading"
-        
+        ProgressStages.setStage(2); // Download
+        ProgressStages.updateProgress(65);
+
         const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${selectedFormat === 'audio' ? 'm4a' : 'mp4'}`;
         const backendFileSize = Number(data.fileSizeBytes) || 0;
-        
-        // ✅ FIX: Use viewUrl for iOS, fileUrl for others
+
+        // ✅ FIX 1: Use viewUrl for iOS (streaming), fileUrl for others
         const playLink = isIOS ? viewUrl : fileUrl;
 
         const downloadedFileSize = await DownloadFlow.runHybrid(
-          downloadUrl, 
-          backendFileName, 
-          backendFileSize, 
+          downloadUrl,
+          backendFileName,
+          backendFileSize,
           (progress) => {
-            // Map 0-100 progress to 60-95% range
-            const mappedProgress = 60 + (progress * 0.35);
+            // Map 0-100 progress to 65-95% range
+            const mappedProgress = 65 + (progress * 0.30);
             ProgressStages.updateProgress(mappedProgress);
           },
           state.abortController.signal
         );
 
-        // ✅ STAGE 4: Complete (95-100%)
-        ProgressStages.updateProgress(95);
+        // ✅ FIX 2: Stage 3 completed, move to Stage 4 (Complete)
         document.querySelector('[data-stage="download"]').classList.add('completed');
-        ProgressStages.setStage(3); // "Complete"
+        ProgressStages.setStage(3); // Complete
         ProgressStages.updateProgress(100);
         ProgressStages.setSuccess();
 
-        // ✅ Store with correct playback URL
+        // Store with correct playback URL
         DownloadsManager.add(
           downloadUrl,
-          playLink,  // iOS gets viewUrl, others get fileUrl
+          playLink, // iOS gets viewUrl, others get fileUrl
           selectedFormat,
           backendFileName,
           downloadedFileSize > 0 ? downloadedFileSize : backendFileSize,
@@ -3233,7 +1454,7 @@
         elements.submitBtn.classList.remove('loading');
         elements.submitBtn.classList.add('success');
 
-        // ✅ Final iOS handling
+        // ✅ FIX 1: Final iOS handling with correct URL
         if (isIOS) {
           updateMessage('Opening in Safari...', 'success');
           Toast.success('Opening in Safari');
@@ -3242,33 +1463,33 @@
           updateMessage('Download complete!', 'success');
           Toast.success('Download complete!');
         }
-        
+
         TabManager.switch('downloads');
 
       } catch (err) {
         if (err.name === 'AbortError') return;
-        
         console.error('Download error:', err);
         let errorMsg = err.message || 'Download failed';
-        
+
         ProgressStages.setError();
         elements.submitBtn.classList.remove('loading');
         elements.submitBtn.classList.add('error');
         elements.downloadForm.classList.add('error');
-        
+
         if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
           showErrorWithRetry(errorMsg);
         } else {
           updateMessage(errorMsg, 'error');
         }
         Toast.error(errorMsg);
-        
+
       } finally {
-        // ✅ ALWAYS reset UI, even if successful
+        // ✅ FIX 4: ALWAYS reset UI, even if successful
         if (downloadId === state.currentDownloadId) {
           state.abortController = null;
           state.isDownloading = false;
         }
+
         // Don't reset immediately on success - let user see completion
         if (!elements.message.classList.contains('success')) {
           resetUI(3000);
@@ -3290,59 +1511,41 @@
       TabManager.init();
       DownloadsManager.init();
       VideoModal.init();
-      
+
+      // ✅ FIX 5: Show iOS hint if on iOS
       if (CONFIG.IS_IOS && elements.iosHint) {
         elements.iosHint.classList.add('visible');
       }
-      
+
       elements.pasteBtn.addEventListener('click', pasteLink);
       elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
       elements.linkInput.addEventListener('input', maybeAutoDownload);
-      elements.downloadForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        handleDownloadWithRetry(0);
-      });
-      
+      elements.downloadForm.addEventListener('submit', (e) => { e.preventDefault(); handleDownloadWithRetry(0); });
+
       document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'v' && document.activeElement !== elements.linkInput) {
-          elements.linkInput.focus();
-        }
-        
+        if ((e.ctrlKey || e.metaKey) && e.key === 'v' && document.activeElement !== elements.linkInput) elements.linkInput.focus();
         if (e.key === 'Escape') {
-          if (elements.videoModal.classList.contains('active')) {
-            VideoModal.close();
-          }
-          if (elements.progressStages.classList.contains('active')) {
-            if (state.abortController) {
-              state.abortController.abort();
-              Toast.info('Download cancelled');
-            }
+          if (elements.videoModal.classList.contains('active')) VideoModal.close();
+          if (elements.progressStages.classList.contains('active') && state.abortController) {
+            state.abortController.abort();
+            Toast.info('Download cancelled');
           }
         }
       });
-      
+
       window.addEventListener('beforeunload', () => {
         state.abortController?.abort();
-        state.activeObjectUrls.forEach(url => {
-          try { URL.revokeObjectURL(url); } catch {}
-        });
+        state.activeObjectUrls.forEach(url => { try { URL.revokeObjectURL(url); } catch {} });
         state.activeObjectUrls.clear();
       });
-      
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden' && state.abortController) {
-          state.abortController.abort();
-        }
-      });
-      
+
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && state.abortController) state.abortController.abort(); });
+
       DownloadsManager.render();
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
   </script>
 </body>
 </html>
