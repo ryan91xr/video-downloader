@@ -2466,20 +2466,19 @@
         }
         
         try {
-          // ✅ FIX: iOS needs viewUrl (streaming), Android/Desktop can use downloadUrl
+          // Always use viewUrl for playback/opening
           const isIOS = CONFIG.IS_IOS;
-          const playLink = isIOS 
-            ? (item.viewUrl || item.fileUrl || item.downloadUrl || item.url)
-            : (item.downloadUrl || item.fileUrl || item.url);
-            
-          if (!playLink) {
-            throw new Error('Missing download URL');
+          const downloadLink = item.downloadUrl || item.url;
+          const playLink = item.viewUrl || item.fileUrl || item.downloadUrl || item.url;
+
+          if (!downloadLink || !playLink) {
+            throw new Error('Missing playback URL');
           }
           
           const message = isIOS ? 'Opening in Safari...' : 'Starting download...';
           Toast.info(message);
           
-          await DownloadFlow.runHybrid(playLink, fileName, fileSize, (progress) => {
+          await DownloadFlow.runHybrid(downloadLink, playLink, fileName, fileSize, (progress) => {
             if (!isIOS) {
               setMessage(`Downloading... ${progress}%`, 'loading');
             }
@@ -2699,7 +2698,7 @@
             const playLink = item.viewUrl || item.fileUrl;
             DownloadFlow.openForIOS(playLink, fileName);
           } else {
-            VideoModal.open(item.fileUrl || item.viewUrl);
+            VideoModal.open(item.viewUrl || item.fileUrl);
           }
         });
         
@@ -2946,12 +2945,12 @@
         return Promise.resolve(0);
       },
 
-      runHybrid(downloadUrl, fileName, fileSize, onProgress, signal) {
+      runHybrid(downloadUrl, playUrl, fileName, fileSize, onProgress, signal) {
         if (CONFIG.IS_IOS) {
           if (signal?.aborted) {
             return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
           }
-          return this.openForIOS(downloadUrl, fileName);
+          return this.openForIOS(playUrl, fileName);
         }
         
         const normalizedSize = Number(fileSize) || 0;
@@ -3094,7 +3093,7 @@
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
-      const isIOS = CONFIG.IS_IOS;
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       
       if (state.isDownloading || elements.submitBtn.disabled) {
         return;
@@ -3182,7 +3181,7 @@
 
         const downloadUrl = data.downloadUrl || data.url;
         const viewUrl = data.viewUrl || data.url;
-        const fileUrl = data.fileUrl || data.url;
+        const playUrl = viewUrl;
         
         if (!downloadUrl) {
           throw new Error('No download URL received');
@@ -3197,13 +3196,11 @@
         const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${selectedFormat === 'audio' ? 'm4a' : 'mp4'}`;
         const backendFileSize = Number(data.fileSizeBytes) || 0;
         
-        // ✅ FIX: Use viewUrl for iOS, fileUrl for others
-        const playLink = isIOS ? viewUrl : fileUrl;
-
         const downloadedFileSize = await DownloadFlow.runHybrid(
-          downloadUrl, 
-          backendFileName, 
-          backendFileSize, 
+          downloadUrl,
+          playUrl,
+          backendFileName,
+          backendFileSize,
           (progress) => {
             // Map 0-100 progress to 60-95% range
             const mappedProgress = 60 + (progress * 0.35);
@@ -3222,7 +3219,7 @@
         // ✅ Store with correct playback URL
         DownloadsManager.add(
           downloadUrl,
-          playLink,  // iOS gets viewUrl, others get fileUrl
+          playUrl,
           selectedFormat,
           backendFileName,
           downloadedFileSize > 0 ? downloadedFileSize : backendFileSize,
@@ -3237,7 +3234,7 @@
         if (isIOS) {
           updateMessage('Opening in Safari...', 'success');
           Toast.success('Opening in Safari');
-          setTimeout(() => window.open(playLink, '_blank'), 500);
+          setTimeout(() => window.open(playUrl, '_blank'), 500);
         } else {
           updateMessage('Download complete!', 'success');
           Toast.success('Download complete!');
