@@ -701,6 +701,7 @@
     .toast-icon.success { color: var(--color-success); }
     .toast-icon.error { color: var(--color-error); }
     .toast-icon.info { color: var(--color-text-secondary); }
+    .toast-icon.warning { color: var(--color-warning); }
 
     .toast-message {
       flex: 1;
@@ -1615,7 +1616,8 @@
       icons: {
         success: '<svg class="toast-icon success" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
         error: '<svg class="toast-icon error" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
-        info: '<svg class="toast-icon info" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>'
+        info: '<svg class="toast-icon info" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+        warning: '<svg class="toast-icon warning" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>'
       },
 
       show(message, type = 'info', duration = CONFIG.TOAST_DURATION) {
@@ -1653,7 +1655,8 @@
 
       success(message) { return this.show(message, 'success'); },
       error(message) { return this.show(message, 'error'); },
-      info(message) { return this.show(message, 'info'); }
+      info(message) { return this.show(message, 'info'); },
+      warning(message, duration = 6000) { return this.show(message, 'warning', duration); }
     };
 
     // ==================== LOCAL STORAGE ====================
@@ -2002,26 +2005,31 @@
           Toast.info('A download is already in progress');
           return;
         }
-        
+
         try {
-          const itemDownloadUrl = item.downloadUrl || item.url;
-          if (!itemDownloadUrl) {
+          const downloadLink = item.downloadUrl || item.url;
+          // iOS must use viewUrl for inline Safari playback
+          const playLink = item.viewUrl || item.fileUrl || item.url;
+
+          if (!downloadLink) {
             throw new Error('Missing download URL');
           }
-          
-          // iOS: Show different message
-          const message = CONFIG.IS_IOS ? 'Opening in Safari...' : 'Starting download...';
-          Toast.info(message);
-          
-          await DownloadFlow.runHybrid(itemDownloadUrl, fileName, fileSize, (progress) => {
-            if (!CONFIG.IS_IOS) {
-              setMessage(`Downloading... ${progress}%`, 'loading');
-            }
-          });
-          
-          if (!CONFIG.IS_IOS) {
-            Toast.success('Download complete!');
+
+          if (CONFIG.IS_IOS) {
+            // iOS: open viewUrl inline in Safari (can't force save)
+            return DownloadFlow.openForIOS(playLink, fileName);
           }
+
+          // Android / Desktop: FIX 1 — <a download> with correct filename
+          Toast.info('Starting download...');
+          const a = document.createElement('a');
+          a.href = downloadLink;
+          a.download = SecurityUtils.normalizeFileName(fileName);
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          Toast.success('Download started!');
         } catch (error) {
           Toast.error(error.message || 'Download failed');
         }
@@ -2066,14 +2074,15 @@
         }
       },
 
-      add(downloadUrl, fileUrl, format, fileName, fileSize, thumbnail, duration) {
+      add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration) {
         const downloads = Storage.loadDownloads();
         const now = Date.now();
-        
+
         const download = {
           id: now.toString(),
           downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
-          fileUrl: SecurityUtils.normalizeStoredUrl(fileUrl),
+          fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // playback URL
+          viewUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // explicit iOS URL
           format,
           fileName: typeof fileName === 'string' ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH) : 'flashvidz_download',
           fileSize: Number.isFinite(Number(fileSize)) && Number(fileSize) > 0 ? Number(fileSize) : null,
@@ -2213,27 +2222,28 @@
             Toast.info('Please wait for current download to complete');
             return;
           }
-          
+
+          // FIX 2 — Always prefer viewUrl for playback (inline-friendly)
+          const playLink = item.viewUrl || item.fileUrl || item.url;
+
           if (!isVideo) {
-            // Audio: Use same flow as video for iOS compatibility
             if (CONFIG.IS_IOS) {
-              DownloadFlow.openForIOS(item.fileUrl || item.downloadUrl, fileName);
+              DownloadFlow.openForIOS(playLink, fileName);
             } else {
               Toast.info('Audio preview not supported yet');
             }
             return;
           }
-          
-          if (!item.fileUrl) {
+
+          if (!playLink) {
             Toast.error('Video preview unavailable: missing URL');
             return;
           }
-          
-          // iOS: Open in Safari instead of modal
+
           if (CONFIG.IS_IOS) {
-            DownloadFlow.openForIOS(item.fileUrl, fileName);
+            DownloadFlow.openForIOS(playLink, fileName);
           } else {
-            VideoModal.open(item.fileUrl);
+            VideoModal.open(playLink);
           }
         });
         
@@ -2463,37 +2473,33 @@
         });
       },
 
-      // iPhone Safari: Open in browser for native playback
+      // iPhone Safari: Open viewUrl inline — backend already appends ?view=1
       openForIOS(url, fileName) {
         if (!url) {
           Toast.error('Invalid URL');
           return Promise.reject(new Error('Invalid URL'));
         }
 
-        Toast.info('Opening in Safari...');
-        
-        // Use view URL for inline playback
-        const separator = url.includes('?') ? '&' : '?';
-        const viewUrl = `${url}${separator}view=1`;
-        
-        // Open in new tab - Safari handles MP4/M4A natively
-        const newWindow = window.open(viewUrl, '_blank');
-        
-        // If popup blocked, fallback to same window
+        Toast.info('Opening in Safari. Use the share button to save to Photos.');
+
+        const newWindow = window.open(url, '_blank');
+
         if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          window.location.href = viewUrl;
+          // Popup blocked — fall back to same-tab navigation
+          Toast.warning('Popup blocked. Tap here to open video.', 8000);
+          window.location.href = url;
         }
-        
+
         return Promise.resolve(0);
       },
 
-      runHybrid(downloadUrl, fileName, fileSize, onProgress, signal) {
-        // iPhone/iPad: Always use open strategy, never force download
+      runHybrid(downloadUrl, playUrl, fileName, fileSize, onProgress, signal) {
+        // iPhone/iPad: open playUrl (viewUrl) inline in Safari — never force a download
         if (CONFIG.IS_IOS) {
           if (signal?.aborted) {
             return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
           }
-          return this.openForIOS(downloadUrl, fileName);
+          return this.openForIOS(playUrl || downloadUrl, fileName);
         }
         
         const normalizedSize = Number(fileSize) || 0;
@@ -2509,12 +2515,15 @@
           
           return new Promise((resolve) => {
             setTimeout(() => {
-              // Use download URL for forced download
-              const separator = downloadUrl.includes('?') ? '&' : '?';
-              const downloadUrlWithParam = `${downloadUrl}${separator}download=1`;
-              
-              window.location.href = downloadUrlWithParam;
-              Toast.success('Download started in browser');
+              // <a download> forces save-to-device with correct filename on Android
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = SecurityUtils.normalizeFileName(fileName);
+              a.rel = 'noopener noreferrer';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              Toast.success('Download started');
               resolve(normalizedSize);
             }, 120);
           });
@@ -2707,36 +2716,50 @@
         if (!downloadUrl) {
           throw new Error('Invalid response from server');
         }
-        
+
+        // viewUrl is for iOS inline Safari playback; downloadUrl is for Android/desktop save
+        const isIOS = CONFIG.IS_IOS;
+        const playUrl = isIOS
+          ? SecurityUtils.normalizeStoredUrl(data.viewUrl || data.url)
+          : (SecurityUtils.normalizeStoredUrl(data.url) || downloadUrl);
+
         const responseFormat = data.format || selectedFormat;
-        const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
+        const backendFileName = data.fileName
+          || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
         const backendFileSize = Number(data.fileSizeBytes) || 0;
-        
-        // iOS: Different flow
-        if (CONFIG.IS_IOS) {
-          updateMessage('Opening in Safari...', 'loading');
-        } else {
-          updateMessage('Downloading... 0%', 'loading');
+
+        // FIX 3 — Show backend warning immediately (format mismatch, codec issues, etc.)
+        if (data.warning) {
+          Toast.warning(data.warning);
         }
-        
+
+        // iOS-specific format warning (only if backend didn't already warn)
+        if (isIOS && data.isIOSCompatible === false && !data.warning) {
+          Toast.warning('This video may not play on iPhone. Try downloading instead.');
+        }
+
+        // Show filename so user knows what they are getting
+        updateMessage(`Downloading: ${backendFileName}`, 'loading');
+
         const downloadedFileSize = await DownloadFlow.runHybrid(
-          downloadUrl, 
-          backendFileName, 
-          backendFileSize, 
+          downloadUrl,
+          playUrl,
+          backendFileName,
+          backendFileSize,
           (progress) => {
-            if (!CONFIG.IS_IOS) {
+            if (!isIOS) {
               updateMessage(`Downloading... ${progress}%`, 'loading');
             }
           },
           state.abortController.signal
         );
-        
+
         const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize > 0 ? backendFileSize : null;
-        const safeFileUrl = SecurityUtils.normalizeStoredUrl(data.fileUrl);
-        
+
+        // FIX 4 — Store both downloadUrl and viewUrl in history
         DownloadsManager.add(
           downloadUrl,
-          safeFileUrl,
+          playUrl,
           responseFormat,
           backendFileName,
           finalFileSize,
