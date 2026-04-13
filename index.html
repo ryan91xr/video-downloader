@@ -2469,7 +2469,7 @@
           // Always use viewUrl for playback/opening
           const isIOS = CONFIG.IS_IOS;
           const downloadLink = item.downloadUrl || item.url;
-          const playLink = item.viewUrl || item.fileUrl || item.downloadUrl || item.url;
+          const playLink = item.viewUrl || item.fileUrl || item.url;
 
           if (!downloadLink || !playLink) {
             throw new Error('Missing playback URL');
@@ -2681,7 +2681,7 @@
           
           if (!isVideo) {
             if (CONFIG.IS_IOS) {
-              const playLink = item.viewUrl || item.fileUrl || item.downloadUrl;
+              const playLink = item.viewUrl || item.fileUrl || item.url;
               DownloadFlow.openForIOS(playLink, fileName);
             } else {
               Toast.info('Audio preview not supported yet');
@@ -2695,10 +2695,11 @@
           }
           
           if (CONFIG.IS_IOS) {
-            const playLink = item.viewUrl || item.fileUrl;
+            const playLink = item.viewUrl || item.fileUrl || item.url;
             DownloadFlow.openForIOS(playLink, fileName);
           } else {
-            VideoModal.open(item.viewUrl || item.fileUrl);
+            const playUrl = item.viewUrl || item.fileUrl || item.url;
+            VideoModal.open(playUrl);
           }
         });
         
@@ -2749,8 +2750,7 @@
 
       open(fileUrl) {
         if (CONFIG.IS_IOS) {
-          const playLink = fileUrl;
-          DownloadFlow.openForIOS(playLink, 'video');
+          DownloadFlow.openForIOS(fileUrl, 'video');
           return;
         }
 
@@ -3180,8 +3180,7 @@
         }
 
         const downloadUrl = data.downloadUrl || data.url;
-        const viewUrl = data.viewUrl || data.url;
-        const playUrl = viewUrl;
+        const playUrl = data.viewUrl || data.url;
         
         if (!downloadUrl) {
           throw new Error('No download URL received');
@@ -3234,7 +3233,8 @@
         if (isIOS) {
           updateMessage('Opening in Safari...', 'success');
           Toast.success('Opening in Safari');
-          setTimeout(() => window.open(playUrl, '_blank'), 500);
+          const iosPlayUrl = data.viewUrl || data.url;
+          setTimeout(() => window.open(iosPlayUrl, '_blank'), 500);
         } else {
           updateMessage('Download complete!', 'success');
           Toast.success('Download complete!');
