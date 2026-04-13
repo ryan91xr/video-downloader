@@ -2464,29 +2464,32 @@
           Toast.info('A download is already in progress');
           return;
         }
-        
+
         try {
-          // Always use viewUrl for playback/opening
           const isIOS = CONFIG.IS_IOS;
-          const downloadLink = item.downloadUrl || item.url;
+          const downloadLink = item.downloadUrl || item.fileUrl || item.url;
+          // For playback/iOS always prefer viewUrl (inline Safari), fallback to fileUrl
           const playLink = item.viewUrl || item.fileUrl || item.url;
 
-          if (!downloadLink || !playLink) {
-            throw new Error('Missing playback URL');
+          if (!downloadLink) {
+            throw new Error('Missing download URL');
           }
-          
-          const message = isIOS ? 'Opening in Safari...' : 'Starting download...';
-          Toast.info(message);
-          
-          await DownloadFlow.runHybrid(downloadLink, playLink, fileName, fileSize, (progress) => {
-            if (!isIOS) {
-              setMessage(`Downloading... ${progress}%`, 'loading');
-            }
-          });
-          
-          if (!isIOS) {
-            Toast.success('Download complete!');
+
+          if (isIOS) {
+            // iOS cannot trigger a file download — open viewUrl inline in Safari
+            return DownloadFlow.openForIOS(playLink, fileName);
           }
+
+          // Non-iOS: trigger a real file download using <a download>
+          Toast.info('Starting download...');
+          const a = document.createElement('a');
+          a.href = downloadLink;
+          a.download = SecurityUtils.normalizeFileName(fileName);
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          Toast.success('Download started!');
         } catch (error) {
           Toast.error(error.message || 'Download failed');
         }
@@ -2531,14 +2534,15 @@
         }
       },
 
-      add(downloadUrl, fileUrl, format, fileName, fileSize, thumbnail, duration) {
+      add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration) {
         const downloads = Storage.loadDownloads();
         const now = Date.now();
-        
+
         const download = {
           id: now.toString(),
           downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
-          fileUrl: SecurityUtils.normalizeStoredUrl(fileUrl),
+          fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),   // used for playback
+          viewUrl: SecurityUtils.normalizeStoredUrl(viewUrl),   // explicit iOS playback URL
           format,
           fileName: typeof fileName === 'string' ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH) : 'flashvidz_download',
           fileSize: Number.isFinite(Number(fileSize)) && Number(fileSize) > 0 ? Number(fileSize) : null,
@@ -2934,14 +2938,16 @@
           return Promise.reject(new Error('Invalid URL'));
         }
 
-        Toast.info('Opening in Safari...');
-        
+        Toast.info('Opening in Safari for playback. Use the share button to save to Photos.');
+
         const newWindow = window.open(url, '_blank');
-        
+
         if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          // Popup was blocked — fall back to same-tab navigation
+          Toast.warning('Popup blocked. Tap here to open video.', 'warning', 8000);
           window.location.href = url;
         }
-        
+
         return Promise.resolve(0);
       },
 
@@ -2965,8 +2971,16 @@
           
           return new Promise((resolve) => {
             setTimeout(() => {
-              window.location.href = downloadUrl;
-              Toast.success('Download started in browser');
+              // Use <a download> so the browser saves with the correct filename
+              // instead of navigating away (which breaks mobile downloads)
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = SecurityUtils.normalizeFileName(fileName);
+              a.rel = 'noopener noreferrer';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              Toast.success('Download started');
               resolve(normalizedSize);
             }, 120);
           });
@@ -3052,26 +3066,34 @@
     async function handleDownloadWithRetry(retryCount = 0) {
       const link = elements.linkInput.value.trim().slice(0, 2000);
       const format = selectedFormat;
-      
+
       state.lastUrl = link;
       state.lastFormat = format;
-      
+
       try {
         await handleDownload();
       } catch (err) {
-        if (err.message?.includes('try again later') && retryCount < CONFIG.MAX_RETRIES) {
+        if (err.name === 'AbortError') return;
+
+        const isRetryable = err.message?.includes('try again later') ||
+                            err.message?.includes('busy') ||
+                            err.message?.includes('Network error');
+
+        if (isRetryable && retryCount < CONFIG.MAX_RETRIES) {
           const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
-          
+          const attempt = retryCount + 1;
+
+          // Reset stage progress so the user sees a fresh restart
           ProgressStages.setStage(0);
           ProgressStages.updateProgress(0);
-          elements.stagesTitle.textContent = `Retrying in ${delay/1000}s... (${retryCount + 1}/${CONFIG.MAX_RETRIES})`;
-          
-          setTimeout(() => {
-            handleDownloadWithRetry(retryCount + 1);
-          }, delay);
+          elements.stagesTitle.textContent = `Retrying in ${delay / 1000}s… (${attempt}/${CONFIG.MAX_RETRIES})`;
+          Toast.info(`Retrying in ${delay / 1000}s… (${attempt}/${CONFIG.MAX_RETRIES})`);
+
+          setTimeout(() => handleDownloadWithRetry(retryCount + 1), delay);
           return;
         }
-        
+
+        // Non-retryable or exhausted — bubble up so caller can handle
         throw err;
       }
     }
@@ -3093,27 +3115,30 @@
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
-      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      
+
+      // Detect iOS once — used throughout this function
+      const isIOS = CONFIG.IS_IOS;
+
       if (state.isDownloading || elements.submitBtn.disabled) {
         return;
       }
-      
+
       const updateMessage = (text, type = '') => {
         if (downloadId !== state.currentDownloadId) return;
         setMessage(text, type);
       };
-      
+
+      // ── Lock UI ────────────────────────────────────────────────────────────
       state.isDownloading = true;
       elements.submitBtn.disabled = true;
       elements.submitBtn.classList.add('loading');
       elements.pasteBtn.disabled = true;
       elements.linkInput.disabled = true;
       elements.downloadForm.classList.add('processing');
-      
-      // ✅ STAGE 1: Fetching (0-25%)
+
+      // ── STAGE 1: Fetch (0 → 25%) ───────────────────────────────────────────
       ProgressStages.show();
-      ProgressStages.setStage(0); // "Fetching video info"
+      ProgressStages.setStage(0);
       ProgressStages.updateProgress(10);
 
       if (!link) {
@@ -3123,9 +3148,9 @@
         resetUI(0);
         return;
       }
-      
+
       const platform = detectPlatform(link);
-      
+
       if (platform === 'unknown') {
         updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
         elements.downloadForm.classList.add('error');
@@ -3133,27 +3158,24 @@
         resetUI(0);
         return;
       }
-      
+
       if (state.abortController) {
         state.abortController.abort();
       }
       state.abortController = new AbortController();
-      
+
       try {
         const response = await fetch(CONFIG.API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: link,
-            format: selectedFormat
-          }),
+          body: JSON.stringify({ url: link, format: selectedFormat }),
           signal: state.abortController.signal
         });
-        
+
         ProgressStages.updateProgress(25);
-        
+
         const data = await response.json();
-        
+
         if (!response.ok || !data.success) {
           ProgressStages.setError();
           const errorMsg = data.error || `Server error: ${response.status}`;
@@ -3162,60 +3184,62 @@
           resetUI(3000);
           return;
         }
-        
-        // ✅ STAGE 2: Processing (25-60%)
-        ProgressStages.setStage(0); // Mark fetch as completed
-        document.querySelector('[data-stage="fetch"]').classList.add('completed');
-        ProgressStages.setStage(1); // "Processing"
+
+        // ── STAGE 2: Process (25 → 60%) ─────────────────────────────────────
+        ProgressStages.setStage(1); // marks stage 0 completed, stage 1 active
         ProgressStages.updateProgress(40);
 
-        // ✅ FIX: Handle warnings from backend IMMEDIATELY
+        // Show backend warning immediately (format mismatch, codec issues, etc.)
         if (data.warning) {
           Toast.warning(data.warning);
         }
-        
-        // ✅ FIX: Extra iOS compatibility check
-        if (!data.isIOSCompatible && isIOS) {
-          Toast.warning("This format may not play on iPhone. Try downloading and using a converter app.");
+
+        // iOS-specific format warning (only if backend didn't already warn)
+        if (isIOS && data.isIOSCompatible === false && !data.warning) {
+          Toast.warning('This video may not play on iPhone. Try downloading instead.');
         }
 
+        // Resolve URLs — always prefer the explicit typed URL from backend
         const downloadUrl = data.downloadUrl || data.url;
-        const playUrl = data.viewUrl || data.url;
-        
+        // iOS must use viewUrl (forces inline/Safari playback, not download prompt)
+        const playUrl = isIOS
+          ? (data.viewUrl || data.url)
+          : (data.url || data.downloadUrl);
+
         if (!downloadUrl) {
-          throw new Error('No download URL received');
+          throw new Error('No download URL received from server');
         }
+
+        // Resolve filename — backend always sends one, but have a safe fallback
+        const backendFileName = data.fileName
+          || `flashvidz_${platform}_${Date.now()}.${selectedFormat === 'audio' ? 'm4a' : 'mp4'}`;
+        const backendFileSize = Number(data.fileSizeBytes) || 0;
+
+        // Show filename in UI message so user sees what's coming
+        updateMessage(`Downloading: ${backendFileName}`, 'loading');
 
         ProgressStages.updateProgress(60);
 
-        // ✅ STAGE 3: Downloading (60-95%)
-        document.querySelector('[data-stage="process"]').classList.add('completed');
-        ProgressStages.setStage(2); // "Downloading"
-        
-        const backendFileName = data.fileName || `flashvidz_${platform}_${Date.now()}.${selectedFormat === 'audio' ? 'm4a' : 'mp4'}`;
-        const backendFileSize = Number(data.fileSizeBytes) || 0;
-        
+        // ── STAGE 3: Download (60 → 95%) ────────────────────────────────────
+        ProgressStages.setStage(2); // marks stage 1 completed, stage 2 active
+
         const downloadedFileSize = await DownloadFlow.runHybrid(
           downloadUrl,
           playUrl,
           backendFileName,
           backendFileSize,
           (progress) => {
-            // Map 0-100 progress to 60-95% range
-            const mappedProgress = 60 + (progress * 0.35);
-            ProgressStages.updateProgress(mappedProgress);
+            ProgressStages.updateProgress(60 + progress * 0.35);
           },
           state.abortController.signal
         );
 
-        // ✅ STAGE 4: Complete (95-100%)
-        ProgressStages.updateProgress(95);
-        document.querySelector('[data-stage="download"]').classList.add('completed');
-        ProgressStages.setStage(3); // "Complete"
+        // ── STAGE 4: Complete (95 → 100%) ────────────────────────────────────
+        ProgressStages.setStage(3); // marks stage 2 completed, stage 3 active
         ProgressStages.updateProgress(100);
         ProgressStages.setSuccess();
 
-        // ✅ Store with correct playback URL
+        // Persist to downloads history — store both URLs for later re-download / playback
         DownloadsManager.add(
           downloadUrl,
           playUrl,
@@ -3229,49 +3253,41 @@
         elements.submitBtn.classList.remove('loading');
         elements.submitBtn.classList.add('success');
 
-        // ✅ Final iOS handling
+        // iOS already opened Safari inside runHybrid → just confirm in the UI
         if (isIOS) {
-          updateMessage('Opening in Safari...', 'success');
-          Toast.success('Opening in Safari');
-          const iosPlayUrl = data.viewUrl || data.url;
-          setTimeout(() => window.open(iosPlayUrl, '_blank'), 500);
+          updateMessage('Opening in Safari — use the share button to save to Photos', 'success');
         } else {
-          updateMessage('Download complete!', 'success');
+          updateMessage(`Saved: ${backendFileName}`, 'success');
           Toast.success('Download complete!');
         }
-        
+
         TabManager.switch('downloads');
 
       } catch (err) {
         if (err.name === 'AbortError') return;
-        
+
         console.error('Download error:', err);
-        let errorMsg = err.message || 'Download failed';
-        
+        const errorMsg = err.message || 'Download failed';
+
         ProgressStages.setError();
         elements.submitBtn.classList.remove('loading');
         elements.submitBtn.classList.add('error');
         elements.downloadForm.classList.add('error');
-        
+
         if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
           showErrorWithRetry(errorMsg);
         } else {
           updateMessage(errorMsg, 'error');
         }
         Toast.error(errorMsg);
-        
+
       } finally {
-        // ✅ ALWAYS reset UI, even if successful
         if (downloadId === state.currentDownloadId) {
           state.abortController = null;
           state.isDownloading = false;
         }
-        // Don't reset immediately on success - let user see completion
-        if (!elements.message.classList.contains('success')) {
-          resetUI(3000);
-        } else {
-          resetUI(isIOS ? 4000 : 3000);
-        }
+        // Give user a moment to read success/error before resetting
+        resetUI(elements.message.classList.contains('success') ? 4000 : 3000);
       }
     }
 
