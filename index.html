@@ -2007,24 +2007,20 @@
         }
 
         try {
-          // FIX 2: use only downloadUrl — never fall back to item.url which may be
-          // a view/stream endpoint that the browser won't save as a named file
-          const downloadLink = item.downloadUrl;
-
-          // FIX 3: clean iOS/Android split — viewUrl for Safari, url for Android
-          const isIOS = CONFIG.IS_IOS;
-          const playLink = isIOS ? item.viewUrl : item.url;
+          const downloadLink = item.downloadUrl || item.url;
+          // iOS must use viewUrl for inline Safari playback
+          const playLink = item.viewUrl || item.fileUrl || item.url;
 
           if (!downloadLink) {
             throw new Error('Missing download URL');
           }
 
-          if (isIOS) {
+          if (CONFIG.IS_IOS) {
             // iOS: open viewUrl inline in Safari (can't force save)
-            return DownloadFlow.openForIOS(playLink || downloadLink, fileName);
+            return DownloadFlow.openForIOS(playLink, fileName);
           }
 
-          // Android / Desktop: <a download> with correct filename
+          // Android / Desktop: FIX 1 — <a download> with correct filename
           Toast.info('Starting download...');
           const a = document.createElement('a');
           a.href = downloadLink;
@@ -2227,8 +2223,8 @@
             return;
           }
 
-          // FIX 3 — Clean iOS/Android split for playback
-          const playLink = CONFIG.IS_IOS ? item.viewUrl : (item.url || item.fileUrl);
+          // FIX 2 — Always prefer viewUrl for playback (inline-friendly)
+          const playLink = item.viewUrl || item.fileUrl || item.url;
 
           if (!isVideo) {
             if (CONFIG.IS_IOS) {
