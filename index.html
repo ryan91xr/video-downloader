@@ -1845,6 +1845,51 @@
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     });
 
+    // ==================== DOWNLOAD HELPERS ====================
+    // forceDownloadFile: triggers a real browser save with the correct filename.
+    // Uses <a download> — the only reliable method on Android Chrome.
+    function forceDownloadFile(data) {
+      try {
+        const fileNameRaw = data.fileName || (data.format === 'audio' ? 'audio.m4a' : 'video.mp4');
+        const fileName = SecurityUtils.normalizeFileName(fileNameRaw);
+
+        const a = document.createElement('a');
+        a.href = data.downloadUrl;
+        a.download = fileName;
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        Toast.success('Download started');
+      } catch (err) {
+        console.error('forceDownloadFile error:', err);
+        Toast.error('Download failed');
+      }
+    }
+
+    // handleDownloadResponse: platform-aware entry point for triggering
+    // the actual file save / iOS Safari playback after API success.
+    function handleDownloadResponse(data) {
+      const isIOS = CONFIG.IS_IOS;
+
+      if (isIOS) {
+        // iPhone/iPad: cannot trigger forced downloads — open viewUrl inline in Safari.
+        // User taps Share → Save to Photos to keep the file.
+        const win = window.open(data.viewUrl || data.downloadUrl, '_blank');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          Toast.warning('Popup blocked. Please allow popups to open video.');
+          window.location.href = data.viewUrl || data.downloadUrl;
+        } else {
+          if (elements.iosHint) elements.iosHint.classList.add('visible');
+          Toast.info('Opened in Safari. Use the share button to save to Photos.');
+        }
+      } else {
+        // Android / Desktop: force a real file download with the correct filename.
+        forceDownloadFile(data);
+      }
+    }
+
     // ==================== STAGE DEFINITIONS ====================
     const DOWNLOAD_STAGES = [
       {
@@ -2753,6 +2798,8 @@
       },
 
       open(fileUrl) {
+        // fileUrl should always be viewUrl (inline-friendly) when available.
+        // Card click handlers already resolve: item.viewUrl || item.fileUrl || item.url
         if (CONFIG.IS_IOS) {
           DownloadFlow.openForIOS(fileUrl, 'video');
           return;
@@ -3223,16 +3270,28 @@
         // ── STAGE 3: Download (60 → 95%) ────────────────────────────────────
         ProgressStages.setStage(2); // marks stage 1 completed, stage 2 active
 
-        const downloadedFileSize = await DownloadFlow.runHybrid(
-          downloadUrl,
-          playUrl,
-          backendFileName,
-          backendFileSize,
-          (progress) => {
-            ProgressStages.updateProgress(60 + progress * 0.35);
-          },
-          state.abortController.signal
-        );
+        // handleDownloadResponse is the authoritative trigger:
+        //   iOS  → openForIOS(viewUrl)  via window.open
+        //   large file (>50 MB) → <a download> directly
+        //   standard → XHR blob → <a download> with progress tracking
+        let downloadedFileSize = 0;
+
+        if (isIOS) {
+          // Delegate entirely to handleDownloadResponse for iOS
+          handleDownloadResponse({ ...data, downloadUrl, fileName: backendFileName });
+          downloadedFileSize = 0;
+        } else {
+          downloadedFileSize = await DownloadFlow.runHybrid(
+            downloadUrl,
+            playUrl,
+            backendFileName,
+            backendFileSize,
+            (progress) => {
+              ProgressStages.updateProgress(60 + progress * 0.35);
+            },
+            state.abortController.signal
+          );
+        }
 
         // ── STAGE 4: Complete (95 → 100%) ────────────────────────────────────
         ProgressStages.setStage(3); // marks stage 2 completed, stage 3 active
