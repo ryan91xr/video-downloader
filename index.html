@@ -2011,4 +2011,870 @@
           // iOS must use viewUrl for inline Safari playback
           const playLink = item.viewUrl || item.fileUrl || item.url;
 
-          if (!download
+          if (!downloadLink) {
+            throw new Error('Missing download URL');
+          }
+
+          if (CONFIG.IS_IOS) {
+            // iOS: open viewUrl inline in Safari (can't force save)
+            return DownloadFlow.openForIOS(playLink, fileName);
+          }
+
+          // Android / Desktop: FIX 1 — <a download> with correct filename
+          Toast.info('Starting download...');
+          const a = document.createElement('a');
+          a.href = downloadLink;
+          a.download = SecurityUtils.normalizeFileName(fileName);
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          Toast.success('Download started!');
+        } catch (error) {
+          Toast.error(error.message || 'Download failed');
+        }
+      },
+
+      async shareItem(item, fileName) {
+        const shareUrl = SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl :
+                        SecurityUtils.isValidHttpUrl(item.fileUrl) ? item.fileUrl : null;
+        
+        if (!shareUrl) {
+          Toast.error('Missing share URL for this item');
+          return;
+        }
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'FlashVidz Download',
+              text: fileName,
+              url: shareUrl
+            });
+          } catch (error) {
+            if (error.name !== 'AbortError') {
+              await HamburgerMenu.copyToClipboard(shareUrl);
+            }
+          }
+        } else {
+          await HamburgerMenu.copyToClipboard(shareUrl);
+        }
+      },
+
+      removeItem(id) {
+        if (confirm('Remove this download from history?')) {
+          const downloads = Storage.loadDownloads();
+          const index = downloads.findIndex(d => d.id === id);
+          if (index > -1) {
+            downloads.splice(index, 1);
+            Storage.saveDownloads(downloads);
+            this.render();
+            Toast.success('Download removed');
+          }
+        }
+      },
+
+      add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration) {
+        const downloads = Storage.loadDownloads();
+        const now = Date.now();
+
+        const download = {
+          id: now.toString(),
+          downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
+          fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // playback URL
+          viewUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // explicit iOS URL
+          format,
+          fileName: typeof fileName === 'string' ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH) : 'flashvidz_download',
+          fileSize: Number.isFinite(Number(fileSize)) && Number(fileSize) > 0 ? Number(fileSize) : null,
+          thumbnail: typeof thumbnail === 'string' && thumbnail.trim().length > 5 ? thumbnail.trim() : null,
+          duration: duration || null,
+          timestamp: now
+        };
+        
+        if (!download.downloadUrl) return null;
+        
+        downloads.unshift(download);
+        if (downloads.length > CONFIG.MAX_DOWNLOADS_HISTORY) {
+          downloads.pop();
+        }
+        
+        Storage.saveDownloads(downloads);
+        return download;
+      },
+
+      formatFileSize(bytes) {
+        const num = Number(bytes);
+        if (!Number.isFinite(num) || num <= 0) return '—';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(num) / Math.log(k));
+        return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      },
+
+      formatDate(timestamp) {
+        const parsed = Number(timestamp);
+        const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      },
+
+      getPlatformBadge(platform) {
+        const badges = {
+          tiktok: '<span class="platform-badge tiktok">TikTok</span>',
+          instagram: '<span class="platform-badge instagram">Instagram</span>',
+          youtube: '<span class="platform-badge youtube">YouTube</span>',
+          facebook: '<span class="platform-badge facebook">Facebook</span>'
+        };
+        return badges[platform] || '';
+      },
+
+      render() {
+        const downloads = Storage.loadDownloads();
+        this.hideMenu();
+        
+        if (downloads.length === 0) {
+          elements.downloadsList.innerHTML = `
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <h3>No downloads yet</h3>
+              <p>Your downloaded videos will appear here</p>
+            </div>
+          `;
+          elements.downloadsCount.textContent = '0 items';
+          return;
+        }
+        
+        elements.downloadsCount.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
+        elements.downloadsList.innerHTML = '';
+        
+        downloads.forEach(item => {
+          const card = this.createCard(item);
+          elements.downloadsList.appendChild(card);
+        });
+      },
+
+      createCard(item) {
+        const card = document.createElement('div');
+        card.className = 'download-card';
+        card.setAttribute('role', 'listitem');
+        card.setAttribute('tabindex', '0');
+        
+        const isVideo = (item.format || 'video').toLowerCase() === 'video';
+        const fileName = item.fileName || item.filename || 'flashvidz_download';
+        const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
+        const displayDate = this.formatDate(item.timestamp);
+        const thumbnailUrl = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 5 ? item.thumbnail.trim() : null;
+        
+        const mediaIconPath = isVideo
+          ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
+          : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
+        
+        const thumbnailMarkup = thumbnailUrl 
+          ? `<img src="${thumbnailUrl}" alt="thumbnail" loading="lazy" onerror="this.onerror=null; this.closest('.download-thumbnail-small').classList.remove('has-thumbnail'); this.style.display='none';">`
+          : '';
+        
+        const durationBadge = item.duration 
+          ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
+          : '';
+        
+        card.innerHTML = `
+          <div class="download-info-row">
+            <div class="download-thumbnail-small ${thumbnailUrl ? 'has-thumbnail' : ''}">
+              ${thumbnailMarkup}
+              <svg class="thumbnail-fallback" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="${mediaIconPath}"/>
+              </svg>
+              ${durationBadge}
+            </div>
+            <div class="download-info">
+              <div class="download-filename" title="${SecurityUtils.escapeHtml(fileName)}">${SecurityUtils.escapeHtml(fileName)}</div>
+              <div class="download-meta">
+                <div class="meta-left">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+                  ${SecurityUtils.escapeHtml(displayDate)}
+                </div>
+                <span class="meta-size">${SecurityUtils.escapeHtml(this.formatFileSize(fileSize))}</span>
+              </div>
+            </div>
+            <div class="menu-wrapper">
+              <button class="menu-btn" aria-label="More options" title="More options">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        const menuBtn = card.querySelector('.menu-btn');
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const shouldClose = state.activeDownloadMenuContext?.id === item.id && elements.globalDownloadMenu.classList.contains('active');
+          if (shouldClose) {
+            this.hideMenu();
+          } else {
+            this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize });
+          }
+        });
+        
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          if (isActivelyDownloading()) {
+            Toast.info('Please wait for current download to complete');
+            return;
+          }
+
+          // FIX 2 — Always prefer viewUrl for playback (inline-friendly)
+          const playLink = item.viewUrl || item.fileUrl || item.url;
+
+          if (!isVideo) {
+            if (CONFIG.IS_IOS) {
+              DownloadFlow.openForIOS(playLink, fileName);
+            } else {
+              Toast.info('Audio preview not supported yet');
+            }
+            return;
+          }
+
+          if (!playLink) {
+            Toast.error('Video preview unavailable: missing URL');
+            return;
+          }
+
+          if (CONFIG.IS_IOS) {
+            DownloadFlow.openForIOS(playLink, fileName);
+          } else {
+            VideoModal.open(playLink);
+          }
+        });
+        
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
+        });
+        
+        return card;
+      }
+    };
+
+    // ==================== VIDEO MODAL ====================
+    const VideoModal = {
+      init() {
+        elements.videoModalClose.addEventListener('click', () => this.close());
+        elements.videoModal.addEventListener('click', (e) => {
+          if (!elements.videoModalContent.contains(e.target)) {
+            this.close();
+          }
+        });
+        
+        window.addEventListener('popstate', () => {
+          if (elements.videoModal.classList.contains('active')) {
+            state.closingFromPopState = true;
+            this.close();
+            state.closingFromPopState = false;
+          }
+        });
+        
+        elements.videoModalPlayer.addEventListener('error', () => {
+          if (elements.videoModal.classList.contains('active') && !isActivelyDownloading()) {
+            Toast.error('Unable to preview this video');
+          }
+        });
+        
+        elements.videoModalPlayer.addEventListener('loadeddata', () => {
+          const msg = elements.message;
+          if (elements.videoModal.classList.contains('active') && 
+              msg?.classList.contains('loading') && 
+              msg.textContent === 'Loading preview...') {
+            setMessage('', '');
+          }
+        });
+      },
+
+      open(fileUrl) {
+        // iOS: Never use modal, always open in Safari
+        if (CONFIG.IS_IOS) {
+          DownloadFlow.openForIOS(fileUrl, 'video');
+          return;
+        }
+
+        const normalizedUrl = SecurityUtils.normalizeStoredUrl(fileUrl);
+        if (!normalizedUrl) {
+          if (!isActivelyDownloading()) {
+            Toast.error('Video preview unavailable: missing URL');
+          }
+          return;
+        }
+        
+        setMessage('Loading preview...', 'loading');
+        elements.videoModalPlayer.pause();
+        elements.videoModalPlayer.removeAttribute('src');
+        elements.videoModalPlayer.src = normalizedUrl;
+        elements.videoModalPlayer.load();
+        elements.videoModal.classList.add('active');
+        elements.videoModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        
+        if (!state.modalHistoryPushed) {
+          history.pushState({ videoModal: true }, '');
+          state.modalHistoryPushed = true;
+        }
+        
+        const playPromise = elements.videoModalPlayer.play();
+        if (playPromise?.catch) {
+          playPromise.catch(() => {
+            const isModalActive = elements.videoModal.classList.contains('active');
+            const msg = elements.message;
+            if (isModalActive && !msg.classList.contains('error') && !isActivelyDownloading()) {
+              setMessage('Tap play to start video preview', 'loading');
+            }
+          });
+        }
+      },
+
+      close() {
+        elements.videoModal.classList.remove('active');
+        elements.videoModal.setAttribute('aria-hidden', 'true');
+        elements.videoModalPlayer.pause();
+        elements.videoModalPlayer.removeAttribute('src');
+        elements.videoModalPlayer.load();
+        document.body.style.overflow = '';
+        
+        if (state.modalHistoryPushed && history.state?.videoModal && !state.closingFromPopState) {
+          state.modalHistoryPushed = false;
+          history.back();
+        } else {
+          state.modalHistoryPushed = false;
+        }
+      }
+    };
+
+    // ==================== DOWNLOAD FLOW ====================
+    const DownloadFlow = {
+      run(downloadUrl, fileName, onProgress, signal) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', downloadUrl, true);
+          xhr.responseType = 'blob';
+          
+          let fakeProgress = 0;
+          let fakeInterval = null;
+          let objectUrl = null;
+          let finished = false;
+          
+          const finish = (fn) => {
+            if (finished) return;
+            finished = true;
+            fn();
+          };
+          
+          const cleanup = () => {
+            if (objectUrl) {
+              URL.revokeObjectURL(objectUrl);
+              state.activeObjectUrls.delete(objectUrl);
+              objectUrl = null;
+            }
+            if (fakeInterval) {
+              clearInterval(fakeInterval);
+              fakeInterval = null;
+            }
+          };
+          
+          const startFakeProgress = () => {
+            fakeProgress = 0;
+            onProgress?.(0);
+            fakeInterval = setInterval(() => {
+              if (fakeProgress < 90) {
+                fakeProgress += Math.random() * 6;
+                onProgress?.(Math.floor(fakeProgress));
+              }
+            }, 300);
+          };
+          
+          const abortHandler = () => {
+            finish(() => {
+              cleanup();
+              xhr.abort();
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          };
+          
+          if (signal) {
+            if (signal.aborted) {
+              abortHandler();
+              return;
+            }
+            signal.addEventListener('abort', abortHandler, { once: true });
+          }
+          
+          xhr.onprogress = (event) => {
+            if (event.lengthComputable && event.total > 0) {
+              if (fakeInterval) clearInterval(fakeInterval);
+              const percent = Math.round((event.loaded / event.total) * 100);
+              onProgress?.(Math.min(100, Math.max(0, percent)));
+            } else if (!fakeInterval) {
+              startFakeProgress();
+            }
+          };
+          
+          xhr.onload = () => {
+            finish(() => {
+              signal?.removeEventListener('abort', abortHandler);
+              
+              if (xhr.status < 200 || xhr.status >= 300) {
+                cleanup();
+                reject(new Error(`Download failed: ${xhr.status}`));
+                return;
+              }
+              
+              onProgress?.(100);
+              
+              const blob = xhr.response;
+              objectUrl = URL.createObjectURL(blob);
+              state.activeObjectUrls.add(objectUrl);
+              
+              const a = document.createElement('a');
+              a.href = objectUrl;
+              a.setAttribute('download', SecurityUtils.normalizeFileName(fileName));
+              a.rel = 'noopener';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              
+              setTimeout(() => {
+                if (objectUrl) {
+                  URL.revokeObjectURL(objectUrl);
+                  state.activeObjectUrls.delete(objectUrl);
+                }
+              }, 1000);
+              
+              resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
+            });
+          };
+          
+          xhr.onerror = () => {
+            finish(() => {
+              cleanup();
+              signal?.removeEventListener('abort', abortHandler);
+              reject(new Error('Download failed'));
+            });
+          };
+          
+          xhr.onabort = () => {
+            finish(() => {
+              cleanup();
+              signal?.removeEventListener('abort', abortHandler);
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          };
+          
+          xhr.send();
+        });
+      },
+
+      // iPhone Safari: Open viewUrl inline — backend already appends ?view=1
+      openForIOS(url, fileName) {
+        if (!url) {
+          Toast.error('Invalid URL');
+          return Promise.reject(new Error('Invalid URL'));
+        }
+
+        Toast.info('Opening in Safari. Use the share button to save to Photos.');
+
+        const newWindow = window.open(url, '_blank');
+
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          // Popup blocked — fall back to same-tab navigation
+          Toast.warning('Popup blocked. Tap here to open video.', 8000);
+          window.location.href = url;
+        }
+
+        return Promise.resolve(0);
+      },
+
+      runHybrid(downloadUrl, playUrl, fileName, fileSize, onProgress, signal) {
+        // iPhone/iPad: open playUrl (viewUrl) inline in Safari — never force a download
+        if (CONFIG.IS_IOS) {
+          if (signal?.aborted) {
+            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+          }
+          return this.openForIOS(playUrl || downloadUrl, fileName);
+        }
+        
+        const normalizedSize = Number(fileSize) || 0;
+        
+        // Large files on desktop: direct download
+        if (normalizedSize > CONFIG.DIRECT_DOWNLOAD_THRESHOLD) {
+          if (signal?.aborted) {
+            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+          }
+          
+          onProgress?.(0);
+          Toast.info('Large file detected. Starting browser download...');
+          
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              // <a download> forces save-to-device with correct filename on Android
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = SecurityUtils.normalizeFileName(fileName);
+              a.rel = 'noopener noreferrer';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              Toast.success('Download started');
+              resolve(normalizedSize);
+            }, 120);
+          });
+        }
+        
+        // Standard XHR download with progress
+        return this.run(downloadUrl, fileName, onProgress, signal);
+      }
+    };
+
+    // ==================== PLATFORM DETECTION ====================
+    function detectPlatform(link) {
+      if (!SecurityUtils.isValidHttpUrl(link)) return 'unknown';
+      
+      const url = link.toLowerCase();
+      if (url.includes('tiktok.com')) return 'tiktok';
+      if (url.includes('instagram.com')) return 'instagram';
+      if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+      if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
+      return 'unknown';
+    }
+
+    // ==================== DOWNLOAD HANDLER ====================
+    async function pasteLink() {
+      const btn = elements.pasteBtn;
+      btn.disabled = true;
+      
+      try {
+        const text = await navigator.clipboard.readText();
+        const sanitized = text.trim().slice(0, 2000);
+        elements.linkInput.value = sanitized;
+        maybeAutoDownload();
+      } catch (error) {
+        const isSecureContextIssue = window.isSecureContext === false;
+        const message = isSecureContextIssue
+          ? 'Clipboard requires HTTPS or localhost'
+          : 'Could not read clipboard. Please paste manually.';
+        Toast.error(message);
+        console.error('Clipboard read failed:', error);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function maybeAutoDownload() {
+      const settings = Storage.getSettings();
+      const link = elements.linkInput.value.trim();
+      
+      if (!settings.autoDownload || !link || !SecurityUtils.isValidHttpUrl(link) || 
+          elements.submitBtn.disabled || isActivelyDownloading()) {
+        return;
+      }
+      
+      handleDownload();
+    }
+
+    function isActivelyDownloading() {
+      return state.isDownloading || (elements.submitBtn.disabled && elements.message.classList.contains('loading'));
+    }
+
+    function resetUI(delay = 2000) {
+      const downloadId = state.currentDownloadId;
+      setTimeout(() => {
+        if (downloadId !== state.currentDownloadId) return;
+        elements.submitBtn.disabled = false;
+        elements.submitBtn.classList.remove('loading');
+        elements.pasteBtn.disabled = false;
+        state.isDownloading = false;
+      }, delay);
+    }
+
+    async function handleDownloadWithRetry(retryCount = 0) {
+      const link = elements.linkInput.value.trim().slice(0, 2000);
+      const format = selectedFormat;
+      
+      state.lastUrl = link;
+      state.lastFormat = format;
+      
+      try {
+        await handleDownload();
+      } catch (err) {
+        if (err.message?.includes('try again later') && retryCount < CONFIG.MAX_RETRIES) {
+          const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
+          setMessage(`Server busy. Retrying in ${delay/1000}s... (${retryCount + 1}/${CONFIG.MAX_RETRIES})`, 'loading');
+          
+          setTimeout(() => {
+            handleDownloadWithRetry(retryCount + 1);
+          }, delay);
+          return;
+        }
+        
+        throw err;
+      }
+    }
+
+    function showErrorWithRetry(message) {
+      const msg = elements.message;
+      msg.innerHTML = `${SecurityUtils.escapeHtml(message)} <button class="retry-btn" onclick="retryLastDownload()">Retry</button>`;
+      msg.className = 'error';
+    }
+
+    window.retryLastDownload = function() {
+      if (state.lastUrl && state.lastFormat) {
+        elements.linkInput.value = state.lastUrl;
+        selectedFormat = state.lastFormat;
+        handleDownloadWithRetry();
+      }
+    };
+
+    async function handleDownload() {
+      const downloadId = ++state.currentDownloadId;
+      const link = elements.linkInput.value.trim().slice(0, 2000);
+      const settings = Storage.getSettings();
+      
+      if (state.isDownloading || elements.submitBtn.disabled) {
+        return;
+      }
+      
+      const updateMessage = (text, type = '') => {
+        if (downloadId !== state.currentDownloadId) return;
+        setMessage(text, type);
+      };
+      
+      state.isDownloading = true;
+      elements.submitBtn.disabled = true;
+      elements.submitBtn.classList.add('loading');
+      elements.pasteBtn.disabled = true;
+      
+      if (!link) {
+        updateMessage('Enter a video link', 'error');
+        resetUI(0);
+        return;
+      }
+      
+      const platform = detectPlatform(link);
+      
+      if (platform === 'unknown') {
+        updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
+        resetUI(0);
+        return;
+      }
+      
+      // iOS: Show hint
+      if (CONFIG.IS_IOS) {
+        elements.iosHint?.classList.add('visible');
+      }
+      
+      updateMessage('Starting download...', 'loading');
+      
+      if (state.abortController) {
+        state.abortController.abort();
+      }
+      state.abortController = new AbortController();
+      
+      try {
+        const response = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: link,
+            format: selectedFormat,
+            quality: settings.quality
+          }),
+          signal: state.abortController.signal
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
+          
+          if (response.status === 503) {
+            throw new Error('Server busy, try again later');
+          } else if (response.status === 429) {
+            throw new Error('Too many requests. Please wait a moment.');
+          } else if (response.status === 413) {
+            throw new Error('File too large');
+          } else if (response.status === 504) {
+            throw new Error('Download timeout. Server may be overloaded.');
+          }
+          
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data?.success || !(data?.downloadUrl || data?.url)) {
+          throw new Error(data?.error || 'Invalid response from server');
+        }
+        
+        const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
+        if (!downloadUrl) {
+          throw new Error('Invalid response from server');
+        }
+
+        // viewUrl is for iOS inline Safari playback; downloadUrl is for Android/desktop save
+        const isIOS = CONFIG.IS_IOS;
+        const playUrl = isIOS
+          ? SecurityUtils.normalizeStoredUrl(data.viewUrl || data.url)
+          : (SecurityUtils.normalizeStoredUrl(data.url) || downloadUrl);
+
+        const responseFormat = data.format || selectedFormat;
+        const backendFileName = data.fileName
+          || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
+        const backendFileSize = Number(data.fileSizeBytes) || 0;
+
+        // FIX 3 — Show backend warning immediately (format mismatch, codec issues, etc.)
+        if (data.warning) {
+          Toast.warning(data.warning);
+        }
+
+        // iOS-specific format warning (only if backend didn't already warn)
+        if (isIOS && data.isIOSCompatible === false && !data.warning) {
+          Toast.warning('This video may not play on iPhone. Try downloading instead.');
+        }
+
+        // Show filename so user knows what they are getting
+        updateMessage(`Downloading: ${backendFileName}`, 'loading');
+
+        const downloadedFileSize = await DownloadFlow.runHybrid(
+          downloadUrl,
+          playUrl,
+          backendFileName,
+          backendFileSize,
+          (progress) => {
+            if (!isIOS) {
+              updateMessage(`Downloading... ${progress}%`, 'loading');
+            }
+          },
+          state.abortController.signal
+        );
+
+        const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize > 0 ? backendFileSize : null;
+
+        // FIX 4 — Store both downloadUrl and viewUrl in history
+        DownloadsManager.add(
+          downloadUrl,
+          playUrl,
+          responseFormat,
+          backendFileName,
+          finalFileSize,
+          data.thumbnail,
+          data.duration
+        );
+        
+        if (downloadId !== state.currentDownloadId) return;
+        
+        if (CONFIG.IS_IOS) {
+          setMessage('Opened in Safari! Tap share button to save.', 'success');
+          Toast.success('Video opened in Safari');
+        } else {
+          setMessage('Download complete!', 'success');
+          Toast.success('Download complete!');
+        }
+        
+        TabManager.switch('downloads');
+        elements.linkInput.value = '';
+        
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        
+        console.error('Download error:', err);
+        let errorMsg = err.message || 'Download failed';
+        
+        if (platform === 'instagram' || platform === 'facebook') {
+          if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
+            errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
+          } else if (errorMsg.includes('private')) {
+            errorMsg = `This ${platform} post is private.`;
+          }
+        } else if (platform === 'youtube') {
+          if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
+            errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
+          }
+        }
+        
+        if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
+          showErrorWithRetry(errorMsg);
+        } else {
+          updateMessage(errorMsg, 'error');
+        }
+        Toast.error(errorMsg);
+        
+        if (errorMsg.includes('try again later')) {
+          throw err;
+        }
+      } finally {
+        if (downloadId === state.currentDownloadId) {
+          state.abortController = null;
+        }
+        resetUI(2000);
+      }
+    }
+
+    // ==================== INITIALIZATION ====================
+    function init() {
+      cacheElements();
+      FormatSelector.init();
+      const settings = Storage.getSettings();
+      selectedFormat = settings.format === 'audio' ? 'audio' : 'video';
+      FormatSelector.select(selectedFormat);
+      HamburgerMenu.init();
+      TabManager.init();
+      DownloadsManager.init();
+      VideoModal.init();
+      
+      // Show iOS hint if on iOS
+      if (CONFIG.IS_IOS && elements.iosHint) {
+        elements.iosHint.classList.add('visible');
+      }
+      
+      elements.pasteBtn.addEventListener('click', pasteLink);
+      elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
+      elements.linkInput.addEventListener('input', maybeAutoDownload);
+      elements.downloadForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleDownloadWithRetry(0);
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'v' && document.activeElement !== elements.linkInput) {
+          elements.linkInput.focus();
+        }
+        
+        if (e.key === 'Escape') {
+          if (elements.videoModal.classList.contains('active')) {
+            VideoModal.close();
+          }
+        }
+      });
+      
+      window.addEventListener('beforeunload', () => {
+        state.abortController?.abort();
+        state.activeObjectUrls.forEach(url => {
+          try { URL.revokeObjectURL(url); } catch {}
+        });
+        state.activeObjectUrls.clear();
+      });
+      
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && state.abortController) {
+          state.abortController.abort();
+        }
+      });
+      
+      DownloadsManager.render();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
