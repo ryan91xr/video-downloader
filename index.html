@@ -2707,24 +2707,23 @@
           
           throw new Error(data?.error || `Server error: ${response.status}`);
         }
-        
-        if (CONFIG.IS_IOS && !data?.isIOSCompatible) {
-  elements.iosHint.classList.add('visible');
-} else {
-  elements.iosHint.classList.remove('visible');
-}
-        
-        if (!data?.success || !(data?.downloadUrl || data?.url)) {
-          throw new Error(data?.error || 'Invalid response from server');
-        }
-
-        setMessage("Download ready", "success");
-        
+       
+       if (!data?.success) {
+         throw new Error(data?.error || 'Invalid response from server');
+       }
         const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
         if (!downloadUrl) {
           throw new Error('Invalid response from server');
         }
+        
+        if (CONFIG.IS_IOS && !data?.isIOSCompatible) {
+          elements.iosHint.classList.add('visible');
+        } else {
+          elements.iosHint.classList.remove('visible');
+        }
 
+        setMessage("Download ready", "success");
+        
         // viewUrl is for iOS inline Safari playback; downloadUrl is for Android/desktop save
         const isIOS = CONFIG.IS_IOS;
         const playUrl = isIOS
