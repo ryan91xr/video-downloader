@@ -2745,9 +2745,6 @@
           Toast.warning('This video may not play on iPhone. Try downloading instead.');
         }
 
-        // Show filename so user knows what they are getting
-        updateMessage(`Downloading: ${backendFileName}`, 'loading');
-
         const downloadedFileSize = await DownloadFlow.runHybrid(
           downloadUrl,
           playUrl,
