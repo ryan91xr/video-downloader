@@ -2691,10 +2691,10 @@
           }),
           signal: state.abortController.signal
         });
+        const data = await
+        response.json().catch(() => null);
         
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Download failed' }));
-          
+        if (!response.ok) {  
           if (response.status === 503) {
             throw new Error('Server busy, try again later');
           } else if (response.status === 429) {
@@ -2705,7 +2705,7 @@
             throw new Error('Download timeout. Server may be overloaded.');
           }
           
-          throw new Error(errorData.error || `Server error: ${response.status}`);
+          throw new Error(data?.error || `Server error: ${response.status}`);
         }
         
         const data = await response.json();
