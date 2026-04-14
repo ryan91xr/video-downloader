@@ -2031,7 +2031,7 @@
           a.remove();
           Toast.success('Download started!');
         } catch (error) {
-          setMessage("Downlaod failed", "error");
+          setMessage("Download failed", "error");
           Toast.error(error.message || 'Download failed');
         }
       },
@@ -2708,7 +2708,6 @@
           throw new Error(data?.error || `Server error: ${response.status}`);
         }
         
-        const data = await response.json();
         setMessage("Download ready", "success");
         
         if (!data?.success || !(data?.downloadUrl || data?.url)) {
