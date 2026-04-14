@@ -2707,23 +2707,24 @@
           
           throw new Error(data?.error || `Server error: ${response.status}`);
         }
-       
-       if (!data?.success) {
-         throw new Error(data?.error || 'Invalid response from server');
-       }
-        const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
-        if (!downloadUrl) {
-          throw new Error('Invalid response from server');
-        }
         
         if (CONFIG.IS_IOS && !data?.isIOSCompatible) {
-          elements.iosHint.classList.add('visible');
-        } else {
-          elements.iosHint.classList.remove('visible');
+  elements.iosHint.classList.add('visible');
+} else {
+  elements.iosHint.classList.remove('visible');
+}
+        
+        if (!data?.success || !(data?.downloadUrl || data?.url)) {
+          throw new Error(data?.error || 'Invalid response from server');
         }
 
         setMessage("Download ready", "success");
         
+        const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
+        if (!downloadUrl) {
+          throw new Error('Invalid response from server');
+        }
+
         // viewUrl is for iOS inline Safari playback; downloadUrl is for Android/desktop save
         const isIOS = CONFIG.IS_IOS;
         const playUrl = isIOS
@@ -2744,6 +2745,9 @@
         if (isIOS && data.isIOSCompatible === false && !data.warning) {
           Toast.warning('This video may not play on iPhone. Try downloading instead.');
         }
+
+        // Show filename so user knows what they are getting
+        updateMessage(`Downloading: ${backendFileName}`, 'loading');
 
         const downloadedFileSize = await DownloadFlow.runHybrid(
           downloadUrl,
