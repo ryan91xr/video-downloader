@@ -2822,8 +2822,17 @@
 
     // ==================== INITIALIZATION ====================
     function init() {
+      const downloads = Storage.loadDownloads();
+      const hasOldFormat = downloads.some(d => !d.viewUrl || !d.downloadUrl);
+      if (hasOldFormat) {
+        console.log('🧹 Clearing old download format');
+        localStorage.removeItem(CONFIG.STORAGE_KEY);
+        Toast.info('Download history cleared for compatibility');
+      }
+      
       cacheElements();
       FormatSelector.init();
+    }
       const settings = Storage.getSettings();
       selectedFormat = settings.format === 'audio' ? 'audio' : 'video';
       FormatSelector.select(selectedFormat);
