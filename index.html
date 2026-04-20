@@ -2582,32 +2582,7 @@
       return 'unknown';
     }
 
-
     // ==================== DOWNLOAD HANDLER ====================
-    let progressInterval = null;
-    let currentProgress = 0;
-
-    function startProgress(updateMessage, isIOS) {
-      clearInterval(progressInterval);
-      progressInterval = null;
-      currentProgress = 0;
-      updateMessage('🔄 Starting download...', 'loading');
-      progressInterval = setInterval(() => {
-        if (currentProgress < 90) {
-          currentProgress += Math.random() * 4 + 1;
-          if (currentProgress > 90) currentProgress = 90;
-          if (!isIOS) {
-            updateMessage(`⬇️ Downloading... ${Math.floor(currentProgress)}%`, 'loading');
-          }
-        }
-      }, 600);
-    }
-
-    function stopProgress() {
-      clearInterval(progressInterval);
-      progressInterval = null;
-    }
-
     async function pasteLink() {
       const btn = elements.pasteBtn;
       btn.disabled = true;
@@ -2732,14 +2707,15 @@
         elements.iosHint?.classList.add('visible');
       }
       
+      updateMessage('Starting download...', 'loading');
+      
       if (state.abortController) {
         state.abortController.abort();
       }
       state.abortController = new AbortController();
       
       try {
-        startProgress(updateMessage, CONFIG.IS_IOS);
-
+        setMessage("Fetching video...","loading");
         const response = await fetch(CONFIG.API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2750,20 +2726,14 @@
           }),
           signal: state.abortController.signal
         });
-
-        stopProgress();
-
-        const data = await response.json().catch(() => null);
+        const data = await
+        response.json().catch(() => null);
         
         if (!response.ok) {  
           if (response.status === 503) {
             throw new Error('Server busy, try again later');
           } else if (response.status === 429) {
-            const retryAfter = data?.retryAfter || 60;
-            updateMessage(`⏳ Too many requests. Try again in ${retryAfter} seconds`, 'error');
-            Toast.warning(`Too many requests. Try again in ${retryAfter} seconds`);
-            resetUI(0);
-            return;
+            throw new Error('Too many requests. Please wait a moment.');
           } else if (response.status === 413) {
             throw new Error('File too large');
           } else if (response.status === 504) {
@@ -2776,9 +2746,6 @@
        if (!data?.success) {
          throw new Error(data?.error || 'Invalid response from server');
        }
-
-        updateMessage('🎬 Processing...', 'loading');
-        
         const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
         if (!downloadUrl) {
           throw new Error('Invalid response from server');
@@ -2790,7 +2757,7 @@
           elements.iosHint.classList.remove('visible');
         }
 
-        setMessage("✅ Download ready", "success");
+        setMessage("Download ready", "success");
         
         // viewUrl is for iOS inline Safari playback; downloadUrl is for Android/desktop save
         const isIOS = CONFIG.IS_IOS;
@@ -2803,7 +2770,7 @@
           || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
         const backendFileSize = Number(data.fileSizeBytes) || 0;
 
-        // Show backend warning immediately (format mismatch, codec issues, etc.)
+        // FIX 3 — Show backend warning immediately (format mismatch, codec issues, etc.)
         if (data.warning) {
           Toast.warning(data.warning);
         }
@@ -2828,7 +2795,7 @@
 
         const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize > 0 ? backendFileSize : null;
 
-        // Store both downloadUrl and viewUrl in history
+        // FIX 4 — Store both downloadUrl and viewUrl in history
         DownloadsManager.add(
           downloadUrl,
           playUrl,
@@ -2842,10 +2809,10 @@
         if (downloadId !== state.currentDownloadId) return;
         
         if (CONFIG.IS_IOS) {
-          setMessage('✅ Opened in Safari! Tap share button to save.', 'success');
+          setMessage('Opened in Safari! Tap share button to save.', 'success');
           Toast.success('Video opened in Safari');
         } else {
-          setMessage('✅ Download complete!', 'success');
+          setMessage('Download complete!', 'success');
           Toast.success('Download complete!');
         }
         
@@ -2856,8 +2823,7 @@
         if (err.name === 'AbortError') return;
         
         console.error('Download error:', err);
-        stopProgress();
-        let errorMsg = err.message || '❌ Download failed';
+        let errorMsg = err.message || 'Download failed';
         
         if (platform === 'instagram' || platform === 'facebook') {
           if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
@@ -2882,7 +2848,6 @@
           throw err;
         }
       } finally {
-        stopProgress();
         if (downloadId === state.currentDownloadId) {
           state.abortController = null;
         }
