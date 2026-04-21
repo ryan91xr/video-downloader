@@ -2092,12 +2092,13 @@
         }
       },
 
-      add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration) {
+      add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration, title) {
         const downloads = Storage.loadDownloads();
         const now = Date.now();
 
         const download = {
           id: now.toString(),
+          title: typeof title === 'string' ? title.trim().slice(0, 200) : null,  // ADDED
           downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
           fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // playback URL
           viewUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // explicit iOS URL
@@ -2189,12 +2190,15 @@
         card.setAttribute('tabindex', '0');
         
         const isVideo = (item.format || 'video').toLowerCase() === 'video';
+        const displayTitle = item.title || item.fileName || item.filename || 'flashvidz_download'; // CHANGED
         const fileName = item.fileName || item.filename || 'flashvidz_download';
         const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
         const displayDate = this.formatDate(item.timestamp);
+        const baseUrl = CONFIG.API_URL.replace('/download', ''); // ADDED
+        const defaultThumb = `${baseUrl}/default-thumbnail.jpg`; // ADDED
         const thumbnailUrl = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0
           ? item.thumbnail.trim()
-          : null;
+          : defaultThumb; // CHANGED
         
         const mediaIconPath = isVideo
           ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
@@ -2204,7 +2208,7 @@
         if (thumbnailUrl) {
           const isExternalThumb = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn');
           const extraAttrs = isExternalThumb ? 'referrerpolicy="no-referrer" crossorigin="anonymous"' : '';
-          thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="lazy" ${extraAttrs} onerror="this.onerror=null; this.style.display='none'; this.parentElement.classList.remove('has-thumbnail');">`;
+          thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="lazy" ${extraAttrs} onerror="this.onerror=null; this.src='${defaultThumb}';">`; // CHANGED
         }
 
         const durationBadge = item.duration 
@@ -2222,7 +2226,7 @@
               ${durationBadge}
             </div>
             <div class="download-info">
-              <div class="download-filename" title="${SecurityUtils.escapeHtml(fileName)}">${SecurityUtils.escapeHtml(fileName)}</div>
+              <div class="download-filename" title="${SecurityUtils.escapeHtml(displayTitle)}">${SecurityUtils.escapeHtml(displayTitle)}</div> <!-- CHANGED -->
               <div class="download-meta">
                 <div class="meta-left">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
@@ -2824,7 +2828,8 @@
           backendFileName,
           finalFileSize,
           data.thumbnail,
-          data.duration
+          data.duration,
+          data.title // ADDED
         );
         
         if (downloadId !== state.currentDownloadId) return;
