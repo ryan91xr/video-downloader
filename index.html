@@ -1501,7 +1501,7 @@
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
-        <video class="video-modal-player" id="videoModalPlayer" controls playsinline preload="metadata"></video>
+        <video class="video-modal-player" id="videoModalPlayer" controls playsinline preload="auto" crossorigin="anonymous"></video>
       </div>
     </div>
 
@@ -2261,6 +2261,7 @@
 
           // FIX 2 — Always prefer viewUrl for playback (inline-friendly)
           const playLink = item.viewUrl || item.fileUrl || item.url;
+          console.log('Card click - playLink:', playLink, '| viewUrl:', item.viewUrl, '| fileUrl:', item.fileUrl, '| url:', item.url);
 
           if (!isVideo) {
             if (CONFIG.IS_IOS) {
@@ -2296,6 +2297,7 @@
 
     // ==================== VIDEO MODAL ====================
     const VideoModal = {
+      previewErrorShown: false,
       init() {
         elements.videoModalClose.addEventListener('click', () => this.close());
         elements.videoModal.addEventListener('click', (e) => {
@@ -2312,13 +2314,17 @@
           }
         });
         
+        // FIX: Guard against double error toasts + softer fallback message
         elements.videoModalPlayer.addEventListener('error', () => {
-          if (elements.videoModal.classList.contains('active') && !isActivelyDownloading()) {
-            Toast.error('Unable to preview this video');
-          }
+          if (!elements.videoModal.classList.contains('active') || isActivelyDownloading()) return;
+          if (this.previewErrorShown) return;
+          this.previewErrorShown = true;
+          Toast.warning('Preview not supported. You can still download the video.');
+          console.log('Preview error - video may have incompatible codec or missing headers');
         });
         
         elements.videoModalPlayer.addEventListener('loadeddata', () => {
+          VideoModal.previewErrorShown = false; // Reset on successful load
           const msg = elements.message;
           if (elements.videoModal.classList.contains('active') && 
               msg?.classList.contains('loading') && 
@@ -2336,6 +2342,7 @@
         }
 
         const normalizedUrl = SecurityUtils.normalizeStoredUrl(fileUrl);
+        console.log('Preview URL:', normalizedUrl); // DEBUG: check if URL is valid
         if (!normalizedUrl) {
           if (!isActivelyDownloading()) {
             Toast.error('Video preview unavailable: missing URL');
@@ -2343,6 +2350,8 @@
           return;
         }
         
+        // Reset error guard for new preview
+        VideoModal.previewErrorShown = false;
         setMessage('Loading preview...', 'loading');
         elements.videoModalPlayer.pause();
         elements.videoModalPlayer.removeAttribute('src');
@@ -2375,6 +2384,7 @@
         elements.videoModalPlayer.pause();
         elements.videoModalPlayer.removeAttribute('src');
         elements.videoModalPlayer.load();
+        VideoModal.previewErrorShown = false; // Reset error guard on close
         document.body.style.overflow = '';
         
         if (state.modalHistoryPushed && history.state?.videoModal && !state.closingFromPopState) {
