@@ -979,6 +979,69 @@
       fill: currentColor;
     }
 
+    .download-card .card {
+      display: flex;
+      gap: var(--space-sm);
+      width: 100%;
+      align-items: flex-start;
+    }
+
+    .download-card .thumb {
+      width: 110px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      background: #111;
+      flex-shrink: 0;
+    }
+
+    .download-card .info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .download-card .info h4 {
+      font-size: 0.9375rem;
+      line-height: 1.2;
+    }
+
+    .download-card .info p,
+    .download-card .info small {
+      color: var(--color-text-secondary);
+      font-size: 0.8rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .progress {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
+      transition: width var(--transition-base);
+    }
+
+    .download-btn {
+      display: inline-block;
+      margin-top: var(--space-sm);
+      color: #001a14;
+      background: var(--color-accent);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      align-self: flex-start;
+    }
+
     .menu-wrapper {
       position: relative;
       flex-shrink: 0;
@@ -1480,7 +1543,7 @@
           <h2 class="downloads-title">Downloads</h2>
           <span class="downloads-count" id="downloadsCount">0 items</span>
         </div>
-        <div class="downloads-list" id="downloadsList" role="list" aria-label="Downloaded videos">
+        <div class="downloads-list" id="downloads" role="list" aria-label="Downloaded videos">
           <!-- Empty State -->
           <div class="empty-state" id="emptyState">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1516,8 +1579,11 @@
   <script>
     // ==================== CONFIGURATION ====================
     const CONFIG = Object.freeze({
-      API_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000/download' 
+      API_BASE: window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
+        : 'https://flashvidz-backend.onrender.com',
+      API_URL: window.location.hostname === 'localhost'
+        ? 'http://localhost:3000/download'
         : 'https://flashvidz-backend.onrender.com/download',
       MAX_FILE_SIZE: 500 * 1024 * 1024,
       MAX_FILENAME_LENGTH: 180,
@@ -1559,7 +1625,7 @@
         'tab-enter-url', 'tab-downloads', 'formatBtn', 'formatDropdown',
         'formatIconVideo', 'formatIconAudio', 'optionVideo', 'optionAudio',
         'linkInput', 'pasteBtn', 'submitBtn', 'downloadForm', 'message',
-        'downloadsCount', 'downloadsList', 'emptyState', 'videoModal',
+        'downloadsCount', 'downloads', 'emptyState', 'videoModal',
         'videoModalContent', 'videoModalPlayer', 'videoModalClose',
         'globalDownloadMenu', 'menuDownloads', 'menuShareApp', 'menuRateApp',
         'menuHelp', 'menuPrivacy', 'iosHint'
@@ -1913,9 +1979,6 @@
         elements['tab-downloads'].classList.toggle('active', isDownloads);
         elements['tab-downloads'].hidden = !isDownloads;
         
-        if (isDownloads) {
-          DownloadsManager.render();
-        }
       }
     };
 
@@ -1943,7 +2006,7 @@
           }
         });
 
-        elements.downloadsList?.addEventListener('scroll', () => {
+        elements.downloads?.addEventListener('scroll', () => {
           clearTimeout(this.scrollTimeout);
           this.scrollTimeout = setTimeout(() => this.hideMenu(), 100);
         });
@@ -2158,10 +2221,10 @@
       render() {
         const downloads = Storage.loadDownloads();
         this.hideMenu();
-        elements.downloadsList.innerHTML = '';
+        elements.downloads.innerHTML = '';
         
         if (downloads.length === 0) {
-          elements.downloadsList.innerHTML = `
+          elements.downloads.innerHTML = `
             <div class="empty-state">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
               <h3>No downloads yet</h3>
@@ -2179,7 +2242,7 @@
           const card = this.createCard(item);
           fragment.appendChild(card);
         });
-        elements.downloadsList.appendChild(fragment);
+        elements.downloads.appendChild(fragment);
       },
 
       createCard(item) {
@@ -2592,6 +2655,114 @@
       return 'unknown';
     }
 
+    function createDownloadCard(id) {
+      const container = elements.downloads;
+      if (!container) return;
+
+      const card = document.createElement('div');
+      card.className = 'download-card';
+      card.id = `download-${id}`;
+
+      card.innerHTML = `
+        <div class="card">
+          <img src="/default-thumbnail.jpg" class="thumb" alt="Video thumbnail"/>
+          <div class="info">
+            <h4 id="title-${id}">Fetching...</h4>
+            <p id="status-${id}">Starting...</p>
+            <div class="progress-bar">
+              <div id="bar-${id}" class="progress"></div>
+            </div>
+            <small id="meta-${id}">0 MB / 0 MB • 0 MB/s</small>
+          </div>
+        </div>
+      `;
+
+      if (elements.emptyState) {
+        elements.emptyState.style.display = 'none';
+      }
+
+      container.prepend(card);
+      elements.downloadsCount.textContent = `${container.children.length} item${container.children.length !== 1 ? 's' : ''}`;
+      TabManager.switch('downloads');
+    }
+
+    function addDownloadButton(id) {
+      const card = document.getElementById(`download-${id}`);
+      if (!card || card.querySelector('.download-btn')) return;
+
+      const btn = document.createElement('a');
+      btn.href = `${CONFIG.API_BASE}/files/${id}`;
+      btn.innerText = 'Download';
+      btn.className = 'download-btn';
+      btn.rel = 'noopener noreferrer';
+
+      card.appendChild(btn);
+    }
+
+    function updateUI(id, data) {
+      const title = document.getElementById(`title-${id}`);
+      const status = document.getElementById(`status-${id}`);
+      const bar = document.getElementById(`bar-${id}`);
+      const meta = document.getElementById(`meta-${id}`);
+      const thumb = document.querySelector(`#download-${id} img`);
+
+      if (!title || !status || !bar || !meta) return;
+
+      title.innerText = data.title || 'Video';
+      status.innerText = data.status === 'downloading'
+        ? `Downloading... ${Math.round(data.progress || 0)}%`
+        : (data.status || 'starting');
+      bar.style.width = `${data.progress || 0}%`;
+      meta.innerText = `${data.downloaded || '0 MB'} / ${data.total || '0 MB'} • ${data.speed || '0 MB/s'}`;
+
+      if (data.thumbnail && thumb) {
+        thumb.src = data.thumbnail;
+      }
+
+      if (data.status === 'finished') {
+        addDownloadButton(id);
+      }
+    }
+
+    function trackProgress(id) {
+      const interval = setInterval(async () => {
+        try {
+          const res = await fetch(`${CONFIG.API_BASE}/progress/${id}`);
+          const data = await res.json();
+          updateUI(id, data);
+
+          if (data.status === 'finished' || data.status === 'error') {
+            clearInterval(interval);
+          }
+        } catch {
+          clearInterval(interval);
+        }
+      }, 1000);
+    }
+
+    async function startDownload(url) {
+      const settings = Storage.getSettings();
+      const res = await fetch(`${CONFIG.API_BASE}/download`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url,
+          format: selectedFormat,
+          quality: settings.quality
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.id) {
+        throw new Error(data.error || 'Failed to start download');
+      }
+
+      createDownloadCard(data.id);
+      trackProgress(data.id);
+    }
+
     // ==================== DOWNLOAD HANDLER ====================
     async function pasteLink() {
       const btn = elements.pasteBtn;
@@ -2682,7 +2853,6 @@
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
-      const settings = Storage.getSettings();
       
       if (state.isDownloading || elements.submitBtn.disabled) {
         return;
@@ -2718,120 +2888,14 @@
       }
       
       updateMessage('Starting download...', 'loading');
-      
-      if (state.abortController) {
-        state.abortController.abort();
-      }
-      state.abortController = new AbortController();
-      
+
       try {
-        setMessage("Please wait...","loading");
-        const response = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: link,
-            format: selectedFormat,
-            quality: settings.quality
-          }),
-          signal: state.abortController.signal
-        });
-        const data = await
-        response.json().catch(() => null);
-        
-        if (!response.ok) {  
-          if (response.status === 503) {
-            throw new Error('Server busy, try again later');
-          } else if (response.status === 429) {
-            throw new Error('Too many requests. Please wait a moment.');
-          } else if (response.status === 413) {
-            throw new Error('File too large');
-          } else if (response.status === 504) {
-            throw new Error('Download timeout. Server may be overloaded.');
-          }
-          
-          throw new Error(data?.error || `Server error: ${response.status}`);
-        }
-       
-       if (!data?.success) {
-         throw new Error(data?.error || 'Invalid response from server');
-       }
-        const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
-        if (!downloadUrl) {
-          throw new Error('Invalid response from server');
-        }
-        
-        if (CONFIG.IS_IOS && !data?.isIOSCompatible) {
-          elements.iosHint.classList.add('visible');
-        } else {
-          elements.iosHint.classList.remove('visible');
-        }
-
-        setMessage("Download ready", "success");
-        
-        // viewUrl is for iOS inline Safari playback; downloadUrl is for Android/desktop save
-        const isIOS = CONFIG.IS_IOS;
-        const playUrl = isIOS
-          ? SecurityUtils.normalizeStoredUrl(data.viewUrl || data.url)
-          : (SecurityUtils.normalizeStoredUrl(data.url) || downloadUrl);
-
-        const responseFormat = data.format || selectedFormat;
-        const backendFileName = data.fileName
-          || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
-        const backendFileSize = Number(data.fileSizeBytes) || 0;
-
-        // FIX 3 — Show backend warning immediately (format mismatch, codec issues, etc.)
-        if (data.warning) {
-          Toast.warning(data.warning);
-        }
-
-        // iOS-specific format warning (only if backend didn't already warn)
-        if (isIOS && data.isIOSCompatible === false && !data.warning) {
-          Toast.warning('This video may not play on iPhone. Try downloading instead.');
-        }
-        
-        const downloadedFileSize = await DownloadFlow.runHybrid(
-          downloadUrl,
-          playUrl,
-          backendFileName,
-          backendFileSize,
-          (progress) => {
-            if (!isIOS) {
-              updateMessage(`Downloading... ${progress}%`, 'loading');
-            }
-          },
-          state.abortController.signal
-        );
-
-        const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize > 0 ? backendFileSize : null;
-
-        // FIX 4 — Store both downloadUrl and viewUrl in history
-        DownloadsManager.add(
-          downloadUrl,
-          playUrl,
-          responseFormat,
-          backendFileName,
-          finalFileSize,
-          data.thumbnail,
-          data.duration
-        );
-        
+        await startDownload(link);
         if (downloadId !== state.currentDownloadId) return;
-        
-        if (CONFIG.IS_IOS) {
-          setMessage('Opened in Safari! Tap share button to save.', 'success');
-          Toast.success('Video opened in Safari');
-        } else {
-          setMessage('Download complete!', 'success');
-          Toast.success('Download complete!');
-        }
-        
-        TabManager.switch('downloads');
+        updateMessage('Download started. Tracking progress...', 'success');
         elements.linkInput.value = '';
         
       } catch (err) {
-        if (err.name === 'AbortError') return;
-        
         console.error('Download error:', err);
         let errorMsg = err.message || 'Download failed';
         
@@ -2858,10 +2922,7 @@
           throw err;
         }
       } finally {
-        if (downloadId === state.currentDownloadId) {
-          state.abortController = null;
-        }
-        resetUI(2000);
+        resetUI(0);
       }
     }
 
@@ -2916,7 +2977,6 @@
         }
       });
       
-      DownloadsManager.render();
     }
 
     if (document.readyState === 'loading') {
