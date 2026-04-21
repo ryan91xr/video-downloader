@@ -2715,7 +2715,7 @@
       state.abortController = new AbortController();
       
       try {
-        setMessage("Fetching video...","loading");
+        setMessage("Please wait...","loading");
         const response = await fetch(CONFIG.API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
