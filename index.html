@@ -2655,72 +2655,49 @@
       return 'unknown';
     }
 
-    function createDownloadCard(id) {
+    function createDownloadCard(id, url) {
       const container = elements.downloads;
       if (!container) return;
+
+      if (elements.emptyState) {
+        elements.emptyState.style.display = 'none';
+      }
 
       const card = document.createElement('div');
       card.className = 'download-card';
       card.id = `download-${id}`;
 
       card.innerHTML = `
-        <div class="card">
-          <img src="/default-thumbnail.jpg" class="thumb" alt="Video thumbnail"/>
-          <div class="info">
-            <h4 id="title-${id}">Fetching...</h4>
-            <p id="status-${id}">Starting...</p>
-            <div class="progress-bar">
-              <div id="bar-${id}" class="progress"></div>
-            </div>
-            <small id="meta-${id}">0 MB / 0 MB • 0 MB/s</small>
+        <div class="download-info">
+          <div class="download-filename">Preparing...</div>
+          <div class="progress-bar">
+            <div class="progress" id="progress-${id}" style="width:0%"></div>
+          </div>
+          <div class="download-meta" id="meta-${id}">
+            Starting...
           </div>
         </div>
       `;
-
-      if (elements.emptyState) {
-        elements.emptyState.style.display = 'none';
-      }
 
       container.prepend(card);
       elements.downloadsCount.textContent = `${container.children.length} item${container.children.length !== 1 ? 's' : ''}`;
       TabManager.switch('downloads');
     }
 
-    function addDownloadButton(id) {
+    function updateDownloadUI(id, data) {
+      const progressEl = document.getElementById(`progress-${id}`);
+      const metaEl = document.getElementById(`meta-${id}`);
       const card = document.getElementById(`download-${id}`);
-      if (!card || card.querySelector('.download-btn')) return;
 
-      const btn = document.createElement('a');
-      btn.href = `${CONFIG.API_BASE}/files/${id}`;
-      btn.innerText = 'Download';
-      btn.className = 'download-btn';
-      btn.rel = 'noopener noreferrer';
+      if (!progressEl || !metaEl || !card) return;
 
-      card.appendChild(btn);
-    }
-
-    function updateUI(id, data) {
-      const title = document.getElementById(`title-${id}`);
-      const status = document.getElementById(`status-${id}`);
-      const bar = document.getElementById(`bar-${id}`);
-      const meta = document.getElementById(`meta-${id}`);
-      const thumb = document.querySelector(`#download-${id} img`);
-
-      if (!title || !status || !bar || !meta) return;
-
-      title.innerText = data.title || 'Video';
-      status.innerText = data.status === 'downloading'
-        ? `Downloading... ${Math.round(data.progress || 0)}%`
-        : (data.status || 'starting');
-      bar.style.width = `${data.progress || 0}%`;
-      meta.innerText = `${data.downloaded || '0 MB'} / ${data.total || '0 MB'} • ${data.speed || '0 MB/s'}`;
-
-      if (data.thumbnail && thumb) {
-        thumb.src = data.thumbnail;
-      }
+      progressEl.style.width = `${data.progress || 0}%`;
+      metaEl.textContent = `${data.downloaded || '0 MB'} / ${data.total || '?'} • ${data.speed || '0 MB/s'}`;
 
       if (data.status === 'finished') {
-        addDownloadButton(id);
+        metaEl.innerHTML = `
+          Completed • <a href="${CONFIG.API_BASE}/file/${id}" target="_blank" class="download-btn">Download</a>
+        `;
       }
     }
 
@@ -2729,38 +2706,54 @@
         try {
           const res = await fetch(`${CONFIG.API_BASE}/progress/${id}`);
           const data = await res.json();
-          updateUI(id, data);
 
-          if (data.status === 'finished' || data.status === 'error') {
+          updateDownloadUI(id, data);
+
+          if (data.status === 'finished') {
             clearInterval(interval);
+            Toast.success('Download complete');
           }
-        } catch {
+
+          if (data.status === 'error') {
+            clearInterval(interval);
+            Toast.error('Download failed');
+          }
+        } catch (err) {
+          console.error('Progress error:', err);
           clearInterval(interval);
         }
       }, 1000);
     }
 
     async function startDownload(url) {
-      const settings = Storage.getSettings();
-      const res = await fetch(`${CONFIG.API_BASE}/download`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url,
-          format: selectedFormat,
-          quality: settings.quality
-        })
-      });
+      try {
+        setMessage('Starting download...', 'loading');
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.id) {
-        throw new Error(data.error || 'Failed to start download');
+        const res = await fetch(`${CONFIG.API_BASE}/download`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            url,
+            format: selectedFormat
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.id) {
+          throw new Error('Failed to start download');
+        }
+
+        createDownloadCard(data.id, url);
+        trackProgress(data.id);
+
+        setMessage('Download started', 'success');
+      } catch (err) {
+        console.error(err);
+        Toast.error('Download failed to start');
       }
-
-      createDownloadCard(data.id);
-      trackProgress(data.id);
     }
 
     // ==================== DOWNLOAD HANDLER ====================
@@ -2944,11 +2937,14 @@
       }
       
       elements.pasteBtn.addEventListener('click', pasteLink);
-      elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
       elements.linkInput.addEventListener('input', maybeAutoDownload);
-      elements.downloadForm.addEventListener('submit', (e) => {
+      elements.downloadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        handleDownloadWithRetry(0);
+
+        const url = elements.linkInput.value.trim();
+        if (!url) return Toast.error('Please enter a valid URL');
+
+        startDownload(url);
       });
       
       document.addEventListener('keydown', (e) => {
