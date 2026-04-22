@@ -2205,7 +2205,7 @@
         
         const isExternalThumb = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn');
         const extraAttrs = isExternalThumb ? 'referrerpolicy="no-referrer" crossorigin="anonymous"' : '';
-        const thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="lazy" ${extraAttrs} onerror="this.onerror=null; this.src='${defaultThumb}'">`;
+        const thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="eager" ${extraAttrs} onerror="this.onerror=null; this.src='${defaultThumb}'">`;
 
         const durationBadge = item.duration 
           ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
