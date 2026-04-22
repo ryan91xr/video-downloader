@@ -1,845 +1,2929 @@
-const express = require("express");
-const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
-const helmet = require("helmet");
-const { promisify } = require("util");
-const youtubedl = require("yt-dlp-exec");
-const { v4: uuidv4 } = require("uuid");
-const ffmpeg = require("fluent-ffmpeg");
-const ffmpegStatic = require("ffmpeg-static");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#0f2027">
+  <meta name="description" content="Download videos from TikTok, Instagram, YouTube, and Facebook">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>FlashVidz - Video Downloader</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  
+  <style>
+    /* ==================== CSS VARIABLES ==================== */
+    :root {
+      /* Colors */
+      --color-bg-primary: #0f2027;
+      --color-bg-secondary: #1c2b33;
+      --color-bg-tertiary: #2c5364;
+      --color-accent: #00d4aa;
+      --color-accent-dark: #00b894;
+      --color-accent-light: #7dffe2;
+      --color-text-primary: #ffffff;
+      --color-text-secondary: #b0b8c1;
+      --color-text-muted: #888888;
+      --color-error: #ff6464;
+      --color-error-bg: rgba(255, 100, 100, 0.2);
+      --color-success: #00d4aa;
+      --color-warning: #ffa726;
+      
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      
+      /* Border Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-full: 9999px;
+      
+      /* Shadows */
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 4px 15px rgba(0, 212, 170, 0.4);
+      
+      /* Z-Index Scale */
+      --z-base: 1;
+      --z-dropdown: 100;
+      --z-sticky: 200;
+      --z-modal: 300;
+      --z-toast: 400;
+      --z-menu: 500;
+      
+      /* Transitions */
+      --transition-fast: 150ms ease;
+      --transition-base: 250ms ease;
+      --transition-slow: 350ms ease;
+      
+      /* Layout */
+      --app-max-width: 420px;
+      --header-height: 72px;
+      --input-height: 56px;
+    }
 
-const app = express();
-app.set('trust proxy', 1);
-app.use(helmet());
-const statAsync = promisify(fs.stat);
-const unlinkAsync = promisify(fs.unlink);
-const readdirAsync = promisify(fs.readdir);
+    /* ==================== RESET & BASE ==================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-// SET FFMPEG PATH (from ffmpeg-static)
-if (ffmpegStatic) {
-  ffmpeg.setFfmpegPath(ffmpegStatic);
-  console.log("FFmpeg installed:", ffmpegStatic);
-} else {
-  console.warn("FFmpeg not found, falling back to yt-dlp only");
-}
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
 
-function isPublicHostname(hostname) {
-  if (!hostname) return false;
-  const host = hostname.toLowerCase();
-  if (host === "localhost" || host.endsWith(".local")) return false;
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
-    if (host.startsWith("10.") || host.startsWith("127.") || host.startsWith("192.168.")) return false;
-    const secondOctet = Number(host.split(".")[1] || 0);
-    if (host.startsWith("172.") && secondOctet >= 16 && secondOctet <= 31) return false;
-    if (host.startsWith("169.254.")) return false;
-  }
-  if (host === "::1" || host.startsWith("fe80:") || host.startsWith("fc") || host.startsWith("fd")) {
-    return false;
-  }
-  return true;
-}
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: linear-gradient(135deg, var(--color-bg-primary), var(--color-bg-secondary), var(--color-bg-tertiary));
+      background-attachment: fixed;
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--color-text-primary);
+      line-height: 1.5;
+    }
 
-function normalizeThumbnailUrl(rawUrl) {
-  if (!rawUrl || typeof rawUrl !== "string") return null;
-  const trimmed = rawUrl.trim();
-  const normalized = trimmed.startsWith("//") ? `https:${trimmed}` : trimmed;
-  try {
-    const parsed = new URL(normalized);
-    if (!["https:", "http:"].includes(parsed.protocol)) return null;
-    if (!isPublicHostname(parsed.hostname)) return null;
-    parsed.protocol = "https:";
-    return parsed.toString();
-  } catch {
-    return null;
-  }
-}
+    /* Focus Styles */
+    :focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
 
-async function fetchMediaMetadata(url, platform) {
-  try {
-    const output = await youtubedl(url, {
-      skipDownload: true,
-      dumpSingleJson: true,
-      noPlaylist: true,
-      quiet: true,
-      noWarnings: true
-    });
+    /* Screen Reader Only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
-    const metadata = typeof output === "string" ? JSON.parse(output) : output;
+    /* ==================== APP CONTAINER ==================== */
+    .app-container {
+      max-width: var(--app-max-width);
+      margin: 0 auto;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    const candidates = [
-      metadata?.thumbnail,
-      metadata?.thumbnails?.[metadata?.thumbnails?.length - 1]?.url,
-      ...(Array.isArray(metadata?.thumbnails) ? metadata.thumbnails.map(t => t?.url).reverse() : [])
-    ].filter(Boolean);
+    /* ==================== HEADER ==================== */
+    .app-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+      background: rgba(15, 32, 39, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      height: var(--header-height);
+    }
 
-    let thumbnail = null;
-    for (const thumbUrl of candidates) {
-      const normalized = normalizeThumbnailUrl(thumbUrl);
-      if (normalized) {
-        thumbnail = normalized;
-        break;
+    .hamburger-btn {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(10px);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-base);
+      color: var(--color-accent);
+      font-size: 20px;
+    }
+
+    .hamburger-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: scale(1.05);
+    }
+
+    .hamburger-btn:active {
+      transform: scale(0.95);
+    }
+
+    .app-title {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin: 0;
+      flex: 1;
+      text-align: center;
+    }
+
+    .app-title span {
+      color: var(--color-accent);
+    }
+
+    .pro-badge {
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+      color: #000;
+      font-size: 0.625rem;
+      font-weight: 700;
+      padding: var(--space-xs) 10px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==================== HAMBURGER MENU ==================== */
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: calc(var(--z-menu) - 1);
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-base);
+    }
+
+    .menu-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .hamburger-menu-container {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      height: 100dvh;
+      background: rgba(15, 32, 39, 0.98);
+      backdrop-filter: blur(20px);
+      z-index: var(--z-menu);
+      transition: left var(--transition-base);
+      padding: var(--space-lg);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+    }
+
+    .hamburger-menu-container.active {
+      left: 0;
+    }
+
+    .menu-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+
+    .menu-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .menu-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+    }
+
+    .menu-subtitle {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .close-menu-btn {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.06);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: #aaa;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .close-menu-btn:hover {
+      background: var(--color-error-bg);
+      color: var(--color-error);
+    }
+
+    .menu-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      min-height: 48px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: var(--color-text-secondary);
+      font-size: 0.875rem;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .menu-item:hover,
+    .menu-item:focus-visible {
+      background: rgba(0, 212, 170, 0.12);
+      color: var(--color-accent);
+    }
+
+    .menu-item:active {
+      transform: scale(0.98);
+    }
+
+    .menu-item.active {
+      background: rgba(0, 212, 170, 0.12);
+      color: var(--color-accent);
+    }
+
+    .menu-item .menu-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    /* ==================== TABS ==================== */
+    .tabs-container {
+      width: 100%;
+      max-width: 360px;
+      margin: var(--space-sm) auto var(--space-lg);
+      padding: 0 var(--space-lg);
+    }
+
+    .tabs-nav {
+      display: flex;
+      background: transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px var(--space-md);
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      position: relative;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tab-btn:hover {
+      color: var(--color-text-secondary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tab-btn[aria-selected="true"] {
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+
+    .tab-indicator {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 50%;
+      background: var(--color-accent);
+      transition: transform var(--transition-base);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .tab-indicator.downloads {
+      transform: translateX(100%);
+    }
+
+    /* ==================== TAB CONTENT ==================== */
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+      flex: 1;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn var(--transition-base);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== INPUT BAR ==================== */
+    .input-bar-container {
+      width: 100%;
+      position: relative;
+      z-index: var(--z-dropdown);
+    }
+
+    .input-bar {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-full);
+      padding: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow-md);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .input-bar:focus-within {
+      border-color: rgba(0, 212, 170, 0.4);
+      box-shadow: var(--shadow-md), 0 0 0 3px rgba(0, 212, 170, 0.1);
+    }
+
+    /* Format Selector */
+    .format-selector {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .format-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: 10px 14px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-accent);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .format-btn:hover {
+      background: rgba(0, 212, 170, 0.2);
+    }
+
+    .format-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .format-btn .arrow-icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.7;
+      transition: transform var(--transition-fast);
+    }
+
+    .format-btn[aria-expanded="true"] .arrow-icon {
+      transform: rotate(180deg);
+    }
+
+    .format-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      background: rgba(20, 40, 50, 0.98);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-lg);
+      padding: var(--space-sm);
+      min-width: 150px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all var(--transition-base);
+      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 212, 170, 0.3);
+      border: 1px solid rgba(0, 212, 170, 0.4);
+      z-index: calc(var(--z-dropdown) + 10);
+    }
+
+    .format-dropdown.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .format-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: var(--color-text-secondary);
+      font-size: 0.8125rem;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .format-option:hover,
+    .format-option:focus-visible {
+      background: rgba(0, 212, 170, 0.2);
+      color: var(--color-accent);
+    }
+
+    .format-option svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .format-option .check-icon {
+      margin-left: auto;
+      opacity: 0;
+      width: 14px;
+      height: 14px;
+    }
+
+    .format-option[aria-selected="true"] .check-icon {
+      opacity: 1;
+    }
+
+    /* Input Field */
+    .input-wrapper {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+
+    .input-bar input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--color-text-primary);
+      font-size: 0.9375rem;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .input-bar input::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    /* Paste Button */
+    .paste-btn-bar {
+      padding: 10px 14px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: transparent;
+      color: var(--color-accent);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .paste-btn-bar:hover {
+      background: rgba(0, 212, 170, 0.15);
+    }
+
+    .paste-btn-bar:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+      color: #000;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .submit-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .submit-btn.loading svg {
+      display: none;
+    }
+
+    .submit-btn.loading::after {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border: 2px solid transparent;
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==================== MESSAGE AREA ==================== */
+    .message-container {
+      width: 100%;
+      margin-top: var(--space-md);
+      text-align: center;
+      min-height: 24px;
+    }
+
+    #message {
+      font-size: 0.875rem;
+      margin: 0;
+      transition: color var(--transition-fast);
+    }
+
+    #message.error { color: var(--color-error); }
+    #message.success { color: var(--color-success); }
+    #message.loading { color: var(--color-text-secondary); }
+
+    /* ==================== TOAST NOTIFICATIONS ==================== */
+    .toast-container {
+      position: fixed;
+      top: calc(var(--header-height) + var(--space-md));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: var(--z-toast);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      width: calc(100% - var(--space-lg) * 2);
+      max-width: 360px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(30, 45, 55, 0.98);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-md);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      animation: toastSlideIn var(--transition-base);
+      pointer-events: auto;
+    }
+
+    .toast.hiding {
+      animation: toastSlideOut var(--transition-base) forwards;
+    }
+
+    @keyframes toastSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
       }
     }
 
-    return {
-      thumbnail,
-      duration: metadata?.duration_string || metadata?.duration || null
-    };
-  } catch (error) {
-    console.warn("Metadata fetch failed:", error.message);
-    return { thumbnail: null, duration: null };
-  }
-}
+    @keyframes toastSlideOut {
+      to {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+    }
 
-function formatFileSize(bytes) {
-  if (!Number.isFinite(bytes) || bytes < 0) return "0 B";
-  if (bytes < 1024) return `${bytes} B`;
-  const units = ["KB", "MB", "GB", "TB"];
-  let size = bytes / 1024;
-  let unitIndex = 0;
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
-  }
-  return `${size.toFixed(2)} ${units[unitIndex]}`;
-}
+    .toast-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
 
-// Check if video is already H.264 + AAC using ffprobe
-async function probeVideo(filePath) {
-  return new Promise((resolve) => {
-    ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) {
-        console.log("FFprobe failed:", err.message);
-        return resolve({ isH264: false, isAAC: false, needsConversion: true });
+    .toast-icon.success { color: var(--color-success); }
+    .toast-icon.error { color: var(--color-error); }
+    .toast-icon.info { color: var(--color-text-secondary); }
+    .toast-icon.warning { color: var(--color-warning); }
+
+    .toast-message {
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--color-text-primary);
+    }
+
+    .toast-close {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+
+    .toast-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-text-primary);
+    }
+
+    /* ==================== USER GUIDE ==================== */
+    .user-guide {
+      margin-top: var(--space-xl);
+      width: 100%;
+    }
+
+    .guide-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .guide-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: var(--space-md);
+      text-align: center;
+    }
+
+    .guide-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .guide-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.8125rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .guide-item:last-child {
+      border-bottom: none;
+    }
+
+    .guide-number {
+      width: 24px;
+      height: 24px;
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--color-accent);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .guide-text strong {
+      color: var(--color-text-primary);
+      font-weight: 600;
+    }
+
+    /* ==================== DOWNLOADS TAB ==================== */
+    .downloads-container {
+      padding: 0;
+    }
+
+    .downloads-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+
+    .downloads-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .downloads-count {
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+      background: rgba(255, 255, 255, 0.06);
+      padding: var(--space-xs) 12px;
+      border-radius: var(--radius-full);
+    }
+
+    .downloads-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      max-height: calc(100vh - 280px);
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .downloads-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .downloads-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .downloads-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius-full);
+    }
+
+    .download-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .download-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .download-card:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    .download-info-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .download-thumbnail-small {
+      width: 110px;
+      height: 80px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .download-thumbnail-small img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .download-thumbnail-small svg {
+      width: 24px;
+      height: 24px;
+      fill: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Better thumbnail fallback handling */
+    .download-thumbnail-small.has-thumbnail .thumbnail-fallback {
+      display: none;
+    }
+
+    .download-thumbnail-small:not(.has-thumbnail) .thumbnail-fallback {
+      display: block;
+    }
+
+    /* Loading state for thumbnails */
+    .download-thumbnail-small.loading {
+      background: linear-gradient(90deg, #1c2b33 25%, #2c5364 50%, #1c2b33 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .video-duration {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      font-size: 0.625rem;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+    }
+
+    .download-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      gap: var(--space-xs);
+    }
+
+    .download-filename {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--color-text-primary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .download-meta {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .meta-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .meta-size {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .download-meta svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
+    }
+
+    .menu-wrapper {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .menu-btn {
+      width: 36px;
+      height: 36px;
+      background: transparent;
+      border: none;
+      color: var(--color-text-muted);
+      font-size: 20px;
+      line-height: 1;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .menu-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--color-text-primary);
+    }
+
+    /* Dropdown Menu */
+    .menu-dropdown {
+      position: fixed;
+      background: rgba(30, 40, 50, 0.98);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-md);
+      padding: var(--space-xs) 0;
+      min-width: 140px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: var(--shadow-lg);
+      z-index: var(--z-dropdown);
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.95);
+      transition: all var(--transition-fast);
+    }
+
+    .menu-dropdown.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+    }
+
+    .menu-dropdown .menu-item {
+      width: 100%;
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      color: var(--color-text-primary);
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.8125rem;
+      transition: all var(--transition-fast);
+    }
+
+    .menu-dropdown .menu-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .menu-dropdown .menu-item.delete:hover {
+      background: var(--color-error-bg);
+      color: var(--color-error);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      color: var(--color-text-muted);
+      padding: 60px var(--space-lg);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(18px);
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      fill: rgba(255, 255, 255, 0.15);
+      margin-bottom: var(--space-md);
+    }
+
+    .empty-state h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin: 0 0 var(--space-xs) 0;
+    }
+
+    .empty-state p {
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    /* ==================== VIDEO MODAL ==================== */
+    .video-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: var(--z-modal);
+      padding: var(--space-lg);
+    }
+
+    .video-modal.active {
+      display: flex;
+      animation: modalFadeIn var(--transition-base);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .video-modal-content {
+      position: relative;
+      width: min(900px, 100%);
+      max-height: 90vh;
+      animation: modalContentIn var(--transition-base);
+    }
+
+    @keyframes modalContentIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .video-modal-player {
+      width: 100%;
+      max-width: 100%;
+      max-height: 80vh;
+      border-radius: var(--radius-md);
+      background: #000;
+      outline: none;
+    }
+
+    .video-modal-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .video-modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ==================== FOOTER ==================== */
+    .footer {
+      margin-top: auto;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      text-align: center;
+      padding: var(--space-lg) var(--space-md);
+    }
+
+    /* ==================== PLATFORM BADGES ==================== */
+    .platform-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--color-text-secondary);
+    }
+
+    .platform-badge.tiktok { background: rgba(0, 0, 0, 0.5); color: #fff; }
+    .platform-badge.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
+    .platform-badge.youtube { background: #ff0000; color: #fff; }
+    .platform-badge.facebook { background: #1877f2; color: #fff; }
+
+    /* ==================== LOADING SKELETON ==================== */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 480px) {
+      :root {
+        --space-lg: 16px;
+        --space-xl: 24px;
       }
 
-      const videoStream = metadata.streams.find(s => s.codec_type === 'video');
-      const audioStream = metadata.streams.find(s => s.codec_type === 'audio');
+      .app-header {
+        padding: var(--space-sm) var(--space-md);
+      }
 
-      const isH264 = videoStream?.codec_name === 'h264';
-      const isAAC = audioStream?.codec_name === 'aac' || audioStream?.codec_name === 'mp4a';
+      .tab-content,
+      .tabs-container {
+        padding-left: var(--space-md);
+        padding-right: var(--space-md);
+      }
 
-      console.log(`Video: ${videoStream?.codec_name || 'unknown'}, Audio: ${audioStream?.codec_name || 'unknown'}`);
+      .download-thumbnail-small {
+        width: 90px;
+        height: 65px;
+      }
+    }
 
-      resolve({
-        isH264,
-        isAAC,
-        needsConversion: !isH264 || !isAAC,
-        width: videoStream?.width,
-        height: videoStream?.height
+    @media (min-width: 768px) {
+      .app-container {
+        --app-max-width: 480px;
+      }
+    }
+
+    /* ==================== REDUCED MOTION ==================== */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ==================== HIGH CONTRAST ==================== */
+    @media (prefers-contrast: high) {
+      :root {
+        --color-accent: #00ffcc;
+        --color-text-primary: #ffffff;
+        --color-text-secondary: #cccccc;
+      }
+
+      .input-bar,
+      .download-card,
+      .guide-card {
+        border-width: 2px;
+      }
+    }
+    
+    /* ==================== RETRY BUTTON ==================== */
+    .retry-btn {
+      background: transparent;
+      border: 1px solid var(--color-accent);
+      color: var(--color-accent);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.75rem;
+      margin-left: var(--space-sm);
+      transition: all var(--transition-fast);
+    }
+    
+    .retry-btn:hover {
+      background: rgba(0, 212, 170, 0.15);
+    }
+
+    /* ==================== iOS SAFARI HINT ==================== */
+    .ios-hint {
+      background: rgba(0, 212, 170, 0.1);
+      border: 1px solid rgba(0, 212, 170, 0.3);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      margin-top: var(--space-md);
+      font-size: 0.8125rem;
+      color: var(--color-text-secondary);
+      display: none;
+    }
+
+    .ios-hint.visible {
+      display: block;
+    }
+
+    .ios-hint strong {
+      color: var(--color-accent);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-label="Notifications"></div>
+
+  <!-- Menu Overlay -->
+  <div class="menu-overlay" id="menuOverlay" aria-hidden="true"></div>
+
+  <!-- Hamburger Menu -->
+  <nav class="hamburger-menu-container" id="hamburgerMenu" aria-label="Main navigation" aria-hidden="true">
+    <div class="menu-header">
+      <div class="menu-title-group">
+        <span class="menu-title">Settings</span>
+        <span class="menu-subtitle">FlashVidz v1.0</span>
+      </div>
+      <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <ul class="menu-list" role="menubar">
+      <li>
+        <button class="menu-item" id="menuDownloads" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 4v10M8 10l4 4 4-4M5 19h14"/>
+          </svg>
+          <span>Downloads</span>
+        </button>
+      </li>
+      <li>
+        <button class="menu-item" id="menuShareApp" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="18" cy="5" r="2"/>
+            <circle cx="6" cy="12" r="2"/>
+            <circle cx="18" cy="19" r="2"/>
+            <path d="M8 12l8-6M8 12l8 6"/>
+          </svg>
+          <span>Share App</span>
+        </button>
+      </li>
+      <li>
+        <button class="menu-item" id="menuRateApp" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5-4.7-4.6 6.5-1z"/>
+          </svg>
+          <span>Rate App</span>
+        </button>
+      </li>
+      <li>
+        <button class="menu-item" id="menuHelp" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4M12 17h0"/>
+          </svg>
+          <span>Help</span>
+        </button>
+      </li>
+      <li>
+        <button class="menu-item" id="menuPrivacy" role="menuitem">
+          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6" y="11" width="12" height="9" rx="2"/>
+            <path d="M9 11V8a3 3 0 0 1 6 0v3"/>
+          </svg>
+          <span>Privacy</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="hamburgerMenu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+      </button>
+      <h1 class="app-title">Flash<span>Vidz</span></h1>
+      <span class="pro-badge">PRO</span>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+      <nav class="tabs-nav" role="tablist" aria-label="Main tabs">
+        <button class="tab-btn active" id="tabBtnEnterUrl" data-tab="enter-url" role="tab" aria-selected="true" aria-controls="tab-enter-url">
+          Enter URL
+        </button>
+        <button class="tab-btn" id="tabBtnDownloads" data-tab="downloads" role="tab" aria-selected="false" aria-controls="tab-downloads">
+          Downloads
+        </button>
+        <div class="tab-indicator" id="tabIndicator" aria-hidden="true"></div>
+      </nav>
+    </div>
+
+    <!-- Tab Content: Enter URL -->
+    <section class="tab-content active" id="tab-enter-url" role="tabpanel" aria-labelledby="tabBtnEnterUrl">
+      <!-- Input Bar -->
+      <div class="input-bar-container">
+        <form class="input-bar" id="downloadForm" onsubmit="return false;">
+          <!-- Format Selector -->
+          <div class="format-selector">
+            <button type="button" class="format-btn" id="formatBtn" aria-label="Select download format" aria-expanded="false" aria-haspopup="listbox">
+              <svg viewBox="0 0 24 24" id="formatIconVideo" aria-hidden="true">
+                <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+              </svg>
+              <svg viewBox="0 0 24 24" id="formatIconAudio" style="display:none" aria-hidden="true">
+                <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
+              </svg>
+              <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 10l5 5 5-5z"/>
+              </svg>
+            </button>
+            <div class="format-dropdown" id="formatDropdown" role="listbox" aria-label="Download format options">
+              <button type="button" class="format-option selected" data-format="video" id="optionVideo" role="option" aria-selected="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+                <span>Video (MP4)</span>
+                <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+              </button>
+              <button type="button" class="format-option" data-format="audio" id="optionAudio" role="option" aria-selected="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
+                </svg>
+                <span>Audio (M4A)</span>
+                <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Input Field -->
+          <div class="input-wrapper">
+            <label for="linkInput" class="sr-only">Video URL</label>
+            <input type="url" id="linkInput" placeholder="Paste link from TikTok, Instagram, YouTube..." 
+                   autocomplete="off" maxlength="2000" inputmode="url" aria-describedby="input-help">
+          </div>
+
+          <!-- Paste Button -->
+          <button type="button" class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">
+            Paste
+          </button>
+
+          <!-- Submit Button -->
+          <button type="submit" class="submit-btn" id="submitBtn" aria-label="Start download">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+            </svg>
+          </button>
+        </form>
+        <span id="input-help" class="sr-only">Supported platforms: TikTok, Instagram, YouTube, and Facebook</span>
+      </div>
+
+      <!-- Message -->
+      <div class="message-container">
+        <p id="message" role="status" aria-live="polite"></p>
+      </div>
+
+      <!-- iOS Safari Hint -->
+      <div class="ios-hint" id="iosHint">
+        <strong>iPhone/iPad:</strong> Videos open in Safari for playback. Tap the share button to save to Photos.
+      </div>
+
+      <!-- User Guide -->
+      <div class="user-guide">
+        <div class="guide-card">
+          <div class="guide-title">Quick Guide</div>
+          <ol class="guide-list">
+            <li class="guide-item">
+              <span class="guide-number" aria-hidden="true">1</span>
+              <span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span>
+            </li>
+            <li class="guide-item">
+              <span class="guide-number" aria-hidden="true">2</span>
+              <span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span>
+            </li>
+            <li class="guide-item">
+              <span class="guide-number" aria-hidden="true">3</span>
+              <span class="guide-text"><strong>Download</strong> — Press the arrow button and wait for processing to complete</span>
+            </li>
+            <li class="guide-item">
+              <span class="guide-number" aria-hidden="true">4</span>
+              <span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab Content: Downloads -->
+    <section class="tab-content" id="tab-downloads" role="tabpanel" aria-labelledby="tabBtnDownloads" hidden>
+      <div class="downloads-container">
+        <div class="downloads-header">
+          <h2 class="downloads-title">Downloads</h2>
+          <span class="downloads-count" id="downloadsCount">0 items</span>
+        </div>
+        <div class="downloads-list" id="downloadsList" role="list" aria-label="Downloaded videos">
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyState">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            <h3>No downloads yet</h3>
+            <p>Your downloaded videos will appear here</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal" aria-hidden="true" role="dialog" aria-label="Video preview" aria-modal="true">
+      <div class="video-modal-content" id="videoModalContent">
+        <button class="video-modal-close" id="videoModalClose" aria-label="Close video preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+        <video class="video-modal-player" id="videoModalPlayer" controls playsinline preload="auto" crossorigin="anonymous"></video>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+    </footer>
+  </div>
+
+  <!-- Global Download Menu -->
+  <div class="menu-dropdown global-download-menu" id="globalDownloadMenu" role="menu" aria-hidden="true"></div>
+
+  <script>
+    // ==================== CONFIGURATION ====================
+    const CONFIG = Object.freeze({
+      API_URL: window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/download' 
+        : 'https://flashvidz-backend.onrender.com/download',
+      MAX_FILE_SIZE: 500 * 1024 * 1024,
+      MAX_FILENAME_LENGTH: 180,
+      STORAGE_KEY: 'flashvidz_downloads',
+      DIRECT_DOWNLOAD_THRESHOLD: 50 * 1024 * 1024,
+      MAX_DOWNLOADS_HISTORY: 50,
+      TOAST_DURATION: 4000,
+      SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook'],
+      MAX_RETRIES: 3,
+      RETRY_DELAY: 2000,
+      // iOS detection for iPhone Safari optimization
+      IS_IOS: /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    });
+
+    // ==================== STATE MANAGEMENT ====================
+    let selectedFormat = 'video';
+
+    const state = {
+      abortController: null,
+      currentDownloadId: 0,
+      modalHistoryPushed: false,
+      closingFromPopState: false,
+      activeObjectUrls: new Set(),
+      activeDownloadMenuContext: null,
+      toastQueue: [],
+      isDownloading: false,
+      lastUrl: null,
+      lastFormat: null
+    };
+
+    // ==================== DOM ELEMENTS CACHE ====================
+    const elements = {};
+
+    function cacheElements() {
+      const ids = [
+        'toastContainer', 'menuOverlay', 'hamburgerMenu', 'closeMenuBtn',
+        'hamburgerBtn', 'tabIndicator', 'tabBtnEnterUrl', 'tabBtnDownloads',
+        'tab-enter-url', 'tab-downloads', 'formatBtn', 'formatDropdown',
+        'formatIconVideo', 'formatIconAudio', 'optionVideo', 'optionAudio',
+        'linkInput', 'pasteBtn', 'submitBtn', 'downloadForm', 'message',
+        'downloadsCount', 'downloadsList', 'emptyState', 'videoModal',
+        'videoModalContent', 'videoModalPlayer', 'videoModalClose',
+        'globalDownloadMenu', 'menuDownloads', 'menuShareApp', 'menuRateApp',
+        'menuHelp', 'menuPrivacy', 'iosHint'
+      ];
+      ids.forEach(id => {
+        elements[id] = document.getElementById(id);
       });
-    });
-  });
-}
+    }
 
-// Convert video to H.264 + AAC (Render-optimized: ultrafast preset, CRF 28)
-async function convertToH264(inputPath, outputPath) {
-  return new Promise((resolve, reject) => {
-    console.log("Starting FFmpeg conversion...");
-    const startTime = Date.now();
+    // ==================== SECURITY UTILITIES ====================
+    const SecurityUtils = {
+      escapeHtml(str) {
+        if (typeof str !== 'string') return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      },
 
-    const timeout = setTimeout(() => {
-      reject(new Error('FFmpeg conversion timeout (180s)'));
-    }, 180000);
-
-    ffmpeg(inputPath)
-      .outputOptions([
-        '-c:v libx264',
-        '-profile:v baseline',
-        '-level 3.0',
-        '-c:a aac',
-        '-b:a 128k',
-        '-movflags +faststart',
-        '-pix_fmt yuv420p',
-        '-preset ultrafast',
-        '-crf 28',
-        '-vf scale=720:-2',
-        '-max_muxing_queue_size 1024'
-      ])
-      .on('start', (cmd) => {
-        console.log('FFmpeg command:', cmd);
-      })
-      .on('progress', (progress) => {
-        if (progress.percent) {
-          console.log(`Converting: ${Math.round(progress.percent)}%`);
+      normalizeFileName(filename) {
+        if (typeof filename !== 'string') return 'flashvidz-download';
+        
+        let sanitized = filename
+          .replace(/[\\/:*?"<>|]/g, '_')
+          .replace(/[\x00-\x1f\x7f]/g, '')
+          .replace(/^\.+/, '')
+          .trim();
+        
+        if (sanitized.length > CONFIG.MAX_FILENAME_LENGTH) {
+          const ext = sanitized.lastIndexOf('.');
+          if (ext > 0 && ext > sanitized.length - 10) {
+            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH - (sanitized.length - ext)) + sanitized.slice(ext);
+          } else {
+            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH);
+          }
         }
-      })
-      .on('end', () => {
-        clearTimeout(timeout);
-        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`FFmpeg conversion complete in ${duration}s`);
-        resolve();
-      })
-      .on('error', (err) => {
-        clearTimeout(timeout);
-        console.error('FFmpeg error:', err.message);
-        reject(err);
-      })
-      .save(outputPath);
-  });
-}
+        
+        return sanitized || 'flashvidz-download';
+      },
 
-// ==================== CONFIG ====================
-const downloadsDir = path.join(__dirname, "downloads");
-if (!fs.existsSync(downloadsDir)) {
-  fs.mkdirSync(downloadsDir, { recursive: true });
-}
-
-const CONFIG = {
-  MAX_FILE_SIZE: 500 * 1024 * 1024,
-  DOWNLOAD_TIMEOUT: 300000,
-  CLEANUP_INTERVAL: 60000,
-  MAX_CONCURRENT_DOWNLOADS: 2,
-  ALLOWED_PLATFORMS: [
-    { name: "youtube", domains: ["youtube.com", "youtu.be"] },
-    { name: "tiktok", domains: ["tiktok.com"] },
-    { name: "instagram", domains: ["instagram.com"] },
-    { name: "facebook", domains: ["facebook.com", "fb.watch"] }
-  ],
-  COOKIES_PATH: path.join(__dirname, "cookies.txt"),
-  FILE_MAX_AGE: 24 * 60 * 60 * 1000,
-  FFMPEG_ENABLED: !!ffmpegStatic,
-  TIKTOK_FAST_PATH_MAX_MB: 50
-};
-
-let activeDownloads = 0;
-
-// ==================== FILE CLEANUP ====================
-async function cleanupOldFiles() {
-  try {
-    const files = await readdirAsync(downloadsDir);
-    const now = Date.now();
-    let cleaned = 0;
-    for (const file of files) {
-      const filePath = path.join(downloadsDir, file);
-      try {
-        const stats = await statAsync(filePath);
-        if (now - stats.mtime.getTime() > CONFIG.FILE_MAX_AGE) {
-          await unlinkAsync(filePath);
-          cleaned++;
-          console.log(`Cleaned up: ${file}`);
+      normalizeStoredUrl(value) {
+        const trimmed = typeof value === 'string' ? value.trim() : '';
+        if (!trimmed || trimmed.length > 2000) return null;
+        
+        try {
+          const parsed = new URL(trimmed);
+          if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+          
+          const hostname = parsed.hostname.toLowerCase();
+          if (hostname === 'localhost' || hostname.endsWith('.local')) return null;
+          if (/^127\./.test(hostname) || /^10\./.test(hostname) || /^192\.168\./.test(hostname)) return null;
+          if (hostname.startsWith('172.')) {
+            const secondOctet = parseInt(hostname.split('.')[1], 10);
+            if (secondOctet >= 16 && secondOctet <= 31) return null;
+          }
+          if (hostname.startsWith('169.254.')) return null;
+          if (hostname === '::1' || hostname.startsWith('fe80:') || hostname.startsWith('fc') || hostname.startsWith('fd')) return null;
+          
+          return trimmed;
+        } catch {
+          return null;
         }
-      } catch (err) {}
-    }
-    if (cleaned > 0) console.log(`Cleaned ${cleaned} files`);
-  } catch (error) {
-    console.error("Cleanup error:", error.message);
-  }
-}
+      },
 
-setInterval(cleanupOldFiles, CONFIG.CLEANUP_INTERVAL);
-cleanupOldFiles();
-
-// ==================== COOKIES ====================
-function hasCookies() {
-  if (!fs.existsSync(CONFIG.COOKIES_PATH)) return false;
-  try {
-    const stats = fs.statSync(CONFIG.COOKIES_PATH);
-    const mode = stats.mode;
-    if ((mode & 0o004) !== 0 || (mode & 0o002) !== 0) {
-      console.warn("cookies.txt is world-readable! Run: chmod 600 cookies.txt");
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// ==================== MIDDLEWARE ====================
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    const allowed = ['http://localhost:3000', 'http://localhost:5500', 'https://flashvidz.onrender.com', 'https://ryan91xr.github.io'];
-    if (allowed.includes(origin) || origin.includes('localhost')) {
-      callback(null, true);
-    } else {
-      console.log("Blocked:", origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
-
-app.use(express.json({ limit: '10kb' }));
-
-// ==================== RATE LIMITING ====================
-const requestCounts = new Map();
-
-// Cleanup old IPs every 60s to prevent memory leak
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, requests] of requestCounts.entries()) {
-    const recent = requests.filter(t => now - t < 60000);
-    if (recent.length === 0) {
-      requestCounts.delete(ip);
-    } else {
-      requestCounts.set(ip, recent);
-    }
-  }
-}, 60000);
-
-app.use((req, res, next) => {
-  const ip = req.ip || 'unknown';
-  const now = Date.now();
-  const windowStart = now - 60 * 1000;
-  const requests = requestCounts.get(ip) || [];
-  const recent = requests.filter(t => t > windowStart);
-  if (recent.length >= 30) {
-    const retryAfter = Math.ceil((recent[0] + 60000 - now) / 1000);
-    return res.status(429).json({
-      success: false,
-      error: `Too many requests. Try again in ${retryAfter}s`,
-      retryAfter
-    });
-  }
-  recent.push(now);
-  requestCounts.set(ip, recent);
-  next();
-});
-
-const downloadLimiter = (req, res, next) => {
-  if (activeDownloads >= CONFIG.MAX_CONCURRENT_DOWNLOADS) {
-    return res.status(503).json({ success: false, error: "Server busy" });
-  }
-  next();
-};
-
-// ==================== VALIDATION ====================
-function validateUrl(url) {
-  try {
-    const parsed = new URL(url);
-    const hostname = parsed.hostname.toLowerCase().replace(/^www\./, "");
-    const platform = CONFIG.ALLOWED_PLATFORMS.find(p =>
-      p.domains.some(d => hostname === d || hostname.endsWith("." + d))
-    );
-    if (!platform) return { valid: false, error: "Unsupported platform" };
-    if (!["http:", "https:"].includes(parsed.protocol)) {
-      return { valid: false, error: "Invalid protocol" };
-    }
-    return { valid: true, platform: platform.name };
-  } catch {
-    return { valid: false, error: "Invalid URL format" };
-  }
-}
-
-// Default thumbnail endpoint
-app.get("/default-thumbnail.jpg", (req, res) => {
-  const svgPlaceholder = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
-      <rect width="320" height="180" fill="#1c2b33"/>
-      <circle cx="160" cy="90" r="30" fill="#00d4aa" opacity="0.8"/>
-      <polygon points="150,75 150,105 175,90" fill="#0f2027"/>
-      <text x="160" y="140" text-anchor="middle" fill="#00d4aa" font-size="14" font-family="sans-serif">FlashVidz</text>
-    </svg>
-  `;
-
-  res.set('Content-Type', 'image/svg+xml');
-  res.set('Cache-Control', 'public, max-age=86400');
-  res.send(svgPlaceholder);
-});
-
-// ==================== CUSTOM FILE ROUTES (BEFORE STATIC) ====================
-app.get("/files/:fileName/download", (req, res) => {
-  res.redirect(301, `/files/${req.params.fileName}?download=1`);
-});
-
-app.get("/files/:fileName", (req, res) => {
-  const safeFileName = path.basename(req.params.fileName);
-  const targetPath = path.join(downloadsDir, safeFileName);
-
-  if (!fs.existsSync(targetPath)) {
-    return res.status(404).json({ success: false, error: "File not found" });
-  }
-
-  const ext = path.extname(safeFileName).toLowerCase();
-  const userAgent = req.headers['user-agent'] || '';
-  const isIOS = /iPhone|iPad|iPod/.test(userAgent);
-  const isSafari = /Safari/.test(userAgent) && !/CriOS/.test(userAgent);
-  const wantsDownload = req.query.download === '1';
-  const wantsView = req.query.view === '1';
-  const shouldInline = wantsView || ((isIOS || isSafari) && !wantsDownload);
-
-  const mimeTypes = {
-    '.m4a': 'audio/mp4',
-    '.mp4': 'video/mp4',
-    '.mp3': 'audio/mpeg',
-    '.mov': 'video/quicktime',
-    '.webm': 'video/webm',
-    '.mkv': 'video/x-matroska',
-    '.opus': 'audio/opus',
-    '.ogg': 'audio/ogg',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.webp': 'image/webp'
-  };
-
-  res.set('Content-Type', mimeTypes[ext] || 'application/octet-stream');
-
-  if (shouldInline) {
-    res.set('Content-Disposition', 'inline');
-    res.set('Accept-Ranges', 'bytes');
-    if (isIOS) res.set('X-Content-Type-Options', 'nosniff');
-    res.sendFile(path.resolve(targetPath));
-  } else {
-    res.set('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(safeFileName)}`);
-    res.sendFile(path.resolve(targetPath));
-  }
-});
-
-// Static fallback (AFTER custom routes)
-app.use("/files", express.static(downloadsDir, {
-  setHeaders: (res, filePath) => {
-    res.set('X-Content-Type-Options', 'nosniff');
-    const ext = path.extname(filePath).toLowerCase();
-    const mimeTypes = {
-      '.m4a': 'audio/mp4', '.mp4': 'video/mp4', '.mp3': 'audio/mpeg',
-      '.mov': 'video/quicktime', '.webm': 'video/webm',
-      '.mkv': 'video/x-matroska', '.opus': 'audio/opus', '.ogg': 'audio/ogg',
-      '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp'
-    };
-    if (mimeTypes[ext]) res.set('Content-Type', mimeTypes[ext]);
-  },
-  index: false,
-  dotfiles: 'deny',
-  fallthrough: true
-}));
-
-// ==================== DOWNLOAD ENDPOINT WITH FFMPEG ====================
-app.post("/download", downloadLimiter, async (req, res) => {
-  const url = req.body?.url?.trim();
-  const format = req.body?.format?.toLowerCase() || "video";
-
-  if (!url) return res.status(400).json({ success: false, error: "No URL provided" });
-  if (url.length > 2000) return res.status(400).json({ success: false, error: "URL too long" });
-  if (!["video", "audio"].includes(format)) {
-    return res.status(400).json({ success: false, error: "Invalid format" });
-  }
-
-  const validation = validateUrl(url);
-  if (!validation.valid) return res.status(400).json({ success: false, error: validation.error });
-
-  const { platform } = validation;
-  console.log(`\n[${platform}] [${format}] ${url}`);
-
-  const downloadId = uuidv4();
-  const safeTitle = `fv_${downloadId}`;
-  const fileNameTemplate = `${safeTitle}.%(ext)s`;
-  const filePathTemplate = path.join(downloadsDir, fileNameTemplate);
-
-  activeDownloads++;
-  let downloadCompleted = false;
-  let processRef = null;
-  let timeoutId = null;
-
-  const cleanup = async () => {
-    if (processRef) {
-      try { processRef.kill("SIGKILL"); } catch (e) {}
-      processRef = null;
-    }
-    if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-    try {
-      const files = await readdirAsync(downloadsDir);
-      for (const file of files) {
-        if (file.startsWith(safeTitle)) {
-          await unlinkAsync(path.join(downloadsDir, file)).catch(() => {});
-          console.log(`Cleaned up: ${file}`);
-        }
+      isValidHttpUrl(value) {
+        return this.normalizeStoredUrl(value) !== null;
       }
-    } catch (err) {}
-  };
-
-  const decrementActiveDownloads = () => {
-    activeDownloads = Math.max(0, activeDownloads - 1);
-  };
-
-  timeoutId = setTimeout(async () => {
-    if (!downloadCompleted) {
-      await cleanup();
-      decrementActiveDownloads();
-      if (!res.headersSent) res.status(504).json({ success: false, error: "Download timeout" });
-    }
-  }, CONFIG.DOWNLOAD_TIMEOUT);
-
-  try {
-    const options = {
-      output: filePathTemplate,
-      noPlaylist: true,
-      retries: 3,
-      fragmentRetries: 10,
-      writeThumbnail: true,
-      addHeader: [
-        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language: en-US,en;q=0.9",
-        "Referer: https://www.tiktok.com/",
-      ],
     };
 
-    if (format === "audio") {
-      options.format = "bestaudio[ext=m4a][acodec^=mp4a]/bestaudio[ext=m4a]/bestaudio/b";
-    } else {
-      options.format = "best[ext=mp4]/best[ext=webm]/best[ext=mov]/best";
-    }
+    // ==================== TOAST NOTIFICATION SYSTEM ====================
+    const Toast = {
+      icons: {
+        success: '<svg class="toast-icon success" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+        error: '<svg class="toast-icon error" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+        info: '<svg class="toast-icon info" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+        warning: '<svg class="toast-icon warning" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>'
+      },
 
-    if (hasCookies()) {
-      options.cookies = CONFIG.COOKIES_PATH;
-      console.log(`Using cookies for ${platform}`);
-    }
-
-    const metadataPromise = fetchMediaMetadata(url, platform);
-
-    console.log("Starting download...");
-
-    try {
-      processRef = youtubedl.exec(url, options);
-      await processRef;
-      console.log("Download completed");
-    } catch (execError) {
-      console.error("yt-dlp failed:", execError.message);
-      throw execError;
-    }
-
-    processRef = null;
-    clearTimeout(timeoutId);
-    timeoutId = null;
-    downloadCompleted = true;
-
-    let actualFilePath = null;
-    let actualExt = null;
-
-    const files = await readdirAsync(downloadsDir);
-
-    const matchingFiles = files.filter(f => {
-      if (!f.startsWith(safeTitle)) return false;
-      if (f.endsWith('.part') || f.endsWith('.ytdl')) return false;
-      if (f.match(/\.(jpg|jpeg|webp|png|gif|json|txt|description|info)$/i)) return false;
-      if (!f.match(/\.(mp4|m4a|mp3|webm|mkv|mov|opus|ogg|wav|flac|m4v|aac)$/i)) return false;
-      return true;
-    });
-
-    if (matchingFiles.length === 0) {
-      const partFiles = files.filter(f => f.startsWith(safeTitle) && f.endsWith('.part'));
-      if (partFiles.length > 0) {
-        throw new Error("Download incomplete - partial file detected. Try again.");
-      }
-      throw new Error("Download completed but no media file was created");
-    }
-
-    if (matchingFiles.length > 1) {
-      console.log(`Multiple files found: ${matchingFiles.join(', ')}`);
-    }
-
-    const fileStats = await Promise.all(
-      matchingFiles.map(async (f) => {
-        const stat = await statAsync(path.join(downloadsDir, f));
-        return {
-          name: f,
-          mtime: stat.mtime,
-          ctime: stat.ctime,
-          size: stat.size
+      show(message, type = 'info', duration = CONFIG.TOAST_DURATION) {
+        const container = elements.toastContainer;
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'polite');
+        
+        toast.innerHTML = `
+          ${this.icons[type] || this.icons.info}
+          <span class="toast-message">${SecurityUtils.escapeHtml(message)}</span>
+          <button class="toast-close" aria-label="Dismiss notification">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        `;
+        
+        const closeBtn = toast.querySelector('.toast-close');
+        const closeToast = () => {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 300);
         };
-      })
-    );
-
-    fileStats.sort((a, b) => {
-      const timeDiff = b.ctime.getTime() - a.ctime.getTime();
-      if (timeDiff !== 0) return timeDiff;
-      return b.mtime.getTime() - a.mtime.getTime();
-    });
-
-    actualFilePath = path.join(downloadsDir, fileStats[0].name);
-    actualExt = path.extname(fileStats[0].name).slice(1) || "unknown";
-
-    console.log(`File: ${path.basename(actualFilePath)} (${actualExt})`);
-    console.log(`Size: ${fileStats[0].size} bytes`);
-
-    if (actualFilePath.endsWith('.part')) {
-      throw new Error("Downloaded file is incomplete (.part extension detected)");
-    }
-
-    const stats = await statAsync(actualFilePath);
-
-    if (stats.size > CONFIG.MAX_FILE_SIZE) {
-      await unlinkAsync(actualFilePath);
-      decrementActiveDownloads();
-      return res.status(413).json({ success: false, error: "File too large" });
-    }
-
-    if (stats.size === 0) {
-      await unlinkAsync(actualFilePath);
-      throw new Error("Downloaded file is empty");
-    }
-
-    if (stats.size < 10240) {
-      await unlinkAsync(actualFilePath);
-      throw new Error("Downloaded file is too small (likely corrupted)");
-    }
-
-    // FFMPEG CONVERSION LOGIC — OPTIMIZED PIPELINE
-    let finalFilePath = actualFilePath;
-    let isConverted = false;
-
-    if (format === "video" && CONFIG.FFMPEG_ENABLED) {
-      if (platform === "tiktok") {
-        // TIKTOK: unified handling — runs exactly once
-        if (actualExt === "mp4") {
-          const fileSizeMB = stats.size / (1024 * 1024);
-          const isSuspicious = fileSizeMB < 2 || fileSizeMB > CONFIG.TIKTOK_FAST_PATH_MAX_MB;
-
-          if (isSuspicious) {
-            // SUSPICIOUS: too small (likely broken) or too large (possible HEVC/AV1)
-            const reason = fileSizeMB < 2 ? "too small, may be broken" : "may contain HEVC/AV1";
-            console.log(`Suspicious TikTok MP4 (${fileSizeMB.toFixed(1)}MB) — ${reason} — verifying codecs`);
-            const probe = await probeVideo(actualFilePath);
-
-            if (!probe.isH264 || !probe.isAAC) {
-              console.log("Incompatible codec detected — converting to H.264 + AAC");
-              const convertedPath = actualFilePath.replace(/\.[^.]+$/, '_h264.mp4');
-
-              try {
-                await convertToH264(actualFilePath, convertedPath);
-
-                if (fs.existsSync(convertedPath) && fs.statSync(convertedPath).size > 0) {
-                  fs.unlinkSync(actualFilePath);
-                  finalFilePath = convertedPath;
-                  actualExt = 'mp4';
-                  isConverted = true;
-                  console.log("Conversion completed successfully");
-                }
-              } catch (err) {
-                console.log("Conversion failed, using original TikTok file");
-              }
-            } else {
-              console.log(`TikTok MP4 verified H.264 + AAC — no conversion needed`);
-            }
-          } else {
-            // FAST PATH: normal-sized TikTok MP4 — quick probe for small files, skip for large
-            if (fileSizeMB < 10) {
-              console.log(`Fast path: Small TikTok MP4 (${fileSizeMB.toFixed(1)}MB) — verifying codecs`);
-              const probe = await probeVideo(actualFilePath);
-              if (!probe.isH264 || !probe.isAAC) {
-                console.log("Incompatible codec detected — converting to H.264 + AAC");
-                const convertedPath = actualFilePath.replace(/\.[^.]+$/, '_h264.mp4');
-                try {
-                  await convertToH264(actualFilePath, convertedPath);
-                  if (fs.existsSync(convertedPath) && fs.statSync(convertedPath).size > 0) {
-                    fs.unlinkSync(actualFilePath);
-                    finalFilePath = convertedPath;
-                    actualExt = 'mp4';
-                    isConverted = true;
-                    console.log("Conversion completed successfully");
-                  }
-                } catch (err) {
-                  console.log("Conversion failed, using original TikTok file");
-                }
-              } else {
-                console.log(`TikTok MP4 verified H.264 + AAC — no conversion needed`);
-              }
-            } else {
-              console.log(`Fast path: TikTok MP4 (${fileSizeMB.toFixed(1)}MB) — assumed compatible`);
-            }
-          }
-        } else {
-          // TikTok non-MP4 (webm, mov, etc.) — always probe
-          console.log(`Checking TikTok ${actualExt} file for codec compatibility...`);
-          const probe = await probeVideo(actualFilePath);
-
-          if (!probe.isH264 || !probe.isAAC) {
-            console.log("TikTok file has incompatible codec — converting to H.264 + AAC");
-            const convertedPath = actualFilePath.replace(/\.[^.]+$/, '_h264.mp4');
-
-            try {
-              await convertToH264(actualFilePath, convertedPath);
-
-              if (fs.existsSync(convertedPath) && fs.statSync(convertedPath).size > 0) {
-                fs.unlinkSync(actualFilePath);
-                finalFilePath = convertedPath;
-                actualExt = 'mp4';
-                isConverted = true;
-              }
-            } catch (err) {
-              console.log("Conversion failed, using original TikTok file");
-            }
-          } else if (actualExt !== 'mp4') {
-            console.log("Compatible codecs — renaming to .mp4");
-            const mp4Path = actualFilePath.replace(/\.[^.]+$/, '.mp4');
-            fs.renameSync(actualFilePath, mp4Path);
-            finalFilePath = mp4Path;
-            actualExt = 'mp4';
-          } else {
-            console.log("Already H.264 + AAC MP4 — no conversion needed");
-          }
+        
+        closeBtn.addEventListener('click', closeToast);
+        container.appendChild(toast);
+        
+        if (duration > 0) {
+          setTimeout(closeToast, duration);
         }
-      } else {
-        // OTHER PLATFORMS: always probe for codec compatibility
-        console.log("Checking if conversion is needed...");
-        const probe = await probeVideo(actualFilePath);
+        
+        return toast;
+      },
 
-        if (probe.needsConversion) {
-          const convertedPath = actualFilePath.replace(/\.[^.]+$/, '_h264.mp4');
-          console.log(`Converting: ${actualExt} -> MP4 (H.264 + AAC)`);
+      success(message) { return this.show(message, 'success'); },
+      error(message) { return this.show(message, 'error'); },
+      info(message) { return this.show(message, 'info'); },
+      warning(message, duration = 6000) { return this.show(message, 'warning', duration); }
+    };
 
+    // ==================== LOCAL STORAGE ====================
+    const Storage = {
+      loadDownloads() {
+        try {
+          const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
+          return stored ? JSON.parse(stored) : [];
+        } catch {
+          localStorage.removeItem(CONFIG.STORAGE_KEY);
+          return [];
+        }
+      },
+
+      saveDownloads(downloads) {
+        try {
+          localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(downloads));
+        } catch (e) {
+          console.error('Failed to save downloads:', e);
+          Toast.error('Failed to save download history');
+        }
+      },
+
+      getSettings() {
+        const defaults = { format: 'video', quality: 'best', autoDownload: false };
+        try {
+          const stored = localStorage.getItem('flashvidz_settings');
+          if (!stored) return defaults;
+          const parsed = JSON.parse(stored);
+          return {
+            format: parsed.format === 'audio' ? 'audio' : 'video',
+            quality: ['best', 'medium', 'low'].includes(parsed.quality) ? parsed.quality : 'best',
+            autoDownload: parsed.autoDownload === true
+          };
+        } catch {
+          return defaults;
+        }
+      },
+
+      saveSettings(settings) {
+        try {
+          localStorage.setItem('flashvidz_settings', JSON.stringify(settings));
+        } catch (e) {
+          console.error('Failed to save settings:', e);
+        }
+      }
+    };
+
+    // ==================== FORMAT SELECTOR ====================
+    const FormatSelector = {
+      init() {
+        elements.formatBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggle();
+        });
+        
+        elements.optionVideo.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.select('video');
+        });
+        
+        elements.optionAudio.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.select('audio');
+        });
+        
+        document.addEventListener('click', (e) => {
+          if (!elements.formatBtn.contains(e.target) && !elements.formatDropdown.contains(e.target)) {
+            this.close();
+          }
+        });
+      },
+
+      toggle() {
+        const isOpen = elements.formatDropdown.classList.contains('active');
+        if (isOpen) {
+          this.close();
+        } else {
+          this.open();
+        }
+      },
+
+      open() {
+        elements.formatDropdown.classList.add('active');
+        elements.formatBtn.setAttribute('aria-expanded', 'true');
+      },
+
+      close() {
+        elements.formatDropdown.classList.remove('active');
+        elements.formatBtn.setAttribute('aria-expanded', 'false');
+      },
+
+      select(format) {
+        selectedFormat = format === 'audio' ? 'audio' : 'video';
+        const settings = Storage.getSettings();
+        Storage.saveSettings({ ...settings, format: selectedFormat });
+        
+        if (selectedFormat === 'video') {
+          elements.formatIconVideo.style.display = 'block';
+          elements.formatIconAudio.style.display = 'none';
+          elements.optionVideo.setAttribute('aria-selected', 'true');
+          elements.optionAudio.setAttribute('aria-selected', 'false');
+          elements.optionVideo.classList.add('selected');
+          elements.optionAudio.classList.remove('selected');
+        } else {
+          elements.formatIconVideo.style.display = 'none';
+          elements.formatIconAudio.style.display = 'block';
+          elements.optionVideo.setAttribute('aria-selected', 'false');
+          elements.optionAudio.setAttribute('aria-selected', 'true');
+          elements.optionAudio.classList.add('selected');
+          elements.optionVideo.classList.remove('selected');
+        }
+        
+        this.close();
+      }
+    };
+
+    // ==================== HAMBURGER MENU ====================
+    const HamburgerMenu = {
+      init() {
+        elements.hamburgerBtn.addEventListener('click', () => this.open());
+        elements.closeMenuBtn.addEventListener('click', () => this.close());
+        elements.menuOverlay.addEventListener('click', () => this.close());
+        
+        elements.menuDownloads.addEventListener('click', () => {
+          this.close();
+          TabManager.switch('downloads');
+        });
+        
+        elements.menuShareApp.addEventListener('click', () => {
+          this.close();
+          this.shareApp();
+        });
+        
+        elements.menuRateApp.addEventListener('click', () => {
+          this.close();
+          Toast.info('Rate App - Feature coming soon');
+        });
+        
+        elements.menuHelp.addEventListener('click', () => {
+          this.close();
+          Toast.info('Help & Support\nContact: support@flashvidz.com', 'info', 6000);
+        });
+        
+        elements.menuPrivacy.addEventListener('click', () => {
+          this.close();
+          Toast.info('Privacy - Feature coming soon');
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) {
+            this.close();
+          }
+        });
+      },
+
+      open() {
+        elements.hamburgerMenu.classList.add('active');
+        elements.menuOverlay.classList.add('active');
+        elements.hamburgerMenu.setAttribute('aria-hidden', 'false');
+        elements.hamburgerBtn.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+        elements.closeMenuBtn.focus();
+      },
+
+      close() {
+        elements.hamburgerMenu.classList.remove('active');
+        elements.menuOverlay.classList.remove('active');
+        elements.hamburgerMenu.setAttribute('aria-hidden', 'true');
+        elements.hamburgerBtn.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        elements.hamburgerBtn.focus();
+      },
+
+      async shareApp() {
+        const shareData = {
+          title: 'FlashVidz',
+          text: 'Download videos from TikTok, Instagram, YouTube, and Facebook',
+          url: window.location.href
+        };
+        
+        if (navigator.share) {
           try {
-            await convertToH264(actualFilePath, convertedPath);
-
-            if (fs.existsSync(convertedPath) && fs.statSync(convertedPath).size > 0) {
-              fs.unlinkSync(actualFilePath);
-              finalFilePath = convertedPath;
-              actualExt = 'mp4';
-              isConverted = true;
-              console.log("Using converted H.264 file");
-            } else {
-              throw new Error("Conversion produced empty file");
+            await navigator.share(shareData);
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              this.copyToClipboard(window.location.href);
             }
-          } catch (convErr) {
-            console.error("FFmpeg conversion failed:", convErr.message);
-            console.log("Falling back to original file");
           }
-        } else if (actualExt !== 'mp4') {
-          console.log("Already compatible — renaming to .mp4");
-          const mp4Path = actualFilePath.replace(/\.[^.]+$/, '.mp4');
-          fs.renameSync(actualFilePath, mp4Path);
-          finalFilePath = mp4Path;
-          actualExt = 'mp4';
         } else {
-          console.log("Already H.264 + AAC MP4 — no conversion needed");
+          this.copyToClipboard(window.location.href);
+        }
+      },
+
+      async copyToClipboard(text) {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'absolute';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+          }
+          Toast.success('Link copied to clipboard');
+        } catch {
+          Toast.error('Failed to copy link');
         }
       }
+    };
+
+    // ==================== TAB MANAGER ====================
+    const TabManager = {
+      init() {
+        elements.tabBtnEnterUrl.addEventListener('click', () => this.switch('enter-url'));
+        elements.tabBtnDownloads.addEventListener('click', () => this.switch('downloads'));
+      },
+
+      switch(tabId) {
+        setMessage('', '');
+        
+        const isDownloads = tabId === 'downloads';
+        elements.tabBtnEnterUrl.setAttribute('aria-selected', !isDownloads);
+        elements.tabBtnDownloads.setAttribute('aria-selected', isDownloads);
+        elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads);
+        elements.tabBtnDownloads.classList.toggle('active', isDownloads);
+        
+        elements.tabIndicator.classList.toggle('downloads', isDownloads);
+        
+        elements['tab-enter-url'].classList.toggle('active', !isDownloads);
+        elements['tab-enter-url'].hidden = isDownloads;
+        elements['tab-downloads'].classList.toggle('active', isDownloads);
+        elements['tab-downloads'].hidden = !isDownloads;
+        
+        if (isDownloads) {
+          DownloadsManager.render();
+        }
+      }
+    };
+
+    // ==================== MESSAGE SYSTEM ====================
+    function setMessage(text, type = '') {
+      const msg = elements.message;
+      msg.textContent = text;
+      msg.className = type;
     }
 
-    const finalStats = fs.statSync(finalFilePath);
-    console.log(`Final: ${(finalStats.size / 1024 / 1024).toFixed(2)}MB`);
+    // ==================== DOWNLOADS MANAGER ====================
+    const DownloadsManager = {
+      DOWNLOAD_MENU_ACTIONS: [
+        { action: 'download', label: 'Save', className: 'save' },
+        { action: 'share', label: 'Share', className: 'share' },
+        { action: 'remove', label: 'Delete', className: 'delete' }
+      ],
 
-    const publicFileName = path.basename(finalFilePath);
-    const forwardedProto = req.get("x-forwarded-proto");
-    const protocol = forwardedProto ? forwardedProto.split(",")[0].trim() : req.protocol;
-    const baseUrl = `${protocol}://${req.get("host")}`;
+      init() {
+        this.populateMenu();
+        
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.menu-wrapper') && !e.target.closest('#globalDownloadMenu')) {
+            this.hideMenu();
+          }
+        });
 
-    const fileUrl = `${baseUrl}/files/${encodeURIComponent(publicFileName)}`;
-    const viewUrl = `${fileUrl}?view=1`;
-    const downloadUrl = `${fileUrl}?download=1`;
+        elements.downloadsList?.addEventListener('scroll', () => {
+          clearTimeout(this.scrollTimeout);
+          this.scrollTimeout = setTimeout(() => this.hideMenu(), 100);
+        });
 
-    const mediaMetadata = await metadataPromise;
+        elements.globalDownloadMenu.addEventListener('click', (e) => this.handleMenuAction(e));
+      },
 
-    // Thumbnail detection
-    let thumbnail = null;
-    const thumbExts = ["jpg", "webp", "png"];
-    for (const ext of thumbExts) {
-      const thumbName = `${safeTitle}.${ext}`;
-      const thumbPath = path.join(downloadsDir, thumbName);
-      if (fs.existsSync(thumbPath)) {
-        thumbnail = `${baseUrl}/files/${encodeURIComponent(thumbName)}`;
-        console.log(`Found local thumbnail: ${thumbName}`);
-        break;
+      populateMenu() {
+        elements.globalDownloadMenu.innerHTML = this.DOWNLOAD_MENU_ACTIONS.map(({ action, label, className }) => 
+          `<button class="menu-item ${SecurityUtils.escapeHtml(className)}" data-action="${SecurityUtils.escapeHtml(action)}" role="menuitem">${SecurityUtils.escapeHtml(label)}</button>`
+        ).join('');
+      },
+
+      hideMenu() {
+        elements.globalDownloadMenu.classList.remove('active');
+        elements.globalDownloadMenu.setAttribute('aria-hidden', 'true');
+        state.activeDownloadMenuContext = null;
+      },
+
+      showMenu(anchorBtn, context) {
+        state.activeDownloadMenuContext = context;
+        elements.globalDownloadMenu.classList.add('active');
+        elements.globalDownloadMenu.setAttribute('aria-hidden', 'false');
+        
+        requestAnimationFrame(() => {
+          const rect = anchorBtn.getBoundingClientRect();
+          const menuWidth = elements.globalDownloadMenu.offsetWidth;
+          const menuHeight = elements.globalDownloadMenu.offsetHeight;
+          const viewportPadding = 8;
+          const gap = 6;
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          
+          let top = rect.bottom + gap;
+          let left = rect.right - menuWidth;
+          
+          if (left < viewportPadding) left = viewportPadding;
+          if (left > viewportWidth - menuWidth - viewportPadding) {
+            left = viewportWidth - menuWidth - viewportPadding;
+          }
+          
+          if (top + menuHeight > viewportHeight - viewportPadding) {
+            top = rect.top - menuHeight - gap;
+          }
+          if (top < viewportPadding) top = viewportPadding;
+          
+          elements.globalDownloadMenu.style.top = `${top}px`;
+          elements.globalDownloadMenu.style.left = `${left}px`;
+        });
+      },
+
+      async handleMenuAction(e) {
+        e.stopPropagation();
+        const actionButton = e.target.closest('.menu-item');
+        if (!actionButton || !state.activeDownloadMenuContext) return;
+        
+        const { item, fileName, fileSize } = state.activeDownloadMenuContext;
+        const action = actionButton.dataset.action;
+        this.hideMenu();
+        
+        switch (action) {
+          case 'download':
+            await this.downloadItem(item, fileName, fileSize);
+            break;
+          case 'share':
+            await this.shareItem(item, fileName);
+            break;
+          case 'remove':
+            this.removeItem(item.id);
+            break;
+        }
+      },
+
+      async downloadItem(item, fileName, fileSize) {
+        if (isActivelyDownloading()) {
+          Toast.info('A download is already in progress');
+          return;
+        }
+
+        try {
+          const downloadLink = item.downloadUrl || item.url;
+          // iOS must use viewUrl for inline Safari playback
+          const playLink = item.viewUrl || item.fileUrl || item.url;
+
+          if (!downloadLink) {
+            throw new Error('Missing download URL');
+          }
+
+          if (CONFIG.IS_IOS) {
+            // iOS: open viewUrl inline in Safari (can't force save)
+            return DownloadFlow.openForIOS(playLink, fileName);
+          }
+
+          // Android / Desktop: FIX 1 — <a download> with correct filename
+          Toast.info('Starting download...');
+          const a = document.createElement('a');
+          a.href = downloadLink;
+          a.download = SecurityUtils.normalizeFileName(fileName);
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          Toast.success('Download started!');
+        } catch (error) {
+          setMessage("Download failed", "error");
+          Toast.error(error.message || 'Download failed');
+        }
+      },
+
+      async shareItem(item, fileName) {
+        const shareUrl = SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl :
+                        SecurityUtils.isValidHttpUrl(item.fileUrl) ? item.fileUrl : null;
+        
+        if (!shareUrl) {
+          Toast.error('Missing share URL for this item');
+          return;
+        }
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'FlashVidz Download',
+              text: fileName,
+              url: shareUrl
+            });
+          } catch (error) {
+            if (error.name !== 'AbortError') {
+              await HamburgerMenu.copyToClipboard(shareUrl);
+            }
+          }
+        } else {
+          await HamburgerMenu.copyToClipboard(shareUrl);
+        }
+      },
+
+      removeItem(id) {
+        if (confirm('Remove this download from history?')) {
+          const downloads = Storage.loadDownloads();
+          const index = downloads.findIndex(d => d.id === id);
+          if (index > -1) {
+            downloads.splice(index, 1);
+            Storage.saveDownloads(downloads);
+            this.render();
+            Toast.success('Download removed');
+          }
+        }
+      },
+
+      add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration) {
+        const downloads = Storage.loadDownloads();
+        const now = Date.now();
+
+        const download = {
+          id: now.toString(),
+          downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
+          fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // playback URL
+          viewUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // explicit iOS URL
+          format,
+          fileName: typeof fileName === 'string' ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH) : 'flashvidz_download',
+          fileSize: Number.isFinite(Number(fileSize)) && Number(fileSize) > 0 ? Number(fileSize) : null,
+          thumbnail: typeof thumbnail === 'string' && thumbnail.trim().length > 5 ? thumbnail.trim() : null,
+          duration: duration || null,
+          timestamp: now
+        };
+        
+        if (!download.downloadUrl) return null;
+        
+        downloads.unshift(download);
+        if (downloads.length > CONFIG.MAX_DOWNLOADS_HISTORY) {
+          downloads.pop();
+        }
+        
+        Storage.saveDownloads(downloads);
+        return download;
+      },
+
+      formatFileSize(bytes) {
+        const num = Number(bytes);
+        if (!Number.isFinite(num) || num <= 0) return '—';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(num) / Math.log(k));
+        return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      },
+
+      formatDate(timestamp) {
+        const parsed = Number(timestamp);
+        const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      },
+
+      getPlatformBadge(platform) {
+        const badges = {
+          tiktok: '<span class="platform-badge tiktok">TikTok</span>',
+          instagram: '<span class="platform-badge instagram">Instagram</span>',
+          youtube: '<span class="platform-badge youtube">YouTube</span>',
+          facebook: '<span class="platform-badge facebook">Facebook</span>'
+        };
+        return badges[platform] || '';
+      },
+
+      debugThumbnail(item) {
+        console.log('Thumbnail debug:', {
+          fileName: item.fileName,
+          thumbnail: item.thumbnail,
+          thumbnailLength: item.thumbnail?.length,
+          format: item.format,
+          duration: item.duration
+        });
+      },
+
+      render() {
+        const downloads = Storage.loadDownloads();
+        this.hideMenu();
+        elements.downloadsList.innerHTML = '';
+        
+        if (downloads.length === 0) {
+          elements.downloadsList.innerHTML = `
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <h3>No downloads yet</h3>
+              <p>Your downloaded videos will appear here</p>
+            </div>
+          `;
+          elements.downloadsCount.textContent = '0 items';
+          return;
+        }
+        
+        elements.downloadsCount.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
+
+        const fragment = document.createDocumentFragment();
+        downloads.forEach(item => {
+          const card = this.createCard(item);
+          fragment.appendChild(card);
+        });
+        elements.downloadsList.appendChild(fragment);
+      },
+
+      createCard(item) {
+        const card = document.createElement('div');
+        card.className = 'download-card';
+        card.setAttribute('role', 'listitem');
+        card.setAttribute('tabindex', '0');
+        
+        const isVideo = (item.format || 'video').toLowerCase() === 'video';
+        const fileName = item.fileName || item.filename || 'flashvidz_download';
+        const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
+        const displayDate = this.formatDate(item.timestamp);
+        const thumbnailUrl = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0
+          ? item.thumbnail.trim()
+          : null;
+        
+        const mediaIconPath = isVideo
+          ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
+          : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
+        
+        let thumbnailMarkup = '';
+        if (thumbnailUrl) {
+          const isExternalThumb = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn');
+          const extraAttrs = isExternalThumb ? 'referrerpolicy="no-referrer" crossorigin="anonymous"' : '';
+          thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="lazy" ${extraAttrs} onerror="this.onerror=null; this.style.display='none'; this.parentElement.classList.remove('has-thumbnail');">`;
+        }
+
+        const durationBadge = item.duration 
+          ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
+          : '';
+        const hasThumbnailClass = thumbnailUrl ? 'has-thumbnail' : '';
+        
+        card.innerHTML = `
+          <div class="download-info-row">
+            <div class="download-thumbnail-small ${hasThumbnailClass}">
+              ${thumbnailMarkup}
+              <svg class="thumbnail-fallback" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="${mediaIconPath}"/>
+              </svg>
+              ${durationBadge}
+            </div>
+            <div class="download-info">
+              <div class="download-filename" title="${SecurityUtils.escapeHtml(fileName)}">${SecurityUtils.escapeHtml(fileName)}</div>
+              <div class="download-meta">
+                <div class="meta-left">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+                  ${SecurityUtils.escapeHtml(displayDate)}
+                </div>
+                <span class="meta-size">${SecurityUtils.escapeHtml(this.formatFileSize(fileSize))}</span>
+              </div>
+            </div>
+            <div class="menu-wrapper">
+              <button class="menu-btn" aria-label="More options" title="More options">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        const menuBtn = card.querySelector('.menu-btn');
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const shouldClose = state.activeDownloadMenuContext?.id === item.id && elements.globalDownloadMenu.classList.contains('active');
+          if (shouldClose) {
+            this.hideMenu();
+          } else {
+            this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize });
+          }
+        });
+        
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          if (isActivelyDownloading()) {
+            Toast.info('Please wait for current download to complete');
+            return;
+          }
+
+          // FIX 2 — Always prefer viewUrl for playback (inline-friendly)
+          const playLink = item.viewUrl || item.fileUrl || item.url;
+          console.log('Card click - playLink:', playLink, '| viewUrl:', item.viewUrl, '| fileUrl:', item.fileUrl, '| url:', item.url);
+
+          if (!isVideo) {
+            if (CONFIG.IS_IOS) {
+              DownloadFlow.openForIOS(playLink, fileName);
+            } else {
+              Toast.info('Audio preview not supported yet');
+            }
+            return;
+          }
+
+          if (!playLink) {
+            Toast.error('Video preview unavailable: missing URL');
+            return;
+          }
+
+          if (CONFIG.IS_IOS) {
+            DownloadFlow.openForIOS(playLink, fileName);
+          } else {
+            VideoModal.open(playLink);
+          }
+        });
+        
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            card.click();
+          }
+        });
+        
+        return card;
+      }
+    };
+
+    // ==================== VIDEO MODAL ====================
+    const VideoModal = {
+      previewErrorShown: false,
+      init() {
+        elements.videoModalClose.addEventListener('click', () => this.close());
+        elements.videoModal.addEventListener('click', (e) => {
+          if (!elements.videoModalContent.contains(e.target)) {
+            this.close();
+          }
+        });
+        
+        window.addEventListener('popstate', () => {
+          if (elements.videoModal.classList.contains('active')) {
+            state.closingFromPopState = true;
+            this.close();
+            state.closingFromPopState = false;
+          }
+        });
+        
+        // FIX: Guard against double error toasts + softer fallback message
+        elements.videoModalPlayer.addEventListener('error', () => {
+          if (!elements.videoModal.classList.contains('active') || isActivelyDownloading()) return;
+          if (this.previewErrorShown) return;
+          this.previewErrorShown = true;
+          Toast.warning('Preview not supported. You can still download the video.');
+          console.log('Preview error - video may have incompatible codec or missing headers');
+        });
+        
+        elements.videoModalPlayer.addEventListener('loadeddata', () => {
+          VideoModal.previewErrorShown = false; // Reset on successful load
+          const msg = elements.message;
+          if (elements.videoModal.classList.contains('active') && 
+              msg?.classList.contains('loading') && 
+              msg.textContent === 'Loading preview...') {
+            setMessage('', '');
+          }
+        });
+      },
+
+      open(fileUrl) {
+        // iOS: Never use modal, always open in Safari
+        if (CONFIG.IS_IOS) {
+          DownloadFlow.openForIOS(fileUrl, 'video');
+          return;
+        }
+
+        const normalizedUrl = SecurityUtils.normalizeStoredUrl(fileUrl);
+        console.log('Preview URL:', normalizedUrl); // DEBUG: check if URL is valid
+        if (!normalizedUrl) {
+          if (!isActivelyDownloading()) {
+            Toast.error('Video preview unavailable: missing URL');
+          }
+          return;
+        }
+        
+        // Reset error guard for new preview
+        VideoModal.previewErrorShown = false;
+        setMessage('Loading preview...', 'loading');
+        elements.videoModalPlayer.pause();
+        elements.videoModalPlayer.removeAttribute('src');
+        elements.videoModalPlayer.src = normalizedUrl;
+        elements.videoModalPlayer.load();
+        elements.videoModal.classList.add('active');
+        elements.videoModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        
+        if (!state.modalHistoryPushed) {
+          history.pushState({ videoModal: true }, '');
+          state.modalHistoryPushed = true;
+        }
+        
+        const playPromise = elements.videoModalPlayer.play();
+        if (playPromise?.catch) {
+          playPromise.catch(() => {
+            const isModalActive = elements.videoModal.classList.contains('active');
+            const msg = elements.message;
+            if (isModalActive && !msg.classList.contains('error') && !isActivelyDownloading()) {
+              setMessage('Tap play to start video preview', 'loading');
+            }
+          });
+        }
+      },
+
+      close() {
+        elements.videoModal.classList.remove('active');
+        elements.videoModal.setAttribute('aria-hidden', 'true');
+        elements.videoModalPlayer.pause();
+        elements.videoModalPlayer.removeAttribute('src');
+        elements.videoModalPlayer.load();
+        VideoModal.previewErrorShown = false; // Reset error guard on close
+        document.body.style.overflow = '';
+        
+        if (state.modalHistoryPushed && history.state?.videoModal && !state.closingFromPopState) {
+          state.modalHistoryPushed = false;
+          history.back();
+        } else {
+          state.modalHistoryPushed = false;
+        }
+      }
+    };
+
+    // ==================== DOWNLOAD FLOW ====================
+    const DownloadFlow = {
+      run(downloadUrl, fileName, onProgress, signal) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', downloadUrl, true);
+          xhr.responseType = 'blob';
+          
+          let fakeProgress = 0;
+          let fakeInterval = null;
+          let objectUrl = null;
+          let finished = false;
+          
+          const finish = (fn) => {
+            if (finished) return;
+            finished = true;
+            fn();
+          };
+          
+          const cleanup = () => {
+            if (objectUrl) {
+              URL.revokeObjectURL(objectUrl);
+              state.activeObjectUrls.delete(objectUrl);
+              objectUrl = null;
+            }
+            if (fakeInterval) {
+              clearInterval(fakeInterval);
+              fakeInterval = null;
+            }
+          };
+          
+          const startFakeProgress = () => {
+            fakeProgress = 0;
+            onProgress?.(0);
+            fakeInterval = setInterval(() => {
+              if (fakeProgress < 90) {
+                fakeProgress += Math.random() * 6;
+                onProgress?.(Math.floor(fakeProgress));
+              }
+            }, 300);
+          };
+          
+          const abortHandler = () => {
+            finish(() => {
+              cleanup();
+              xhr.abort();
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          };
+          
+          if (signal) {
+            if (signal.aborted) {
+              abortHandler();
+              return;
+            }
+            signal.addEventListener('abort', abortHandler, { once: true });
+          }
+          
+          xhr.onprogress = (event) => {
+            if (event.lengthComputable && event.total > 0) {
+              if (fakeInterval) clearInterval(fakeInterval);
+              const percent = Math.round((event.loaded / event.total) * 100);
+              onProgress?.(Math.min(100, Math.max(0, percent)));
+            } else if (!fakeInterval) {
+              startFakeProgress();
+            }
+          };
+          
+          xhr.onload = () => {
+            finish(() => {
+              signal?.removeEventListener('abort', abortHandler);
+              
+              if (xhr.status < 200 || xhr.status >= 300) {
+                cleanup();
+                reject(new Error(`Download failed: ${xhr.status}`));
+                return;
+              }
+              
+              onProgress?.(100);
+              
+              const blob = xhr.response;
+              objectUrl = URL.createObjectURL(blob);
+              state.activeObjectUrls.add(objectUrl);
+              
+              const a = document.createElement('a');
+              a.href = objectUrl;
+              a.setAttribute('download', SecurityUtils.normalizeFileName(fileName));
+              a.rel = 'noopener';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              
+              setTimeout(() => {
+                if (objectUrl) {
+                  URL.revokeObjectURL(objectUrl);
+                  state.activeObjectUrls.delete(objectUrl);
+                }
+              }, 1000);
+              
+              resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
+            });
+          };
+          
+          xhr.onerror = () => {
+            finish(() => {
+              cleanup();
+              signal?.removeEventListener('abort', abortHandler);
+              reject(new Error('Download failed'));
+            });
+          };
+          
+          xhr.onabort = () => {
+            finish(() => {
+              cleanup();
+              signal?.removeEventListener('abort', abortHandler);
+              reject(new DOMException('The operation was aborted.', 'AbortError'));
+            });
+          };
+          
+          xhr.send();
+        });
+      },
+
+      // iPhone Safari: Open viewUrl inline — backend already appends ?view=1
+      openForIOS(url, fileName) {
+        if (!url) {
+          Toast.error('Invalid URL');
+          return Promise.reject(new Error('Invalid URL'));
+        }
+
+        Toast.info('Opening in Safari. Use the share button to save to Photos.');
+
+        const newWindow = window.open(url, '_blank');
+
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          // Popup blocked — fall back to same-tab navigation
+          Toast.warning('Popup blocked. Tap here to open video.', 8000);
+          window.location.href = url;
+        }
+
+        return Promise.resolve(0);
+      },
+
+      runHybrid(downloadUrl, playUrl, fileName, fileSize, onProgress, signal) {
+        // iPhone/iPad: open playUrl (viewUrl) inline in Safari — never force a download
+        if (CONFIG.IS_IOS) {
+          if (signal?.aborted) {
+            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+          }
+          return this.openForIOS(playUrl || downloadUrl, fileName);
+        }
+        
+        const normalizedSize = Number(fileSize) || 0;
+        
+        // Large files on desktop: direct download
+        if (normalizedSize > CONFIG.DIRECT_DOWNLOAD_THRESHOLD) {
+          if (signal?.aborted) {
+            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+          }
+          
+          onProgress?.(0);
+          Toast.info('Large file detected. Starting browser download...');
+          
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              // <a download> forces save-to-device with correct filename on Android
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = SecurityUtils.normalizeFileName(fileName);
+              a.rel = 'noopener noreferrer';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              Toast.success('Download started');
+              resolve(normalizedSize);
+            }, 120);
+          });
+        }
+        
+        // Standard XHR download with progress
+        return this.run(downloadUrl, fileName, onProgress, signal);
+      }
+    };
+
+    // ==================== PLATFORM DETECTION ====================
+    function detectPlatform(link) {
+      if (!SecurityUtils.isValidHttpUrl(link)) return 'unknown';
+      
+      const url = link.toLowerCase();
+      if (url.includes('tiktok.com')) return 'tiktok';
+      if (url.includes('instagram.com')) return 'instagram';
+      if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+      if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
+      return 'unknown';
+    }
+
+    // ==================== DOWNLOAD HANDLER ====================
+    async function pasteLink() {
+      const btn = elements.pasteBtn;
+      btn.disabled = true;
+      
+      try {
+        const text = await navigator.clipboard.readText();
+        const sanitized = text.trim().slice(0, 2000);
+        elements.linkInput.value = sanitized;
+        maybeAutoDownload();
+      } catch (error) {
+        const isSecureContextIssue = window.isSecureContext === false;
+        const message = isSecureContextIssue
+          ? 'Clipboard requires HTTPS or localhost'
+          : 'Could not read clipboard. Please paste manually.';
+        Toast.error(message);
+        console.error('Clipboard read failed:', error);
+      } finally {
+        btn.disabled = false;
       }
     }
-    if (!thumbnail && mediaMetadata.thumbnail) {
-      thumbnail = mediaMetadata.thumbnail;
-    } else if (!thumbnail) {
-      thumbnail = `${baseUrl}/default-thumbnail.jpg`;
+
+    function maybeAutoDownload() {
+      const settings = Storage.getSettings();
+      const link = elements.linkInput.value.trim();
+      
+      if (!settings.autoDownload || !link || !SecurityUtils.isValidHttpUrl(link) || 
+          elements.submitBtn.disabled || isActivelyDownloading()) {
+        return;
+      }
+      
+      handleDownload();
     }
 
-    const isIOSCompatible = ['mp4', 'm4a', 'mov', 'mp3'].includes(actualExt.toLowerCase());
+    function isActivelyDownloading() {
+      return state.isDownloading || (elements.submitBtn.disabled && elements.message.classList.contains('loading'));
+    }
 
-    // Proper H.264 detection: probe non-converted MP4s instead of assuming
-    let isH264Final = false;
-    if (actualExt.toLowerCase() === 'mp4') {
-      if (isConverted) {
-        isH264Final = true;
-      } else {
-        const probe = await probeVideo(finalFilePath);
-        isH264Final = probe.isH264 && probe.isAAC;
+    function resetUI(delay = 2000) {
+      const downloadId = state.currentDownloadId;
+      setTimeout(() => {
+        if (downloadId !== state.currentDownloadId) return;
+        elements.submitBtn.disabled = false;
+        elements.submitBtn.classList.remove('loading');
+        elements.pasteBtn.disabled = false;
+        state.isDownloading = false;
+      }, delay);
+    }
+
+    async function handleDownloadWithRetry(retryCount = 0) {
+      const link = elements.linkInput.value.trim().slice(0, 2000);
+      const format = selectedFormat;
+      
+      state.lastUrl = link;
+      state.lastFormat = format;
+      
+      try {
+        await handleDownload();
+      } catch (err) {
+        if (err.message?.includes('try again later') && retryCount < CONFIG.MAX_RETRIES) {
+          const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
+          setMessage(`Server busy. Retrying in ${delay/1000}s... (${retryCount + 1}/${CONFIG.MAX_RETRIES})`, 'loading');
+          
+          setTimeout(() => {
+            handleDownloadWithRetry(retryCount + 1);
+          }, delay);
+          return;
+        }
+        
+        throw err;
       }
     }
 
-    decrementActiveDownloads();
-
-    if (res.headersSent) {
-      await unlinkAsync(finalFilePath).catch(() => {});
-      return;
+    function showErrorWithRetry(message) {
+      const msg = elements.message;
+      msg.innerHTML = `${SecurityUtils.escapeHtml(message)} <button class="retry-btn" onclick="retryLastDownload()">Retry</button>`;
+      msg.className = 'error';
     }
 
-    return res.json({
-      success: true,
-      url: fileUrl,
-      viewUrl: viewUrl,
-      downloadUrl: downloadUrl,
-      fileUrl: fileUrl,
-      format,
-      thumbnail,
-      duration: mediaMetadata.duration || null,
-      fileName: publicFileName,
-      fileSize: formatFileSize(finalStats.size),
-      fileSizeBytes: finalStats.size,
-      actualFormat: actualExt,
-      isIOSCompatible,
-      isH264: isH264Final,
-      isConverted,
-      ffmpegUsed: CONFIG.FFMPEG_ENABLED,
-      warning: !isIOSCompatible ? `This file is in ${actualExt.toUpperCase()} format and may not play on all devices.` : null,
-      downloadId: downloadId
-    });
-  } catch (err) {
-    await cleanup();
-    decrementActiveDownloads();
-    console.error("Download error:", err.message);
+    window.retryLastDownload = function() {
+      if (state.lastUrl && state.lastFormat) {
+        elements.linkInput.value = state.lastUrl;
+        selectedFormat = state.lastFormat;
+        handleDownloadWithRetry();
+      }
+    };
 
-    let errorMessage = "Download failed";
-    if (err.message?.includes("login") || err.message?.includes("cookie")) {
-      errorMessage = `${platform} login required - Try refreshing your cookies`;
-    } else if (err.message?.includes("unavailable")) {
-      errorMessage = "Video not found or unavailable";
-    } else if (err.message?.includes("copyright")) {
-      errorMessage = "Content blocked due to copyright";
-    } else if (err.message?.includes("network") || err.message?.includes("timeout")) {
-      errorMessage = "Network error, please try again";
-    } else if (err.message?.includes("incomplete") || err.message?.includes("partial")) {
-      errorMessage = "Download was incomplete. Please try again.";
+    async function handleDownload() {
+      const downloadId = ++state.currentDownloadId;
+      const link = elements.linkInput.value.trim().slice(0, 2000);
+      const settings = Storage.getSettings();
+      
+      if (state.isDownloading || elements.submitBtn.disabled) {
+        return;
+      }
+      
+      const updateMessage = (text, type = '') => {
+        if (downloadId !== state.currentDownloadId) return;
+        setMessage(text, type);
+      };
+      
+      state.isDownloading = true;
+      elements.submitBtn.disabled = true;
+      elements.submitBtn.classList.add('loading');
+      elements.pasteBtn.disabled = true;
+      
+      if (!link) {
+        updateMessage('Enter a video link', 'error');
+        resetUI(0);
+        return;
+      }
+      
+      const platform = detectPlatform(link);
+      
+      if (platform === 'unknown') {
+        updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
+        resetUI(0);
+        return;
+      }
+      
+      // iOS: Show hint
+      if (CONFIG.IS_IOS) {
+        elements.iosHint?.classList.add('visible');
+      }
+      
+      updateMessage('Starting download...', 'loading');
+      
+      if (state.abortController) {
+        state.abortController.abort();
+      }
+      state.abortController = new AbortController();
+      
+      try {
+        setMessage("Please wait...","loading");
+        const response = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: link,
+            format: selectedFormat,
+            quality: settings.quality
+          }),
+          signal: state.abortController.signal
+        });
+        const data = await
+        response.json().catch(() => null);
+        
+        if (!response.ok) {  
+          if (response.status === 503) {
+            throw new Error('Server busy, try again later');
+          } else if (response.status === 429) {
+            throw new Error('Too many requests. Please wait a moment.');
+          } else if (response.status === 413) {
+            throw new Error('File too large');
+          } else if (response.status === 504) {
+            throw new Error('Download timeout. Server may be overloaded.');
+          }
+          
+          throw new Error(data?.error || `Server error: ${response.status}`);
+        }
+       
+       if (!data?.success) {
+         throw new Error(data?.error || 'Invalid response from server');
+       }
+        const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
+        if (!downloadUrl) {
+          throw new Error('Invalid response from server');
+        }
+        
+        if (CONFIG.IS_IOS && !data?.isIOSCompatible) {
+          elements.iosHint.classList.add('visible');
+        } else {
+          elements.iosHint.classList.remove('visible');
+        }
+
+        setMessage("Download ready", "success");
+        
+        // viewUrl is for iOS inline Safari playback; downloadUrl is for Android/desktop save
+        const isIOS = CONFIG.IS_IOS;
+        const playUrl = isIOS
+          ? SecurityUtils.normalizeStoredUrl(data.viewUrl || data.url)
+          : (SecurityUtils.normalizeStoredUrl(data.url) || downloadUrl);
+
+        const responseFormat = data.format || selectedFormat;
+        const backendFileName = data.fileName
+          || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
+        const backendFileSize = Number(data.fileSizeBytes) || 0;
+
+        // FIX 3 — Show backend warning immediately (format mismatch, codec issues, etc.)
+        if (data.warning) {
+          Toast.warning(data.warning);
+        }
+
+        // iOS-specific format warning (only if backend didn't already warn)
+        if (isIOS && data.isIOSCompatible === false && !data.warning) {
+          Toast.warning('This video may not play on iPhone. Try downloading instead.');
+        }
+        
+        const downloadedFileSize = await DownloadFlow.runHybrid(
+          downloadUrl,
+          playUrl,
+          backendFileName,
+          backendFileSize,
+          (progress) => {
+            if (!isIOS) {
+              updateMessage(`Downloading... ${progress}%`, 'loading');
+            }
+          },
+          state.abortController.signal
+        );
+
+        const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize > 0 ? backendFileSize : null;
+
+        // FIX 4 — Store both downloadUrl and viewUrl in history
+        DownloadsManager.add(
+          downloadUrl,
+          playUrl,
+          responseFormat,
+          backendFileName,
+          finalFileSize,
+          data.thumbnail,
+          data.duration
+        );
+        
+        if (downloadId !== state.currentDownloadId) return;
+        
+        if (CONFIG.IS_IOS) {
+          setMessage('Opened in Safari! Tap share button to save.', 'success');
+          Toast.success('Video opened in Safari');
+        } else {
+          setMessage('Download complete!', 'success');
+          Toast.success('Download complete!');
+        }
+        
+        TabManager.switch('downloads');
+        elements.linkInput.value = '';
+        
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        
+        console.error('Download error:', err);
+        let errorMsg = err.message || 'Download failed';
+        
+        if (platform === 'instagram' || platform === 'facebook') {
+          if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
+            errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
+          } else if (errorMsg.includes('private')) {
+            errorMsg = `This ${platform} post is private.`;
+          }
+        } else if (platform === 'youtube') {
+          if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
+            errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
+          }
+        }
+        
+        if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
+          showErrorWithRetry(errorMsg);
+        } else {
+          updateMessage(errorMsg, 'error');
+        }
+        Toast.error(errorMsg);
+        
+        if (errorMsg.includes('try again later')) {
+          throw err;
+        }
+      } finally {
+        if (downloadId === state.currentDownloadId) {
+          state.abortController = null;
+        }
+        resetUI(2000);
+      }
     }
 
-    if (res.headersSent) return;
+    // ==================== INITIALIZATION ====================
+    function init() {
+      cacheElements();
+      FormatSelector.init();
+      const settings = Storage.getSettings();
+      selectedFormat = settings.format === 'audio' ? 'audio' : 'video';
+      FormatSelector.select(selectedFormat);
+      HamburgerMenu.init();
+      TabManager.init();
+      DownloadsManager.init();
+      VideoModal.init();
+      
+      // Show iOS hint if on iOS
+      if (CONFIG.IS_IOS && elements.iosHint) {
+        elements.iosHint.classList.add('visible');
+      }
+      
+      elements.pasteBtn.addEventListener('click', pasteLink);
+      elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
+      elements.linkInput.addEventListener('input', maybeAutoDownload);
+      elements.downloadForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleDownloadWithRetry(0);
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'v' && document.activeElement !== elements.linkInput) {
+          elements.linkInput.focus();
+        }
+        
+        if (e.key === 'Escape') {
+          if (elements.videoModal.classList.contains('active')) {
+            VideoModal.close();
+          }
+        }
+      });
+      
+      window.addEventListener('beforeunload', () => {
+        state.abortController?.abort();
+        state.activeObjectUrls.forEach(url => {
+          try { URL.revokeObjectURL(url); } catch {}
+        });
+        state.activeObjectUrls.clear();
+      });
+      
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden' && state.abortController) {
+          state.abortController.abort();
+        }
+      });
+      
+      DownloadsManager.render();
+    }
 
-    res.status(500).json({
-      success: false,
-      platform,
-      format,
-      error: errorMessage,
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-  }
-});
-
-// ==================== HEALTH CHECK ====================
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    downloads_path: downloadsDir,
-    active_downloads: activeDownloads,
-    ffmpeg_installed: CONFIG.FFMPEG_ENABLED,
-    ffmpeg_path: ffmpegStatic || null,
-    format_policy: "H264_AAC_CONVERSION",
-    route_order: "CUSTOM_FIRST",
-    timestamp: new Date().toISOString()
-  });
-});
-
-// ==================== ERROR HANDLING ====================
-app.use((err, req, res, next) => {
-  console.error("Express error:", err);
-  if (!res.headersSent) {
-    res.status(500).json({ success: false, error: "Internal server error" });
-  }
-});
-
-// ==================== START ====================
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`FFmpeg: ${CONFIG.FFMPEG_ENABLED ? 'ENABLED' : 'DISABLED'}`);
-  if (CONFIG.FFMPEG_ENABLED) {
-    console.log(`   Path: ${ffmpegStatic}`);
-  }
-  console.log(`Features: H.264 + AAC conversion, thumbnail extraction, UUID filenames, TikTok fast path`);
-});
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
