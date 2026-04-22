@@ -2032,7 +2032,7 @@
             throw new Error('Missing download URL');
           }
 
-          if (CONFIG.IS_IOS) {
+          if (IS_IOS) {
             // iOS: open viewUrl inline in Safari (can't force save)
             return DownloadFlow.openForIOS(playLink, fileName);
           }
@@ -2092,12 +2092,13 @@
         }
       },
 
-      add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration) {
+      add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration, title) {  // CHANGED: added title param
         const downloads = Storage.loadDownloads();
         const now = Date.now();
 
         const download = {
           id: now.toString(),
+          title: typeof title === 'string' ? title.trim().slice(0, 200) : null,  // ADDED
           downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
           fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // playback URL
           viewUrl: SecurityUtils.normalizeStoredUrl(viewUrl),  // explicit iOS URL
@@ -2190,27 +2191,26 @@
         
         const isVideo = (item.format || 'video').toLowerCase() === 'video';
         const fileName = item.fileName || item.filename || 'flashvidz_download';
+        const displayTitle = item.title || fileName;  // ADDED: prefer real title over UUID filename
         const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
         const displayDate = this.formatDate(item.timestamp);
-        const thumbnailUrl = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0
-          ? item.thumbnail.trim()
-          : null;
+        const baseUrl = CONFIG.API_URL.replace(/\/download\/?$/, '');
+        const defaultThumb = `${baseUrl}/default-thumbnail.jpg`;
+        const hasThumbnail = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0;
+        const thumbnailUrl = hasThumbnail ? item.thumbnail.trim() : defaultThumb;
         
         const mediaIconPath = isVideo
           ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
           : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
         
-        let thumbnailMarkup = '';
-        if (thumbnailUrl) {
-          const isExternalThumb = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn');
-          const extraAttrs = isExternalThumb ? 'referrerpolicy="no-referrer" crossorigin="anonymous"' : '';
-          thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="lazy" ${extraAttrs} onerror="this.onerror=null; this.style.display='none'; this.parentElement.classList.remove('has-thumbnail');">`;
-        }
+        const isExternalThumb = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn');
+        const extraAttrs = isExternalThumb ? 'referrerpolicy="no-referrer" crossorigin="anonymous"' : '';
+        const thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="eager" ${extraAttrs} onerror="this.onerror=null; this.src='${defaultThumb}'">`;
 
         const durationBadge = item.duration 
           ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
           : '';
-        const hasThumbnailClass = thumbnailUrl ? 'has-thumbnail' : '';
+        const hasThumbnailClass = hasThumbnail ? 'has-thumbnail' : '';
         
         card.innerHTML = `
           <div class="download-info-row">
@@ -2222,7 +2222,7 @@
               ${durationBadge}
             </div>
             <div class="download-info">
-              <div class="download-filename" title="${SecurityUtils.escapeHtml(fileName)}">${SecurityUtils.escapeHtml(fileName)}</div>
+              <div class="download-filename" title="${SecurityUtils.escapeHtml(displayTitle)}">${SecurityUtils.escapeHtml(displayTitle)}</div>  <!-- CHANGED: displayTitle -->
               <div class="download-meta">
                 <div class="meta-left">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
@@ -2264,7 +2264,7 @@
           console.log('Card click - playLink:', playLink, '| viewUrl:', item.viewUrl, '| fileUrl:', item.fileUrl, '| url:', item.url);
 
           if (!isVideo) {
-            if (CONFIG.IS_IOS) {
+            if (IS_IOS) {
               DownloadFlow.openForIOS(playLink, fileName);
             } else {
               Toast.info('Audio preview not supported yet');
@@ -2277,7 +2277,7 @@
             return;
           }
 
-          if (CONFIG.IS_IOS) {
+          if (IS_IOS) {
             DownloadFlow.openForIOS(playLink, fileName);
           } else {
             VideoModal.open(playLink);
@@ -2336,7 +2336,7 @@
 
       open(fileUrl) {
         // iOS: Never use modal, always open in Safari
-        if (CONFIG.IS_IOS) {
+        if (IS_IOS) {
           DownloadFlow.openForIOS(fileUrl, 'video');
           return;
         }
@@ -2541,7 +2541,7 @@
 
       runHybrid(downloadUrl, playUrl, fileName, fileSize, onProgress, signal) {
         // iPhone/iPad: open playUrl (viewUrl) inline in Safari — never force a download
-        if (CONFIG.IS_IOS) {
+        if (IS_IOS) {
           if (signal?.aborted) {
             return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
           }
@@ -2665,19 +2665,31 @@
       }
     }
 
-    function showErrorWithRetry(message) {
-      const msg = elements.message;
-      msg.innerHTML = `${SecurityUtils.escapeHtml(message)} <button class="retry-btn" onclick="retryLastDownload()">Retry</button>`;
-      msg.className = 'error';
-    }
-
-    window.retryLastDownload = function() {
+    function retryLastDownload() {
       if (state.lastUrl && state.lastFormat) {
         elements.linkInput.value = state.lastUrl;
         selectedFormat = state.lastFormat;
         handleDownloadWithRetry();
       }
-    };
+    }
+
+    function showErrorWithRetry(message) {
+      const msg = elements.message;
+      // Build the retry button with addEventListener — avoids inline onclick
+      // which requires 'unsafe-inline' in Content-Security-Policy.
+      msg.textContent = '';
+      const text = document.createTextNode(SecurityUtils.escapeHtml(message) + ' ');
+      const btn = document.createElement('button');
+      btn.className = 'retry-btn';
+      btn.textContent = 'Retry';
+      btn.addEventListener('click', retryLastDownload);
+      msg.appendChild(text);
+      msg.appendChild(btn);
+      msg.className = 'error';
+    }
+
+    // Computed once at module load — IS_IOS never changes between calls.
+    const IS_IOS = CONFIG.IS_IOS;
 
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
@@ -2713,7 +2725,7 @@
       }
       
       // iOS: Show hint
-      if (CONFIG.IS_IOS) {
+      if (IS_IOS) {
         elements.iosHint?.classList.add('visible');
       }
       
@@ -2736,8 +2748,7 @@
           }),
           signal: state.abortController.signal
         });
-        const data = await
-        response.json().catch(() => null);
+        const data = await response.json().catch(() => null);
         
         if (!response.ok) {  
           if (response.status === 503) {
@@ -2761,7 +2772,7 @@
           throw new Error('Invalid response from server');
         }
         
-        if (CONFIG.IS_IOS && !data?.isIOSCompatible) {
+        if (IS_IOS && !data?.isIOSCompatible) {
           elements.iosHint.classList.add('visible');
         } else {
           elements.iosHint.classList.remove('visible');
@@ -2770,7 +2781,7 @@
         setMessage("Download ready", "success");
         
         // viewUrl is for iOS inline Safari playback; downloadUrl is for Android/desktop save
-        const isIOS = CONFIG.IS_IOS;
+        const isIOS = IS_IOS;
         const playUrl = isIOS
           ? SecurityUtils.normalizeStoredUrl(data.viewUrl || data.url)
           : (SecurityUtils.normalizeStoredUrl(data.url) || downloadUrl);
@@ -2813,12 +2824,13 @@
           backendFileName,
           finalFileSize,
           data.thumbnail,
-          data.duration
+          data.duration,
+          data.title  // ADDED
         );
         
         if (downloadId !== state.currentDownloadId) return;
         
-        if (CONFIG.IS_IOS) {
+        if (IS_IOS) {
           setMessage('Opened in Safari! Tap share button to save.', 'success');
           Toast.success('Video opened in Safari');
         } else {
@@ -2878,7 +2890,7 @@
       VideoModal.init();
       
       // Show iOS hint if on iOS
-      if (CONFIG.IS_IOS && elements.iosHint) {
+      if (IS_IOS && elements.iosHint) {
         elements.iosHint.classList.add('visible');
       }
       
