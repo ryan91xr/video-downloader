@@ -2197,7 +2197,15 @@
         const baseUrl = CONFIG.API_URL.replace(/\/download\/?$/, '');
         const defaultThumb = `${baseUrl}/default-thumbnail.jpg`;
         const hasThumbnail = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0;
-        const thumbnailUrl = hasThumbnail ? item.thumbnail.trim() : defaultThumb;
+        let thumbnailUrl = defaultThumb;
+        if (item.thumbnail && typeof item.thumbnail === "string") {
+          const thumb = item.thumbnail.trim();
+          if (thumb.startsWith("http")) {
+            thumbnailUrl = thumb;
+          } else {
+            thumbnailUrl = `${baseUrl}/files/${encodeURIComponent(thumb)}`;
+          }
+        }
         
         const mediaIconPath = isVideo
           ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
@@ -2205,7 +2213,8 @@
         
         const isExternalThumb = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn');
         const extraAttrs = isExternalThumb ? 'referrerpolicy="no-referrer" crossorigin="anonymous"' : '';
-        const thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="eager" ${extraAttrs} onerror="this.onerror=null; this.src='${defaultThumb}'">`;
+        console.log("Thumbnail URL:", thumbnailUrl);
+        const thumbnailMarkup = hasThumbnail? `<img src="${thumbnailUrl}" alt="thumbnail" onerror="this.onerror=null;this.src='${defaultThumb}'">` : `<img src="${defaultThumb}" alt="thumbnail">`;
 
         const durationBadge = item.duration 
           ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
