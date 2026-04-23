@@ -1516,8 +1516,8 @@
   <script>
     // ==================== CONFIGURATION ====================
     const CONFIG = Object.freeze({
-      API_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000/download' 
+      API_URL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '::1')
+        ? 'http://localhost:3000/download'
         : 'https://flashvidz-backend.onrender.com/download',
       MAX_FILE_SIZE: 500 * 1024 * 1024,
       MAX_FILENAME_LENGTH: 180,
@@ -1532,6 +1532,9 @@
       IS_IOS: /iPad|iPhone|iPod/.test(navigator.userAgent) || 
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     });
+
+    // Computed once at module load — IS_IOS never changes between calls.
+    const IS_IOS = CONFIG.IS_IOS;
 
     // ==================== STATE MANAGEMENT ====================
     let selectedFormat = 'video';
@@ -2195,7 +2198,7 @@
         const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
         const displayDate = this.formatDate(item.timestamp);
         const baseUrl = CONFIG.API_URL.replace(/\/download\/?$/, '');
-        const defaultThumb = `${baseUrl}/default-thumbnail.jpg`;
+        const defaultThumb = `${baseUrl}/default-thumbnail.svg`;
         const hasThumbnail = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0;
         const thumbnailUrl = hasThumbnail ? item.thumbnail.trim() : defaultThumb;
         
@@ -2207,7 +2210,7 @@
         // referrerpolicy for external CDN URLs (TikTok/Instagram block requests with referrer).
         const isExternalCdn = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn') || thumbnailUrl.includes('ytimg') || thumbnailUrl.includes('youtube');
         const referrerAttr = isExternalCdn ? 'referrerpolicy="no-referrer"' : '';
-        const thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="eager" crossorigin="anonymous" ${referrerAttr} onerror="this.onerror=null; this.src='${defaultThumb}'">`;
+        const thumbnailMarkup = `<img class="thumb-img" src="${thumbnailUrl}" alt="thumbnail" loading="eager" crossorigin="anonymous" ${referrerAttr} data-fallback="${defaultThumb}">`;
 
         const durationBadge = item.duration 
           ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
@@ -2243,6 +2246,16 @@
           </div>
         `;
         
+        // Thumbnail error fallback (replaces inline onerror for CSP safety)
+        const thumbImg = card.querySelector('.thumb-img');
+        if (thumbImg) {
+          thumbImg.addEventListener('error', () => {
+            thumbImg.removeEventListener('error', arguments.callee);
+            const fallback = thumbImg.dataset.fallback;
+            if (fallback && thumbImg.src !== fallback) thumbImg.src = fallback;
+          });
+        }
+
         const menuBtn = card.querySelector('.menu-btn');
         menuBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -2690,9 +2703,6 @@
       msg.className = 'error';
     }
 
-    // Computed once at module load — IS_IOS never changes between calls.
-    const IS_IOS = CONFIG.IS_IOS;
-
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
@@ -2898,7 +2908,12 @@
       
       elements.pasteBtn.addEventListener('click', pasteLink);
       elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
-      elements.linkInput.addEventListener('input', maybeAutoDownload);
+      // Debounced auto-download: wait 400ms after typing stops before checking
+      let inputDebounceTimer = null;
+      elements.linkInput.addEventListener('input', () => {
+        clearTimeout(inputDebounceTimer);
+        inputDebounceTimer = setTimeout(maybeAutoDownload, 400);
+      });
       elements.downloadForm.addEventListener('submit', (e) => {
         e.preventDefault();
         handleDownloadWithRetry(0);
@@ -2924,9 +2939,18 @@
         state.activeObjectUrls.clear();
       });
       
+      // Grace-period abort: only kill download if tab stays hidden for 30s+
+      let visibilityHideTime = 0;
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden' && state.abortController) {
-          state.abortController.abort();
+          visibilityHideTime = Date.now();
+        } else if (document.visibilityState === 'visible' && visibilityHideTime > 0) {
+          const hiddenMs = Date.now() - visibilityHideTime;
+          visibilityHideTime = 0;
+          if (hiddenMs > 30000 && state.abortController) {
+            state.abortController.abort();
+            Toast.info('Download aborted after 30s in background');
+          }
         }
       });
       
