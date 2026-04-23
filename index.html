@@ -2825,7 +2825,7 @@
           responseFormat,
           backendFileName,
           finalFileSize,
-          data.thumbnailCdn || data.thumbnail,  // prefer CDN URL — survives server restarts
+          data.thumbnail || data.thumbnailCdn,  // prefer CDN URL — survives server restarts
           data.duration,
           data.title  // ADDED
         );
