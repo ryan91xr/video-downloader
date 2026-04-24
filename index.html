@@ -1516,13 +1516,12 @@
   <script>
     // ==================== CONFIGURATION ====================
     const CONFIG = Object.freeze({
-      API_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000/download' 
+      API_URL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '::1')
+        ? 'http://localhost:3000/download'
         : 'https://flashvidz-backend.onrender.com/download',
       MAX_FILE_SIZE: 500 * 1024 * 1024,
       MAX_FILENAME_LENGTH: 180,
       STORAGE_KEY: 'flashvidz_downloads',
-      DIRECT_DOWNLOAD_THRESHOLD: 50 * 1024 * 1024,
       MAX_DOWNLOADS_HISTORY: 50,
       TOAST_DURATION: 4000,
       SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook'],
@@ -1532,6 +1531,9 @@
       IS_IOS: /iPad|iPhone|iPod/.test(navigator.userAgent) || 
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     });
+
+    // Computed once at module load — IS_IOS never changes between calls.
+    const IS_IOS = CONFIG.IS_IOS;
 
     // ==================== STATE MANAGEMENT ====================
     let selectedFormat = 'video';
@@ -2037,16 +2039,15 @@
             return DownloadFlow.openForIOS(playLink, fileName);
           }
 
-          // Android / Desktop: FIX 1 — <a download> with correct filename
+          // Android / Desktop: use DownloadFlow.run() which downloads the file as a
+          // blob and saves via blob URL — this guarantees the file lands in the
+          // Downloads folder where Gallery/MediaStore can index it.
           Toast.info('Starting download...');
-          const a = document.createElement('a');
-          a.href = downloadLink;
-          a.download = SecurityUtils.normalizeFileName(fileName);
-          a.rel = 'noopener noreferrer';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          Toast.success('Download started!');
+          const abortCtl = new AbortController();
+          await DownloadFlow.run(downloadLink, fileName, (progress) => {
+            // Silent progress — no message spam for re-downloads
+          }, abortCtl.signal);
+          Toast.success('Download started! Check your Gallery/Downloads folder.');
         } catch (error) {
           setMessage("Download failed", "error");
           Toast.error(error.message || 'Download failed');
@@ -2195,7 +2196,7 @@
         const fileSize = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
         const displayDate = this.formatDate(item.timestamp);
         const baseUrl = CONFIG.API_URL.replace(/\/download\/?$/, '');
-        const defaultThumb = `${baseUrl}/default-thumbnail.jpg`;
+        const defaultThumb = `${baseUrl}/default-thumbnail.svg`;
         const hasThumbnail = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0;
         const thumbnailUrl = hasThumbnail ? item.thumbnail.trim() : defaultThumb;
         
@@ -2207,7 +2208,7 @@
         // referrerpolicy for external CDN URLs (TikTok/Instagram block requests with referrer).
         const isExternalCdn = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn') || thumbnailUrl.includes('ytimg') || thumbnailUrl.includes('youtube');
         const referrerAttr = isExternalCdn ? 'referrerpolicy="no-referrer"' : '';
-        const thumbnailMarkup = `<img src="${thumbnailUrl}" alt="thumbnail" loading="eager" crossorigin="anonymous" ${referrerAttr} onerror="this.onerror=null; this.src='${defaultThumb}'">`;
+        const thumbnailMarkup = `<img class="thumb-img" src="${thumbnailUrl}" alt="thumbnail" loading="eager" crossorigin="anonymous" ${referrerAttr} data-fallback="${defaultThumb}">`;
 
         const durationBadge = item.duration 
           ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>` 
@@ -2243,6 +2244,16 @@
           </div>
         `;
         
+        // Thumbnail error fallback (replaces inline onerror for CSP safety)
+        const thumbImg = card.querySelector('.thumb-img');
+        if (thumbImg) {
+          thumbImg.addEventListener('error', () => {
+            thumbImg.removeEventListener('error', arguments.callee);
+            const fallback = thumbImg.dataset.fallback;
+            if (fallback && thumbImg.src !== fallback) thumbImg.src = fallback;
+          });
+        }
+
         const menuBtn = card.querySelector('.menu-btn');
         menuBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -2400,125 +2411,78 @@
 
     // ==================== DOWNLOAD FLOW ====================
     const DownloadFlow = {
-      run(downloadUrl, fileName, onProgress, signal) {
-        return new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('GET', downloadUrl, true);
-          xhr.responseType = 'blob';
-          
-          let fakeProgress = 0;
-          let fakeInterval = null;
-          let objectUrl = null;
-          let finished = false;
-          
-          const finish = (fn) => {
-            if (finished) return;
-            finished = true;
-            fn();
-          };
-          
-          const cleanup = () => {
-            if (objectUrl) {
-              URL.revokeObjectURL(objectUrl);
-              state.activeObjectUrls.delete(objectUrl);
-              objectUrl = null;
-            }
-            if (fakeInterval) {
-              clearInterval(fakeInterval);
-              fakeInterval = null;
-            }
-          };
-          
-          const startFakeProgress = () => {
-            fakeProgress = 0;
-            onProgress?.(0);
-            fakeInterval = setInterval(() => {
-              if (fakeProgress < 90) {
-                fakeProgress += Math.random() * 6;
-                onProgress?.(Math.floor(fakeProgress));
-              }
-            }, 300);
-          };
-          
-          const abortHandler = () => {
-            finish(() => {
-              cleanup();
-              xhr.abort();
-              reject(new DOMException('The operation was aborted.', 'AbortError'));
-            });
-          };
-          
-          if (signal) {
-            if (signal.aborted) {
-              abortHandler();
-              return;
-            }
-            signal.addEventListener('abort', abortHandler, { once: true });
+      // Single-request download: fetch streams into memory chunks, assemble into a Blob,
+      // then create a same-origin blob URL for the final <a download>.
+      // This guarantees the browser's download manager handles the save — the file lands
+      // in the Downloads folder where Android MediaStore / Gallery can index it.
+      //
+      // Why blob URL instead of re-downloading via <a href=remoteUrl>?
+      // - Blob URLs are same-origin, so the 'download' attribute works 100% of the time
+      // - Only ONE network request instead of two (fetch + re-download)
+      // - Eliminates race conditions where Chrome ignores 'download' on cross-origin URLs
+      async run(downloadUrl, fileName, onProgress, signal) {
+        const controller = new AbortController();
+        let cleanedUp = false;
+
+        const cleanup = () => { cleanedUp = true; };
+        const abortHandler = () => controller.abort();
+        if (signal) {
+          if (signal.aborted) {
+            throw new DOMException('The operation was aborted.', 'AbortError');
           }
-          
-          xhr.onprogress = (event) => {
-            if (event.lengthComputable && event.total > 0) {
-              if (fakeInterval) clearInterval(fakeInterval);
-              const percent = Math.round((event.loaded / event.total) * 100);
-              onProgress?.(Math.min(100, Math.max(0, percent)));
-            } else if (!fakeInterval) {
-              startFakeProgress();
+          signal.addEventListener('abort', abortHandler, { once: true });
+        }
+
+        try {
+          const response = await fetch(downloadUrl, { signal: controller.signal });
+          if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
+          const contentLength = +(response.headers.get('content-length')) || 0;
+          const reader = response.body.getReader();
+          const chunks = [];
+          let received = 0;
+
+          // Stream read loop — collect chunks + track progress
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value) {
+              chunks.push(value);
+              received += value.length;
             }
-          };
-          
-          xhr.onload = () => {
-            finish(() => {
-              signal?.removeEventListener('abort', abortHandler);
-              
-              if (xhr.status < 200 || xhr.status >= 300) {
-                cleanup();
-                reject(new Error(`Download failed: ${xhr.status}`));
-                return;
-              }
-              
-              onProgress?.(100);
-              
-              const blob = xhr.response;
-              objectUrl = URL.createObjectURL(blob);
-              state.activeObjectUrls.add(objectUrl);
-              
-              const a = document.createElement('a');
-              a.href = objectUrl;
-              a.setAttribute('download', SecurityUtils.normalizeFileName(fileName));
-              a.rel = 'noopener';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              
-              setTimeout(() => {
-                if (objectUrl) {
-                  URL.revokeObjectURL(objectUrl);
-                  state.activeObjectUrls.delete(objectUrl);
-                }
-              }, 1000);
-              
-              resolve(blob?.size || Number(xhr.getResponseHeader('content-length')) || 0);
-            });
-          };
-          
-          xhr.onerror = () => {
-            finish(() => {
-              cleanup();
-              signal?.removeEventListener('abort', abortHandler);
-              reject(new Error('Download failed'));
-            });
-          };
-          
-          xhr.onabort = () => {
-            finish(() => {
-              cleanup();
-              signal?.removeEventListener('abort', abortHandler);
-              reject(new DOMException('The operation was aborted.', 'AbortError'));
-            });
-          };
-          
-          xhr.send();
-        });
+            if (contentLength > 0) {
+              onProgress?.(Math.min(100, Math.round(received / contentLength * 100)));
+            }
+          }
+
+          onProgress?.(100);
+
+          // Assemble blob from collected chunks
+          const blob = new Blob(chunks);
+          const blobUrl = URL.createObjectURL(blob);
+
+          try {
+            // Blob URL is same-origin — 'download' attribute always honored
+            const normalizedName = SecurityUtils.normalizeFileName(fileName);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = normalizedName;
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } finally {
+            // Revoke blob URL after a short delay so the browser has time to start the save
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+          }
+
+          return received || contentLength;
+        } catch (err) {
+          if (!cleanedUp) throw err;
+          return 0;
+        } finally {
+          signal?.removeEventListener('abort', abortHandler);
+        }
       },
 
       // iPhone Safari: Open viewUrl inline — backend already appends ?view=1
@@ -2550,34 +2514,9 @@
           return this.openForIOS(playUrl || downloadUrl, fileName);
         }
         
-        const normalizedSize = Number(fileSize) || 0;
-        
-        // Large files on desktop: direct download
-        if (normalizedSize > CONFIG.DIRECT_DOWNLOAD_THRESHOLD) {
-          if (signal?.aborted) {
-            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
-          }
-          
-          onProgress?.(0);
-          Toast.info('Large file detected. Starting browser download...');
-          
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              // <a download> forces save-to-device with correct filename on Android
-              const a = document.createElement('a');
-              a.href = downloadUrl;
-              a.download = SecurityUtils.normalizeFileName(fileName);
-              a.rel = 'noopener noreferrer';
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              Toast.success('Download started');
-              resolve(normalizedSize);
-            }, 120);
-          });
-        }
-        
-        // Standard XHR download with progress
+        // Android/Desktop: fetch-stream for progress, then native download.
+        // The ?download=1 endpoint sends Content-Disposition: attachment which
+        // forces the browser's download manager to save to the Downloads folder.
         return this.run(downloadUrl, fileName, onProgress, signal);
       }
     };
@@ -2689,9 +2628,6 @@
       msg.appendChild(btn);
       msg.className = 'error';
     }
-
-    // Computed once at module load — IS_IOS never changes between calls.
-    const IS_IOS = CONFIG.IS_IOS;
 
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
@@ -2837,7 +2773,7 @@
           Toast.success('Video opened in Safari');
         } else {
           setMessage('Download complete!', 'success');
-          Toast.success('Download complete!');
+          Toast.success('Download complete! Check Gallery/Downloads');
         }
         
         TabManager.switch('downloads');
@@ -2898,7 +2834,12 @@
       
       elements.pasteBtn.addEventListener('click', pasteLink);
       elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
-      elements.linkInput.addEventListener('input', maybeAutoDownload);
+      // Debounced auto-download: wait 400ms after typing stops before checking
+      let inputDebounceTimer = null;
+      elements.linkInput.addEventListener('input', () => {
+        clearTimeout(inputDebounceTimer);
+        inputDebounceTimer = setTimeout(maybeAutoDownload, 400);
+      });
       elements.downloadForm.addEventListener('submit', (e) => {
         e.preventDefault();
         handleDownloadWithRetry(0);
@@ -2924,9 +2865,18 @@
         state.activeObjectUrls.clear();
       });
       
+      // Grace-period abort: only kill download if tab stays hidden for 30s+
+      let visibilityHideTime = 0;
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden' && state.abortController) {
-          state.abortController.abort();
+          visibilityHideTime = Date.now();
+        } else if (document.visibilityState === 'visible' && visibilityHideTime > 0) {
+          const hiddenMs = Date.now() - visibilityHideTime;
+          visibilityHideTime = 0;
+          if (hiddenMs > 30000 && state.abortController) {
+            state.abortController.abort();
+            Toast.info('Download aborted after 30s in background');
+          }
         }
       });
       
