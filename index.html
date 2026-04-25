@@ -2777,8 +2777,18 @@
           Toast.warning('This video may not play on iPhone. Try downloading instead.');
         }
         
+        // Append the video title as a query param so the server can use it in
+        // Content-Disposition. Android Chrome uses that header for the saved filename —
+        // it ignores a.download and the URL path for cross-origin downloads.
+        const titleParam = rawTitle ? '&title=' + encodeURIComponent(
+          rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '').trim().slice(0, 100)
+        ) : '';
+        const downloadUrlWithTitle = downloadUrl
+          ? downloadUrl + (downloadUrl.includes('?') ? titleParam : titleParam.replace('&', '?'))
+          : downloadUrl;
+
         const downloadedFileSize = await DownloadFlow.runHybrid(
-          downloadUrl,
+          downloadUrlWithTitle,
           playUrl,
           backendFileName,
           backendFileSize,
