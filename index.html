@@ -1532,8 +1532,9 @@
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     });
 
-    // Computed once at module load — IS_IOS never changes between calls.
+    // Computed once at module load — these never change between calls.
     const IS_IOS = CONFIG.IS_IOS;
+    const IS_ANDROID = /Android/i.test(navigator.userAgent);
 
     // ==================== STATE MANAGEMENT ====================
     let selectedFormat = 'video';
@@ -2457,8 +2458,17 @@
 
           onProgress?.(100);
 
-          // Assemble blob from collected chunks
-          const blob = new Blob(chunks);
+          // Assemble blob with correct MIME type — without this Chrome saves as
+          // 'application/octet-stream' and Android MediaStore ignores it (Gallery won't show it).
+          const serverMimeType = response.headers.get('content-type')?.split(';')[0]?.trim();
+          const extForMime = (fileName.split('.').pop() || '').toLowerCase();
+          const MIME_MAP = {
+            mp4: 'video/mp4', m4a: 'audio/mp4', mp3: 'audio/mpeg',
+            mov: 'video/quicktime', webm: 'video/webm', mkv: 'video/x-matroska',
+            ogg: 'audio/ogg', opus: 'audio/opus'
+          };
+          const blobType = serverMimeType || MIME_MAP[extForMime] || 'video/mp4';
+          const blob = new Blob(chunks, { type: blobType });
           const blobUrl = URL.createObjectURL(blob);
 
           try {
@@ -2483,6 +2493,22 @@
         } finally {
           signal?.removeEventListener('abort', abortHandler);
         }
+      },
+
+      // Android native download — lets Chrome's download manager handle saving.
+      // This triggers Android MediaStore scan so videos appear in Gallery immediately.
+      // Unlike the Blob path, no progress % is available but Gallery compatibility is 100%.
+      runAndroidNative(downloadUrl, fileName, onProgress) {
+        onProgress?.(100);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = SecurityUtils.normalizeFileName(fileName);
+        a.rel = 'noopener noreferrer';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return Promise.resolve(0);
       },
 
       // iPhone Safari: Open viewUrl inline — backend already appends ?view=1
@@ -2514,9 +2540,12 @@
           return this.openForIOS(playUrl || downloadUrl, fileName);
         }
         
-        // Android/Desktop: fetch-stream for progress, then native download.
-        // The ?download=1 endpoint sends Content-Disposition: attachment which
-        // forces the browser's download manager to save to the Downloads folder.
+        // Android: native browser download — proper MIME type + MediaStore scan → Gallery
+        if (IS_ANDROID) {
+          return this.runAndroidNative(downloadUrl, fileName, onProgress);
+        }
+
+        // Desktop: fetch-stream with progress bar (Blob now has correct MIME type too).
         return this.run(downloadUrl, fileName, onProgress, signal);
       }
     };
@@ -2725,8 +2754,17 @@
           : (SecurityUtils.normalizeStoredUrl(data.url) || downloadUrl);
 
         const responseFormat = data.format || selectedFormat;
-        const backendFileName = data.fileName
-          || `flashvidz_${platform}_${Date.now()}.${responseFormat === 'audio' ? 'm4a' : 'mp4'}`;
+        // Build a human-readable filename from the video title so Android MediaStore
+        // indexes it into Gallery. UUID filenames (fv_xxx.mp4) are ignored by Android Gallery.
+        const ext = responseFormat === 'audio' ? 'm4a' : 'mp4';
+        const rawTitle = data.title && typeof data.title === 'string' ? data.title.trim() : '';
+        const backendFileName = rawTitle
+          ? SecurityUtils.normalizeFileName(
+              // Slug the title: replace spaces/special chars with underscores, keep extension
+              rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '').replace(/\s+/g, '_').slice(0, 80)
+              + '_FlashVidz.' + ext
+            )
+          : (data.fileName || `flashvidz_${platform}_${Date.now()}.${ext}`);
         const backendFileSize = Number(data.fileSizeBytes) || 0;
 
         // FIX 3 — Show backend warning immediately (format mismatch, codec issues, etc.)
