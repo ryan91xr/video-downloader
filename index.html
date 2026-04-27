@@ -2495,19 +2495,20 @@
         }
       },
 
-      // Android native download — lets Chrome's download manager handle saving.
-      // This triggers Android MediaStore scan so videos appear in Gallery immediately.
-      // Unlike the Blob path, no progress % is available but Gallery compatibility is 100%.
+      // Android native download — uses window.open() which Chrome treats as a
+      // real navigation. When server responds with Content-Disposition: attachment,
+      // Chrome's native download manager saves it with the server's filename and
+      // triggers Android MediaStore indexing so the file appears in Gallery.
+      // <a>.click() on cross-origin URLs is silently ignored on Android Chrome.
       runAndroidNative(downloadUrl, fileName, onProgress) {
         onProgress?.(100);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = SecurityUtils.normalizeFileName(fileName);
-        a.rel = 'noopener noreferrer';
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // window.open with _blank triggers Chrome's download manager correctly.
+        // The server's Content-Disposition: attachment + friendly filename does the rest.
+        const newWin = window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+        if (!newWin) {
+          // Popup blocked — fall back to same-tab navigation (still works for download)
+          window.location.href = downloadUrl;
+        }
         return Promise.resolve(0);
       },
 
