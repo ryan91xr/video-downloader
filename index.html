@@ -1454,19 +1454,19 @@
           <ol class="guide-list">
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">1</span>
-              <span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span>
+              <span class="guide-text"><strong>Copy URL</strong> â€” Navigate to the video and copy its link from the address bar</span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">2</span>
-              <span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span>
+              <span class="guide-text"><strong>Paste Link</strong> â€” Click the paste button or manually enter the URL above</span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">3</span>
-              <span class="guide-text"><strong>Download</strong> — Press the arrow button and wait for processing to complete</span>
+              <span class="guide-text"><strong>Download</strong> â€” Press the arrow button and wait for processing to complete</span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">4</span>
-              <span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span>
+              <span class="guide-text"><strong>Save File</strong> â€” Video saves automatically to your downloads folder</span>
             </li>
           </ol>
         </div>
@@ -1532,7 +1532,7 @@
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     });
 
-    // Computed once at module load — these never change between calls.
+    // Computed once at module load â€” these never change between calls.
     const IS_IOS = CONFIG.IS_IOS;
     const IS_ANDROID = /Android/i.test(navigator.userAgent);
 
@@ -2040,14 +2040,11 @@
             return DownloadFlow.openForIOS(playLink, fileName);
           }
 
-          // Android / Desktop: use DownloadFlow.run() which downloads the file as a
-          // blob and saves via blob URL — this guarantees the file lands in the
-          // Downloads folder where Gallery/MediaStore can index it.
+          // Route through runHybrid so Android gets native download (Gallery-compatible)
+          // and Desktop keeps the Blob path with progress.
           Toast.info('Starting download...');
           const abortCtl = new AbortController();
-          await DownloadFlow.run(downloadLink, fileName, (progress) => {
-            // Silent progress — no message spam for re-downloads
-          }, abortCtl.signal);
+          await DownloadFlow.runHybrid(downloadLink, downloadLink, fileName, 0, () => {}, abortCtl.signal);
           Toast.success('Download started! Check your Gallery/Downloads folder.');
         } catch (error) {
           setMessage("Download failed", "error");
@@ -2125,7 +2122,7 @@
 
       formatFileSize(bytes) {
         const num = Number(bytes);
-        if (!Number.isFinite(num) || num <= 0) return '—';
+        if (!Number.isFinite(num) || num <= 0) return 'â€”';
         const k = 1024;
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(num) / Math.log(k));
@@ -2205,7 +2202,7 @@
           ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
           : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
         
-        // Always add crossorigin — thumbnail is always cross-origin (GitHub Pages → Render).
+        // Always add crossorigin â€” thumbnail is always cross-origin (GitHub Pages â†’ Render).
         // referrerpolicy for external CDN URLs (TikTok/Instagram block requests with referrer).
         const isExternalCdn = thumbnailUrl.includes('tiktok') || thumbnailUrl.includes('instagram') || thumbnailUrl.includes('fbcdn') || thumbnailUrl.includes('ytimg') || thumbnailUrl.includes('youtube');
         const referrerAttr = isExternalCdn ? 'referrerpolicy="no-referrer"' : '';
@@ -2248,11 +2245,12 @@
         // Thumbnail error fallback (replaces inline onerror for CSP safety)
         const thumbImg = card.querySelector('.thumb-img');
         if (thumbImg) {
-          thumbImg.addEventListener('error', () => {
-            thumbImg.removeEventListener('error', arguments.callee);
+          const onThumbError = () => {
+            thumbImg.removeEventListener('error', onThumbError);
             const fallback = thumbImg.dataset.fallback;
             if (fallback && thumbImg.src !== fallback) thumbImg.src = fallback;
-          });
+          };
+          thumbImg.addEventListener('error', onThumbError);
         }
 
         const menuBtn = card.querySelector('.menu-btn');
@@ -2273,7 +2271,7 @@
             return;
           }
 
-          // FIX 2 — Always prefer viewUrl for playback (inline-friendly)
+          // FIX 2 â€” Always prefer viewUrl for playback (inline-friendly)
           const playLink = item.viewUrl || item.fileUrl || item.url;
           console.log('Card click - playLink:', playLink, '| viewUrl:', item.viewUrl, '| fileUrl:', item.fileUrl, '| url:', item.url);
 
@@ -2414,7 +2412,7 @@
     const DownloadFlow = {
       // Single-request download: fetch streams into memory chunks, assemble into a Blob,
       // then create a same-origin blob URL for the final <a download>.
-      // This guarantees the browser's download manager handles the save — the file lands
+      // This guarantees the browser's download manager handles the save â€” the file lands
       // in the Downloads folder where Android MediaStore / Gallery can index it.
       //
       // Why blob URL instead of re-downloading via <a href=remoteUrl>?
@@ -2443,7 +2441,7 @@
           const chunks = [];
           let received = 0;
 
-          // Stream read loop — collect chunks + track progress
+          // Stream read loop â€” collect chunks + track progress
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -2458,7 +2456,7 @@
 
           onProgress?.(100);
 
-          // Assemble blob with correct MIME type — without this Chrome saves as
+          // Assemble blob with correct MIME type â€” without this Chrome saves as
           // 'application/octet-stream' and Android MediaStore ignores it (Gallery won't show it).
           const serverMimeType = response.headers.get('content-type')?.split(';')[0]?.trim();
           const extForMime = (fileName.split('.').pop() || '').toLowerCase();
@@ -2472,7 +2470,7 @@
           const blobUrl = URL.createObjectURL(blob);
 
           try {
-            // Blob URL is same-origin — 'download' attribute always honored
+            // Blob URL is same-origin â€” 'download' attribute always honored
             const normalizedName = SecurityUtils.normalizeFileName(fileName);
             const a = document.createElement('a');
             a.href = blobUrl;
@@ -2495,7 +2493,7 @@
         }
       },
 
-      // Android native download — uses window.open() which Chrome treats as a
+      // Android native download â€” uses window.open() which Chrome treats as a
       // real navigation. When server responds with Content-Disposition: attachment,
       // Chrome's native download manager saves it with the server's filename and
       // triggers Android MediaStore indexing so the file appears in Gallery.
@@ -2506,13 +2504,13 @@
         // The server's Content-Disposition: attachment + friendly filename does the rest.
         const newWin = window.open(downloadUrl, '_blank', 'noopener,noreferrer');
         if (!newWin) {
-          // Popup blocked — fall back to same-tab navigation (still works for download)
+          // Popup blocked â€” fall back to same-tab navigation (still works for download)
           window.location.href = downloadUrl;
         }
         return Promise.resolve(0);
       },
 
-      // iPhone Safari: Open viewUrl inline — backend already appends ?view=1
+      // iPhone Safari: Open viewUrl inline â€” backend already appends ?view=1
       openForIOS(url, fileName) {
         if (!url) {
           Toast.error('Invalid URL');
@@ -2524,7 +2522,7 @@
         const newWindow = window.open(url, '_blank');
 
         if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          // Popup blocked — fall back to same-tab navigation
+          // Popup blocked â€” fall back to same-tab navigation
           Toast.warning('Popup blocked. Tap here to open video.', 8000);
           window.location.href = url;
         }
@@ -2533,7 +2531,7 @@
       },
 
       runHybrid(downloadUrl, playUrl, fileName, fileSize, onProgress, signal) {
-        // iPhone/iPad: open playUrl (viewUrl) inline in Safari — never force a download
+        // iPhone/iPad: open playUrl (viewUrl) inline in Safari â€” never force a download
         if (IS_IOS) {
           if (signal?.aborted) {
             return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
@@ -2541,7 +2539,7 @@
           return this.openForIOS(playUrl || downloadUrl, fileName);
         }
         
-        // Android: native browser download — proper MIME type + MediaStore scan → Gallery
+        // Android: native browser download â€” proper MIME type + MediaStore scan â†’ Gallery
         if (IS_ANDROID) {
           return this.runAndroidNative(downloadUrl, fileName, onProgress);
         }
@@ -2594,7 +2592,7 @@
         return;
       }
       
-      handleDownload();
+      handleDownload().catch(err => console.warn('Auto-download failed:', err.message));
     }
 
     function isActivelyDownloading() {
@@ -2646,10 +2644,10 @@
 
     function showErrorWithRetry(message) {
       const msg = elements.message;
-      // Build the retry button with addEventListener — avoids inline onclick
+      // Build the retry button with addEventListener â€” avoids inline onclick
       // which requires 'unsafe-inline' in Content-Security-Policy.
       msg.textContent = '';
-      const text = document.createTextNode(SecurityUtils.escapeHtml(message) + ' ');
+      const text = document.createTextNode(message + ' ');
       const btn = document.createElement('button');
       btn.className = 'retry-btn';
       btn.textContent = 'Retry';
@@ -2762,13 +2760,13 @@
         const backendFileName = rawTitle
           ? SecurityUtils.normalizeFileName(
               // Slug the title: replace spaces/special chars with underscores, keep extension
-              rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '').replace(/\s+/g, '_').slice(0, 80)
+              rawTitle.replace(/[^a-zA-Z0-9Ã€-É\s\-_]/g, '').replace(/\s+/g, '_').slice(0, 80)
               + '_FlashVidz.' + ext
             )
           : (data.fileName || `flashvidz_${platform}_${Date.now()}.${ext}`);
         const backendFileSize = Number(data.fileSizeBytes) || 0;
 
-        // FIX 3 — Show backend warning immediately (format mismatch, codec issues, etc.)
+        // FIX 3 â€” Show backend warning immediately (format mismatch, codec issues, etc.)
         if (data.warning) {
           Toast.warning(data.warning);
         }
@@ -2779,10 +2777,10 @@
         }
         
         // Append the video title as a query param so the server can use it in
-        // Content-Disposition. Android Chrome uses that header for the saved filename —
+        // Content-Disposition. Android Chrome uses that header for the saved filename â€”
         // it ignores a.download and the URL path for cross-origin downloads.
         const titleParam = rawTitle ? '&title=' + encodeURIComponent(
-          rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '').trim().slice(0, 100)
+          rawTitle.replace(/[^a-zA-Z0-9Ã€-É\s\-_]/g, '').trim().slice(0, 100)
         ) : '';
         const downloadUrlWithTitle = downloadUrl
           ? downloadUrl + (downloadUrl.includes('?') ? titleParam : titleParam.replace('&', '?'))
@@ -2803,14 +2801,14 @@
 
         const finalFileSize = downloadedFileSize > 0 ? downloadedFileSize : backendFileSize > 0 ? backendFileSize : null;
 
-        // FIX 4 — Store both downloadUrl and viewUrl in history
+        // FIX 4 â€” Store both downloadUrl and viewUrl in history
         DownloadsManager.add(
           downloadUrl,
           playUrl,
           responseFormat,
           backendFileName,
           finalFileSize,
-          data.thumbnailCdn || data.thumbnail,  // prefer CDN URL — survives server restarts
+          data.thumbnailCdn || data.thumbnail,  // prefer CDN URL â€” survives server restarts
           data.duration,
           data.title  // ADDED
         );
