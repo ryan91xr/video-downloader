@@ -1960,7 +1960,9 @@
         if (!isDownloads) {
           if (state.isDownloading) {
             setMessage("Please wait...", "loading");
+            // Restore the bar at whatever percentage FakeProgress is currently at
             ProgressBar.show();
+            ProgressBar.set(FakeProgress._current);
           } else {
             setMessage('', '');
           }
