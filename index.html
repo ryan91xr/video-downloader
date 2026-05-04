@@ -1952,9 +1952,19 @@
       },
 
       switch(tabId) {
-        setMessage('', '');
-        
         const isDownloads = tabId === 'downloads';
+
+        // Only clear the message if no download is in progress.
+        // If a download IS running, restore the progress bar and message
+        // so the user can see it when they switch back to the Enter URL tab.
+        if (!isDownloads) {
+          if (state.isDownloading) {
+            setMessage("Please wait...", "loading");
+            ProgressBar.show();
+          } else {
+            setMessage('', '');
+          }
+        }
         elements.tabBtnEnterUrl.setAttribute('aria-selected', !isDownloads);
         elements.tabBtnDownloads.setAttribute('aria-selected', isDownloads);
         elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads);
