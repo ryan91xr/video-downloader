@@ -1954,19 +1954,19 @@
       switch(tabId) {
         const isDownloads = tabId === 'downloads';
 
-        // Only clear the message if no download is in progress.
-        // If a download IS running, restore the progress bar and message
-        // so the user can see it when they switch back to the Enter URL tab.
+        // When switching back to Enter URL tab — restore download state if active
         if (!isDownloads) {
-          if (state.isDownloading) {
+          if (isActivelyDownloading()) {
             setMessage("Please wait...", "loading");
-            // Restore the bar at whatever percentage FakeProgress is currently at
             ProgressBar.show();
             ProgressBar.set(FakeProgress._current);
           } else {
             setMessage('', '');
+            ProgressBar.hide();
           }
         }
+        // When switching to Downloads tab — don't touch the message or progress bar
+        // The download is still running on the server, we just hide the Enter URL tab
         elements.tabBtnEnterUrl.setAttribute('aria-selected', !isDownloads);
         elements.tabBtnDownloads.setAttribute('aria-selected', isDownloads);
         elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads);
