@@ -152,7 +152,16 @@
 
     .app-title span { color: var(--color-accent); }
 
-
+    .pro-badge {
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+      color: #000;
+      font-size: 0.625rem;
+      font-weight: 700;
+      padding: var(--space-xs) 10px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
     .menu-overlay {
       position: fixed;
@@ -361,7 +370,7 @@
       backdrop-filter: blur(20px);
       border-radius: var(--radius-lg);
       padding: var(--space-sm);
-      min-width: 150px;
+      min-width: 60px;
       opacity: 0;
       visibility: hidden;
       transform: translateY(-10px);
@@ -376,8 +385,8 @@
     .format-option {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px;
+      justify-content: center;
+      padding: 10px;
       border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all var(--transition-fast);
@@ -386,7 +395,6 @@
       background: transparent;
       border: none;
       width: 100%;
-      text-align: left;
     }
 
     .format-option:hover,
@@ -556,6 +564,60 @@
     }
 
     .toast-close:hover { background: rgba(255, 255, 255, 0.1); color: var(--color-text-primary); }
+
+    /* ==================== QUALITY SELECTOR ==================== */
+    .quality-selector {
+      width: 100%;
+      margin-top: var(--space-md);
+      display: none; /* hidden by default — shown only for video format */
+    }
+
+    .quality-selector.visible {
+      display: block;
+    }
+
+    .quality-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-sm);
+    }
+
+    .quality-options {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    .quality-btn {
+      flex: 1;
+      min-width: 60px;
+      padding: 8px var(--space-sm);
+      border-radius: var(--radius-full);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-align: center;
+    }
+
+    .quality-btn:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+      background: rgba(0, 212, 170, 0.08);
+    }
+
+    .quality-btn.active {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+      background: rgba(0, 212, 170, 0.12);
+      font-weight: 600;
+    }
 
     .user-guide { margin-top: var(--space-xl); width: 100%; }
 
@@ -995,7 +1057,7 @@
         </svg>
       </button>
       <h1 class="app-title">Flash<span>Vidz</span></h1>
-
+      <span class="pro-badge">PRO</span>
     </header>
 
     <div class="tabs-container">
@@ -1028,21 +1090,19 @@
             </button>
             <div class="format-dropdown" id="formatDropdown" role="listbox" aria-label="Download format options">
               <button type="button" class="format-option selected" data-format="video"
-                      id="optionVideo" role="option" aria-selected="true">
+                      id="optionVideo" role="option" aria-selected="true" aria-label="Video MP4">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
                 </svg>
-                <span>Video (MP4)</span>
                 <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
               </button>
               <button type="button" class="format-option" data-format="audio"
-                      id="optionAudio" role="option" aria-selected="false">
+                      id="optionAudio" role="option" aria-selected="false" aria-label="Audio M4A">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
                 </svg>
-                <span>Audio (M4A)</span>
                 <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
@@ -1080,6 +1140,17 @@
           <div id="progress-fill"></div>
         </div>
         <div id="progress-label">0%</div>
+      </div>
+
+      <!-- Quality Selector — hidden for audio format -->
+      <div class="quality-selector" id="qualitySelector">
+        <div class="quality-label">Download Quality</div>
+        <div class="quality-options" role="group" aria-label="Select video quality">
+          <button class="quality-btn" data-quality="1080p" aria-pressed="false">1080p</button>
+          <button class="quality-btn active" data-quality="720p" aria-pressed="true">720p</button>
+          <button class="quality-btn" data-quality="480p" aria-pressed="false">480p</button>
+          <button class="quality-btn" data-quality="best" aria-pressed="false">Best</button>
+        </div>
       </div>
 
       <div class="ios-hint" id="iosHint">
@@ -1206,7 +1277,8 @@
         'videoModalContent','videoModalPlayer','videoModalClose',
         'globalDownloadMenu','menuDownloads','menuShareApp','menuRateApp',
         'menuHelp','menuPrivacy','iosHint',
-        'progress-wrap','progress-fill','progress-label'
+        'progress-wrap','progress-fill','progress-label',
+        'qualitySelector'
       ];
       ids.forEach(id => { elements[id] = document.getElementById(id); });
     }
@@ -1333,7 +1405,7 @@
           const parsed = JSON.parse(stored);
           return {
             format: parsed.format === 'audio' ? 'audio' : 'video',
-            quality: ['best','medium','low'].includes(parsed.quality) ? parsed.quality : 'best',
+            quality: ['best','1080p','720p','480p'].includes(parsed.quality) ? parsed.quality : '720p',
             autoDownload: parsed.autoDownload === true
           };
         } catch {
@@ -1346,6 +1418,50 @@
           localStorage.setItem('flashvidz_settings', JSON.stringify(settings));
         } catch (e) {
           console.error('Failed to save settings:', e);
+        }
+      }
+    };
+
+    // ==================== QUALITY SELECTOR ====================
+    const QualitySelector = {
+      _selected: '720p', // default — good balance of quality and speed
+
+      init() {
+        const buttons = elements.qualitySelector?.querySelectorAll('.quality-btn');
+        buttons?.forEach(btn => {
+          btn.addEventListener('click', () => this.select(btn.dataset.quality));
+        });
+        // Show/hide based on initial format
+        this.updateVisibility();
+      },
+
+      select(quality) {
+        if (!['1080p', '720p', '480p', 'best'].includes(quality)) return;
+        this._selected = quality;
+
+        // Update button states
+        const buttons = elements.qualitySelector?.querySelectorAll('.quality-btn');
+        buttons?.forEach(btn => {
+          const isActive = btn.dataset.quality === quality;
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-pressed', String(isActive));
+        });
+
+        // Persist to settings
+        const settings = Storage.getSettings();
+        Storage.saveSettings({ ...settings, quality });
+      },
+
+      get() {
+        return this._selected;
+      },
+
+      updateVisibility() {
+        // Only show for video — quality doesn't apply to audio
+        if (selectedFormat === 'video') {
+          elements.qualitySelector?.classList.add('visible');
+        } else {
+          elements.qualitySelector?.classList.remove('visible');
         }
       }
     };
@@ -1390,6 +1506,7 @@
         elements.optionVideo.classList.toggle('selected', isVideo);
         elements.optionAudio.classList.toggle('selected', !isVideo);
         this.close();
+        QualitySelector.updateVisibility();
       }
     };
 
@@ -2226,7 +2343,7 @@
         const response = await fetch(CONFIG.API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: link, format: selectedFormat, quality: settings.quality }),
+          body: JSON.stringify({ url: link, format: selectedFormat, quality: QualitySelector.get() }),
           signal: state.abortController.signal
         });
 
@@ -2367,6 +2484,8 @@
       const settings = Storage.getSettings();
       selectedFormat = settings.format === 'audio' ? 'audio' : 'video';
       FormatSelector.select(selectedFormat);
+      QualitySelector.init();
+      QualitySelector.select(settings.quality || '720p');
 
       HamburgerMenu.init();
       TabManager.init();
