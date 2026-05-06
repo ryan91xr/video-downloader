@@ -7,13 +7,17 @@
   <meta name="description" content="Download videos from TikTok, Instagram, YouTube, and Facebook">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self';
+             script-src 'self' 'unsafe-inline';
+             connect-src 'self' https://flashvidz-backend.onrender.com http://localhost:3000;
+             img-src 'self' data: https: blob:;
+             media-src 'self' blob: https:;
+             style-src 'self' 'unsafe-inline'">
   <title>FlashVidz - Video Downloader</title>
-  
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-  
   <style>
-    /* ==================== CSS VARIABLES ==================== */
     :root {
       --color-bg-primary: #0f2027;
       --color-bg-secondary: #1c2b33;
@@ -38,10 +42,10 @@
       --radius-lg: 16px;
       --radius-xl: 20px;
       --radius-full: 9999px;
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-      --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
-      --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
-      --shadow-glow: 0 4px 15px rgba(0, 212, 170, 0.4);
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+      --shadow-glow: 0 4px 15px rgba(0,212,170,0.4);
       --z-base: 1;
       --z-dropdown: 100;
       --z-sticky: 200;
@@ -55,898 +59,474 @@
       --header-height: 72px;
       --input-height: 56px;
     }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html {
       font-size: 16px;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
     }
-
     body {
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      min-height: 100dvh;
+      margin: 0; padding: 0;
+      min-height: 100vh; min-height: 100dvh;
       background: linear-gradient(135deg, var(--color-bg-primary), var(--color-bg-secondary), var(--color-bg-tertiary));
       background-attachment: fixed;
       font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--color-text-primary);
       line-height: 1.5;
     }
-
-    :focus-visible {
-      outline: 2px solid var(--color-accent);
-      outline-offset: 2px;
-    }
-
+    :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
     .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+      position: absolute; width: 1px; height: 1px; padding: 0;
+      margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border: 0;
     }
-
     .app-container {
-      max-width: var(--app-max-width);
-      margin: 0 auto;
-      width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      max-width: var(--app-max-width); margin: 0 auto; width: 100%;
+      min-height: 100vh; display: flex; flex-direction: column;
     }
-
     .app-header {
-      width: 100%;
-      display: flex;
-      align-items: center;
+      width: 100%; display: flex; align-items: center;
       justify-content: space-between;
       padding: var(--space-md) var(--space-lg);
-      position: sticky;
-      top: 0;
-      z-index: var(--z-sticky);
-      background: rgba(15, 32, 39, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: var(--z-sticky);
+      background: rgba(15,32,39,0.85);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       height: var(--header-height);
     }
-
     .hamburger-btn {
-      width: 44px;
-      height: 44px;
-      background: rgba(255, 255, 255, 0.06);
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,0.06);
       backdrop-filter: blur(10px);
-      border: none;
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: none; border-radius: var(--radius-md);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: all var(--transition-base);
-      color: var(--color-accent);
-      font-size: 20px;
+      color: var(--color-accent); font-size: 20px;
     }
-
-    .hamburger-btn:hover { background: rgba(255, 255, 255, 0.12); transform: scale(1.05); }
+    .hamburger-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.05); }
     .hamburger-btn:active { transform: scale(0.95); }
-
     .app-title {
-      font-size: 1.375rem;
-      font-weight: 700;
-      color: var(--color-text-primary);
-      margin: 0;
-      flex: 1;
-      text-align: center;
+      font-size: 1.375rem; font-weight: 700;
+      color: var(--color-text-primary); margin: 0;
+      flex: 1; text-align: center;
     }
-
     .app-title span { color: var(--color-accent); }
-
     .pro-badge {
       background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
-      color: #000;
-      font-size: 0.625rem;
-      font-weight: 700;
-      padding: var(--space-xs) 10px;
-      border-radius: var(--radius-full);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      color: #000; font-size: 0.625rem; font-weight: 700;
+      padding: var(--space-xs) 10px; border-radius: var(--radius-full);
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
-
     .menu-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       z-index: calc(var(--z-menu) - 1);
-      opacity: 0;
-      visibility: hidden;
-      transition: all var(--transition-base);
+      opacity: 0; visibility: hidden; transition: all var(--transition-base);
     }
-
     .menu-overlay.active { opacity: 1; visibility: visible; }
-
     .hamburger-menu-container {
-      position: fixed;
-      top: 0;
-      left: -280px;
-      width: 280px;
-      height: 100vh;
-      height: 100dvh;
-      background: rgba(15, 32, 39, 0.98);
-      backdrop-filter: blur(20px);
-      z-index: var(--z-menu);
-      transition: left var(--transition-base);
+      position: fixed; top: 0; left: -280px; width: 280px;
+      height: 100vh; height: 100dvh;
+      background: rgba(15,32,39,0.98); backdrop-filter: blur(20px);
+      z-index: var(--z-menu); transition: left var(--transition-base);
       padding: var(--space-lg);
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
-      overflow-y: auto;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.5); overflow-y: auto;
     }
-
     .hamburger-menu-container.active { left: 0; }
-
     .menu-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: var(--space-lg);
+      display: flex; align-items: baseline;
+      justify-content: space-between; margin-bottom: var(--space-lg);
     }
-
     .menu-title-group { display: flex; flex-direction: column; gap: var(--space-xs); }
     .menu-title { font-size: 1.125rem; font-weight: 600; color: var(--color-text-primary); line-height: 1.3; }
     .menu-subtitle { font-size: 0.75rem; color: var(--color-text-muted); }
-
     .close-menu-btn {
-      width: 36px;
-      height: 36px;
-      background: rgba(255, 255, 255, 0.06);
-      border: none;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      color: #aaa;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.06); border: none;
+      border-radius: var(--radius-sm); cursor: pointer; color: #aaa;
+      font-size: 20px; display: flex; align-items: center; justify-content: center;
       transition: all var(--transition-fast);
     }
-
     .close-menu-btn:hover { background: var(--color-error-bg); color: var(--color-error); }
-
     .menu-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-sm); }
-
     .menu-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      padding: var(--space-md);
-      min-height: 48px;
-      border-radius: var(--radius-md);
-      cursor: pointer;
+      display: flex; align-items: center; gap: var(--space-md);
+      padding: var(--space-md); min-height: 48px;
+      border-radius: var(--radius-md); cursor: pointer;
       transition: all var(--transition-fast);
-      color: var(--color-text-secondary);
-      font-size: 0.875rem;
-      background: transparent;
-      border: none;
-      width: 100%;
-      text-align: left;
+      color: var(--color-text-secondary); font-size: 0.875rem;
+      background: transparent; border: none; width: 100%; text-align: left;
     }
-
-    .menu-item:hover,
-    .menu-item:focus-visible { background: rgba(0, 212, 170, 0.12); color: var(--color-accent); }
+    .menu-item:hover, .menu-item:focus-visible { background: rgba(0,212,170,0.12); color: var(--color-accent); }
     .menu-item:active { transform: scale(0.98); }
-    .menu-item.active { background: rgba(0, 212, 170, 0.12); color: var(--color-accent); }
-
+    .menu-item.active { background: rgba(0,212,170,0.12); color: var(--color-accent); }
     .menu-item .menu-icon {
-      width: 24px;
-      height: 24px;
-      flex-shrink: 0;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      fill: none;
+      width: 24px; height: 24px; flex-shrink: 0;
+      stroke: currentColor; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round; fill: none;
     }
-
     .tabs-container {
-      width: 100%;
-      max-width: 360px;
+      width: 100%; max-width: 360px;
       margin: var(--space-sm) auto var(--space-lg);
       padding: 0 var(--space-lg);
     }
-
     .tabs-nav {
-      display: flex;
-      background: transparent;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      position: relative;
+      display: flex; background: transparent;
+      border-bottom: 1px solid rgba(255,255,255,0.1); position: relative;
     }
-
     .tab-btn {
-      flex: 1;
-      padding: 14px var(--space-md);
-      border: none;
-      background: transparent;
-      color: var(--color-text-muted);
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all var(--transition-base);
-      position: relative;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      flex: 1; padding: 14px var(--space-md);
+      border: none; background: transparent;
+      color: var(--color-text-muted); font-size: 0.875rem; font-weight: 500;
+      cursor: pointer; transition: all var(--transition-base); position: relative;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
-
-    .tab-btn:hover { color: var(--color-text-secondary); background: rgba(255, 255, 255, 0.03); }
+    .tab-btn:hover { color: var(--color-text-secondary); background: rgba(255,255,255,0.03); }
     .tab-btn[aria-selected="true"] { color: var(--color-accent); font-weight: 600; }
-
     .tab-indicator {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      height: 3px;
-      width: 50%;
+      position: absolute; bottom: 0; left: 0; height: 3px; width: 50%;
       background: var(--color-accent);
       transition: transform var(--transition-base);
       border-radius: 3px 3px 0 0;
     }
-
     .tab-indicator.downloads { transform: translateX(100%); }
-
     .tab-content {
-      display: none;
-      width: 100%;
-      max-width: 360px;
-      margin: 0 auto;
-      padding: 0 var(--space-lg);
-      flex: 1;
+      display: none; width: 100%; max-width: 360px;
+      margin: 0 auto; padding: 0 var(--space-lg); flex: 1;
     }
-
-    .tab-content.active {
-      display: block;
-      animation: fadeIn var(--transition-base);
-    }
-
+    .tab-content.active { display: block; animation: fadeIn var(--transition-base); }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
     .input-bar-container { width: 100%; position: relative; z-index: var(--z-dropdown); }
-
     .input-bar {
-      display: flex;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(20px);
-      border-radius: var(--radius-full);
-      padding: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: var(--shadow-md);
+      display: flex; align-items: center;
+      background: rgba(255,255,255,0.08); backdrop-filter: blur(20px);
+      border-radius: var(--radius-full); padding: 6px;
+      border: 1px solid rgba(255,255,255,0.1); box-shadow: var(--shadow-md);
       transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     }
-
     .input-bar:focus-within {
-      border-color: rgba(0, 212, 170, 0.4);
-      box-shadow: var(--shadow-md), 0 0 0 3px rgba(0, 212, 170, 0.1);
+      border-color: rgba(0,212,170,0.4);
+      box-shadow: var(--shadow-md), 0 0 0 3px rgba(0,212,170,0.1);
     }
-
     .format-selector { position: relative; flex-shrink: 0; }
-
     .format-btn {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-      padding: 10px 14px;
-      border-radius: var(--radius-full);
-      border: none;
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--color-accent);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      white-space: nowrap;
+      display: flex; align-items: center; gap: var(--space-xs);
+      padding: 10px 14px; border-radius: var(--radius-full);
+      border: none; background: rgba(255,255,255,0.1);
+      color: var(--color-accent); font-size: 0.8125rem; font-weight: 500;
+      cursor: pointer; transition: all var(--transition-fast); white-space: nowrap;
     }
-
-    .format-btn:hover { background: rgba(0, 212, 170, 0.2); }
+    .format-btn:hover { background: rgba(0,212,170,0.2); }
     .format-btn svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
     .format-btn .arrow-icon { width: 14px; height: 14px; opacity: 0.7; transition: transform var(--transition-fast); }
     .format-btn[aria-expanded="true"] .arrow-icon { transform: rotate(180deg); }
-
     .format-dropdown {
-      position: absolute;
-      top: calc(100% + 10px);
-      left: 0;
-      background: rgba(20, 40, 50, 0.98);
-      backdrop-filter: blur(20px);
-      border-radius: var(--radius-lg);
-      padding: var(--space-sm);
-      min-width: 60px;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-10px);
+      position: absolute; top: calc(100% + 10px); left: 0;
+      background: rgba(20,40,50,0.98); backdrop-filter: blur(20px);
+      border-radius: var(--radius-lg); padding: var(--space-sm); min-width: 60px;
+      opacity: 0; visibility: hidden; transform: translateY(-10px);
       transition: all var(--transition-base);
-      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 212, 170, 0.3);
-      border: 1px solid rgba(0, 212, 170, 0.4);
+      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0,212,170,0.3);
+      border: 1px solid rgba(0,212,170,0.4);
       z-index: calc(var(--z-dropdown) + 10);
     }
-
     .format-dropdown.active { opacity: 1; visibility: visible; transform: translateY(0); }
-
     .format-option {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      padding: 10px; border-radius: var(--radius-sm); cursor: pointer;
       transition: all var(--transition-fast);
-      color: var(--color-text-secondary);
-      font-size: 0.8125rem;
-      background: transparent;
-      border: none;
-      width: 100%;
+      color: var(--color-text-secondary); font-size: 0.8125rem;
+      background: transparent; border: none; width: 100%;
     }
-
-    .format-option:hover,
-    .format-option:focus-visible { background: rgba(0, 212, 170, 0.2); color: var(--color-accent); }
+    .format-option:hover, .format-option:focus-visible { background: rgba(0,212,170,0.2); color: var(--color-accent); }
     .format-option svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
     .format-option .check-icon { margin-left: auto; opacity: 0; width: 14px; height: 14px; }
     .format-option[aria-selected="true"] .check-icon { opacity: 1; }
-
     .input-wrapper { flex: 1; min-width: 0; position: relative; }
-
     .input-bar input {
-      width: 100%;
-      border: none;
-      background: transparent;
-      color: var(--color-text-primary);
-      font-size: 0.9375rem;
-      padding: 10px 12px;
-      outline: none;
+      width: 100%; border: none; background: transparent;
+      color: var(--color-text-primary); font-size: 0.9375rem;
+      padding: 10px 12px; outline: none;
     }
-
     .input-bar input::placeholder { color: var(--color-text-muted); }
-
     .paste-btn-bar {
-      padding: 10px 14px;
-      border-radius: var(--radius-full);
-      border: none;
-      background: transparent;
-      color: var(--color-accent);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      white-space: nowrap;
-      flex-shrink: 0;
+      padding: 10px 14px; border-radius: var(--radius-full);
+      border: none; background: transparent; color: var(--color-accent);
+      font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+      transition: all var(--transition-fast); white-space: nowrap; flex-shrink: 0;
     }
-
-    .paste-btn-bar:hover { background: rgba(0, 212, 170, 0.15); }
+    .paste-btn-bar:hover { background: rgba(0,212,170,0.15); }
     .paste-btn-bar:disabled { opacity: 0.5; cursor: not-allowed; }
-
     .submit-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
+      width: 44px; height: 44px; border-radius: 50%; border: none;
       background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
-      color: #000;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--transition-fast);
-      flex-shrink: 0;
-      margin-left: 4px;
+      color: #000; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; transition: all var(--transition-fast);
+      flex-shrink: 0; margin-left: 4px;
     }
-
     .submit-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: var(--shadow-glow); }
     .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
     .submit-btn svg { width: 20px; height: 20px; fill: currentColor; }
     .submit-btn.loading svg { display: none; }
-
     .submit-btn.loading::after {
-      content: "";
-      width: 18px;
-      height: 18px;
-      border: 2px solid transparent;
-      border-top-color: #000;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      content: ""; width: 18px; height: 18px;
+      border: 2px solid transparent; border-top-color: #000;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
     }
-
+    .cancel-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1.5px solid var(--color-error); background: transparent;
+      color: var(--color-error); cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      transition: all var(--transition-fast);
+      flex-shrink: 0; margin-left: 4px;
+    }
+    .cancel-btn:hover { background: var(--color-error-bg); transform: scale(1.05); }
+    .cancel-btn:active { transform: scale(0.95); }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .message-container { width: 100%; margin-top: var(--space-md); text-align: center; min-height: 24px; }
-
     #message { font-size: 0.875rem; margin: 0; transition: color var(--transition-fast); }
     #message.error { color: var(--color-error); }
     #message.success { color: var(--color-success); }
     #message.loading { color: var(--color-text-secondary); }
-
     #progress-wrap { width: 75%; margin-top: var(--space-sm); margin-left: auto; margin-right: auto; display: none; }
     #progress-wrap.visible { display: block; }
-
     #progress-track {
-      width: 100%;
-      height: 4px;
-      background: rgba(255,255,255,0.1);
-      border-radius: var(--radius-full);
-      overflow: hidden;
+      width: 100%; height: 4px; background: rgba(255,255,255,0.1);
+      border-radius: var(--radius-full); overflow: hidden;
     }
-
     #progress-fill {
-      height: 100%;
-      width: 0%;
+      height: 100%; width: 0%;
       background: linear-gradient(90deg, var(--color-accent-dark), var(--color-accent), var(--color-accent-light));
       border-radius: var(--radius-full);
-      transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition: width 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
       background-size: 200% 100%;
       animation: progress-shimmer 1.8s linear infinite;
     }
-
     @keyframes progress-shimmer {
       0%   { background-position: 200% center; }
       100% { background-position: -200% center; }
     }
-
     #progress-label { font-size: 0.75rem; color: var(--color-text-muted); text-align: right; margin-top: 4px; }
-
     .toast-container {
       position: fixed;
       top: calc(var(--header-height) + var(--space-md));
-      left: 50%;
-      transform: translateX(-50%);
+      left: 50%; transform: translateX(-50%);
       z-index: var(--z-toast);
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-sm);
-      width: calc(100% - var(--space-lg) * 2);
-      max-width: 360px;
+      display: flex; flex-direction: column; gap: var(--space-sm);
+      width: calc(100% - var(--space-lg) * 2); max-width: 360px;
       pointer-events: none;
     }
-
     .toast {
-      background: rgba(30, 45, 55, 0.98);
-      backdrop-filter: blur(12px);
-      border-radius: var(--radius-md);
-      padding: var(--space-md) var(--space-lg);
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      box-shadow: var(--shadow-lg);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      animation: toastSlideIn var(--transition-base);
-      pointer-events: auto;
+      background: rgba(30,45,55,0.98); backdrop-filter: blur(12px);
+      border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-md);
+      box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.08);
+      animation: toastSlideIn var(--transition-base); pointer-events: auto;
     }
-
     .toast.hiding { animation: toastSlideOut var(--transition-base) forwards; }
-
     @keyframes toastSlideIn {
       from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
-
-    @keyframes toastSlideOut {
-      to { opacity: 0; transform: translateY(-20px) scale(0.95); }
-    }
-
+    @keyframes toastSlideOut { to { opacity: 0; transform: translateY(-20px) scale(0.95); } }
     .toast-icon { width: 20px; height: 20px; flex-shrink: 0; }
     .toast-icon.success { color: var(--color-success); }
-    .toast-icon.error { color: var(--color-error); }
-    .toast-icon.info { color: var(--color-text-secondary); }
+    .toast-icon.error   { color: var(--color-error); }
+    .toast-icon.info    { color: var(--color-text-secondary); }
     .toast-icon.warning { color: var(--color-warning); }
-
     .toast-message { flex: 1; font-size: 0.875rem; color: var(--color-text-primary); }
-
     .toast-close {
-      width: 24px;
-      height: 24px;
-      border: none;
-      background: transparent;
-      color: var(--color-text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      transition: all var(--transition-fast);
+      width: 24px; height: 24px; border: none; background: transparent;
+      color: var(--color-text-muted); cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      border-radius: var(--radius-sm); transition: all var(--transition-fast);
     }
-
-    .toast-close:hover { background: rgba(255, 255, 255, 0.1); color: var(--color-text-primary); }
-
-    /* ==================== QUALITY SELECTOR ==================== */
-    .quality-selector {
-      width: 100%;
-      margin-top: var(--space-md);
-      display: none; /* hidden by default — shown only for video format */
-    }
-
-    .quality-selector.visible {
-      display: block;
-    }
-
+    .toast-close:hover { background: rgba(255,255,255,0.1); color: var(--color-text-primary); }
+    .quality-selector { width: 100%; margin-top: var(--space-md); display: none; }
+    .quality-selector.visible { display: block; }
     .quality-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: var(--space-sm);
+      font-size: 0.75rem; font-weight: 600; color: var(--color-text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: var(--space-sm);
     }
-
-    .quality-options {
-      display: flex;
-      gap: var(--space-sm);
-      flex-wrap: wrap;
-    }
-
+    .quality-options { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
     .quality-btn {
-      flex: 1;
-      min-width: 60px;
-      padding: 8px var(--space-sm);
-      border-radius: var(--radius-full);
-      border: 1.5px solid rgba(255, 255, 255, 0.12);
-      background: transparent;
-      color: var(--color-text-secondary);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      text-align: center;
+      flex: 1; min-width: 60px; padding: 8px var(--space-sm);
+      border-radius: var(--radius-full); border: 1.5px solid rgba(255,255,255,0.12);
+      background: transparent; color: var(--color-text-secondary);
+      font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+      transition: all var(--transition-fast); text-align: center;
     }
-
-    .quality-btn:hover {
-      border-color: var(--color-accent);
-      color: var(--color-accent);
-      background: rgba(0, 212, 170, 0.08);
-    }
-
-    .quality-btn.active {
-      border-color: var(--color-accent);
-      color: var(--color-accent);
-      background: rgba(0, 212, 170, 0.12);
-      font-weight: 600;
-    }
-
+    .quality-btn:hover { border-color: var(--color-accent); color: var(--color-accent); background: rgba(0,212,170,0.08); }
+    .quality-btn.active { border-color: var(--color-accent); color: var(--color-accent); background: rgba(0,212,170,0.12); font-weight: 600; }
     .user-guide { margin-top: var(--space-xl); width: 100%; }
-
     .guide-card {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255,255,255,0.03); backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg); padding: var(--space-lg);
+      border: 1px solid rgba(255,255,255,0.08);
     }
-
     .guide-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--color-accent);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: var(--space-md);
-      text-align: center;
+      font-size: 0.875rem; font-weight: 600; color: var(--color-accent);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: var(--space-md); text-align: center;
     }
-
     .guide-list { list-style: none; display: flex; flex-direction: column; }
-
     .guide-item {
-      display: flex;
-      align-items: flex-start;
-      gap: var(--space-md);
+      display: flex; align-items: flex-start; gap: var(--space-md);
       padding: var(--space-md) 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.8125rem;
-      color: var(--color-text-secondary);
-      line-height: 1.5;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.8125rem; color: var(--color-text-secondary); line-height: 1.5;
     }
-
     .guide-item:last-child { border-bottom: none; }
-
     .guide-number {
-      width: 24px;
-      height: 24px;
-      background: rgba(0, 212, 170, 0.15);
-      color: var(--color-accent);
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      flex-shrink: 0;
+      width: 24px; height: 24px; background: rgba(0,212,170,0.15);
+      color: var(--color-accent); border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
     }
-
     .guide-text strong { color: var(--color-text-primary); font-weight: 600; }
-
     .downloads-container { padding: 0; }
-
     .downloads-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
     .downloads-title { font-size: 1.125rem; font-weight: 600; color: var(--color-text-primary); }
-
     .downloads-count {
-      font-size: 0.8125rem;
-      color: var(--color-text-muted);
-      background: rgba(255, 255, 255, 0.06);
-      padding: var(--space-xs) 12px;
-      border-radius: var(--radius-full);
+      font-size: 0.8125rem; color: var(--color-text-muted);
+      background: rgba(255,255,255,0.06);
+      padding: var(--space-xs) 12px; border-radius: var(--radius-full);
     }
-
     .downloads-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-sm);
-      max-height: calc(100vh - 280px);
-      overflow-y: auto;
-      padding-right: 6px;
+      display: flex; flex-direction: column; gap: var(--space-sm);
+      max-height: calc(100vh - 280px); overflow-y: auto; padding-right: 6px;
     }
-
     .downloads-list::-webkit-scrollbar { width: 6px; }
     .downloads-list::-webkit-scrollbar-track { background: transparent; }
-    .downloads-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: var(--radius-full); }
-
+    .downloads-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: var(--radius-full); }
     .download-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(18px);
-      border-radius: var(--radius-md);
-      padding: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: all var(--transition-fast);
-      cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.06); backdrop-filter: blur(18px);
+      border-radius: var(--radius-md); padding: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: all var(--transition-fast); cursor: pointer;
     }
-
-    .download-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+    .download-card:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
     .download-card:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-
     .download-info-row { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-
     .download-thumbnail-small {
-      width: 110px;
-      height: 80px;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      background: #111;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      position: relative;
+      width: 110px; height: 80px; border-radius: var(--radius-sm);
+      overflow: hidden; background: #111;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; position: relative;
     }
-
     .download-thumbnail-small img { width: 100%; height: 100%; object-fit: cover; }
-    .download-thumbnail-small svg { width: 24px; height: 24px; fill: rgba(255, 255, 255, 0.4); }
-    .download-thumbnail-small.has-thumbnail .thumbnail-fallback { display: none; }
-    .download-thumbnail-small:not(.has-thumbnail) .thumbnail-fallback { display: block; }
-
-    .download-thumbnail-small.loading {
-      background: linear-gradient(90deg, #1c2b33 25%, #2c5364 50%, #1c2b33 75%);
-      background-size: 200% 100%;
-      animation: skeleton-loading 1.5s infinite;
-    }
-
-    @keyframes skeleton-loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
+    .download-thumbnail-small svg { width: 24px; height: 24px; fill: rgba(255,255,255,0.4); }
     .video-duration {
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-      background: rgba(0, 0, 0, 0.7);
-      color: #fff;
-      font-size: 0.625rem;
-      padding: 2px 6px;
-      border-radius: var(--radius-sm);
-      font-weight: 600;
+      position: absolute; bottom: 4px; right: 4px;
+      background: rgba(0,0,0,0.7); color: #fff; font-size: 0.625rem;
+      padding: 2px 6px; border-radius: var(--radius-sm); font-weight: 600;
     }
-
-    .download-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: var(--space-xs); }
-
+    .download-info {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; min-width: 0; gap: var(--space-xs);
+    }
     .download-filename {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      line-height: 1.2;
+      font-size: 0.9375rem; font-weight: 600; line-height: 1.2;
       color: var(--color-text-primary);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      word-break: break-word;
-      overflow-wrap: anywhere;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; word-break: break-word; overflow-wrap: anywhere;
     }
-
     .download-meta { font-size: 0.75rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 2px; }
-
     .meta-left {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      display: flex; align-items: center; gap: var(--space-xs);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-
     .meta-size { flex-shrink: 0; margin-top: 2px; }
     .download-meta svg { width: 12px; height: 12px; fill: currentColor; }
-
     .menu-wrapper { position: relative; flex-shrink: 0; }
-
     .menu-btn {
-      width: 36px;
-      height: 36px;
-      background: transparent;
-      border: none;
-      color: var(--color-text-muted);
-      font-size: 20px;
-      line-height: 1;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 36px; height: 36px; background: transparent; border: none;
+      color: var(--color-text-muted); font-size: 20px; line-height: 1;
+      border-radius: var(--radius-sm); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: all var(--transition-fast);
     }
-
-    .menu-btn:hover { background: rgba(255, 255, 255, 0.08); color: var(--color-text-primary); }
-
+    .menu-btn:hover { background: rgba(255,255,255,0.08); color: var(--color-text-primary); }
     .menu-dropdown {
-      position: fixed;
-      background: rgba(30, 40, 50, 0.98);
-      backdrop-filter: blur(12px);
-      border-radius: var(--radius-md);
-      padding: var(--space-xs) 0;
-      min-width: 140px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: var(--shadow-lg);
-      z-index: var(--z-dropdown);
-      opacity: 0;
-      visibility: hidden;
-      transform: scale(0.95);
-      transition: all var(--transition-fast);
+      position: fixed; background: rgba(30,40,50,0.98);
+      backdrop-filter: blur(12px); border-radius: var(--radius-md);
+      padding: var(--space-xs) 0; min-width: 140px;
+      border: 1px solid rgba(255,255,255,0.12); box-shadow: var(--shadow-lg);
+      z-index: var(--z-dropdown); opacity: 0; visibility: hidden;
+      transform: scale(0.95); transition: all var(--transition-fast);
     }
-
     .menu-dropdown.active { opacity: 1; visibility: visible; transform: scale(1); }
-
     .menu-dropdown .menu-item {
-      width: 100%;
-      padding: 10px 14px;
-      background: none;
-      border: none;
-      color: var(--color-text-primary);
-      text-align: left;
-      cursor: pointer;
-      font-size: 0.8125rem;
-      transition: all var(--transition-fast);
+      width: 100%; padding: 10px 14px; background: none; border: none;
+      color: var(--color-text-primary); text-align: left; cursor: pointer;
+      font-size: 0.8125rem; transition: all var(--transition-fast);
     }
-
-    .menu-dropdown .menu-item:hover { background: rgba(255, 255, 255, 0.08); }
+    .menu-dropdown .menu-item:hover { background: rgba(255,255,255,0.08); }
     .menu-dropdown .menu-item.delete:hover { background: var(--color-error-bg); color: var(--color-error); }
-
     .empty-state {
-      text-align: center;
-      color: var(--color-text-muted);
+      text-align: center; color: var(--color-text-muted);
       padding: 60px var(--space-lg);
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(18px);
-      border-radius: var(--radius-xl);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255,255,255,0.03); backdrop-filter: blur(18px);
+      border-radius: var(--radius-xl); border: 1px solid rgba(255,255,255,0.08);
     }
-
-    .empty-state svg { width: 64px; height: 64px; fill: rgba(255, 255, 255, 0.15); margin-bottom: var(--space-md); }
+    .empty-state svg { width: 64px; height: 64px; fill: rgba(255,255,255,0.15); margin-bottom: var(--space-md); }
     .empty-state h3 { font-size: 1.125rem; font-weight: 600; color: var(--color-text-primary); margin: 0 0 var(--space-xs) 0; }
     .empty-state p { font-size: 0.875rem; margin: 0; }
-
     .video-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.9);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: var(--z-modal);
-      padding: var(--space-lg);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+      display: none; align-items: center; justify-content: center;
+      z-index: var(--z-modal); padding: var(--space-lg);
     }
-
     .video-modal.active { display: flex; animation: modalFadeIn var(--transition-base); }
-
     @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
-
     .video-modal-content {
-      position: relative;
-      width: min(900px, 100%);
-      max-height: 90vh;
+      position: relative; width: min(900px, 100%); max-height: 90vh;
       animation: modalContentIn var(--transition-base);
     }
-
     @keyframes modalContentIn {
       from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+      to   { opacity: 1; transform: scale(1); }
     }
-
     .video-modal-player {
-      width: 100%;
-      max-width: 100%;
-      max-height: 80vh;
-      border-radius: var(--radius-md);
-      background: #000;
-      outline: none;
+      width: 100%; max-width: 100%; max-height: 80vh;
+      border-radius: var(--radius-md); background: #000; outline: none;
     }
-
     .video-modal-close {
-      position: absolute;
-      top: -40px;
-      right: 0;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255, 255, 255, 0.15);
-      color: #fff;
-      font-size: 24px;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: absolute; top: -40px; right: 0;
+      width: 36px; height: 36px; border-radius: 50%; border: none;
+      background: rgba(255,255,255,0.15); color: #fff;
+      font-size: 24px; line-height: 1; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: all var(--transition-fast);
     }
-
-    .video-modal-close:hover { background: rgba(255, 255, 255, 0.3); }
-
+    .video-modal-close:hover { background: rgba(255,255,255,0.3); }
     .footer { margin-top: auto; font-size: 0.75rem; color: var(--color-text-muted); text-align: center; padding: var(--space-lg) var(--space-md); }
-
-    .platform-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 2px 8px;
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--color-text-secondary);
+    .retry-btn {
+      background: transparent; border: 1px solid var(--color-accent);
+      color: var(--color-accent); padding: 6px 12px;
+      border-radius: var(--radius-sm); cursor: pointer; font-size: 0.75rem;
+      margin-left: var(--space-sm); transition: all var(--transition-fast);
     }
-
-    .platform-badge.tiktok { background: rgba(0, 0, 0, 0.5); color: #fff; }
-    .platform-badge.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
-    .platform-badge.youtube { background: #ff0000; color: #fff; }
-    .platform-badge.facebook { background: #1877f2; color: #fff; }
-
-    .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
-      background-size: 200% 100%;
-      animation: skeleton-loading 1.5s infinite;
-      border-radius: var(--radius-sm);
+    .retry-btn:hover { background: rgba(0,212,170,0.15); }
+    .ios-hint {
+      background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.3);
+      border-radius: var(--radius-md); padding: var(--space-md);
+      margin-top: var(--space-md); font-size: 0.8125rem;
+      color: var(--color-text-secondary); display: none;
     }
-
+    .ios-hint.visible { display: block; }
+    .ios-hint strong { color: var(--color-accent); }
     @media (max-width: 480px) {
       :root { --space-lg: 16px; --space-xl: 24px; }
       .app-header { padding: var(--space-sm) var(--space-md); }
       .tab-content, .tabs-container { padding-left: var(--space-md); padding-right: var(--space-md); }
       .download-thumbnail-small { width: 90px; height: 65px; }
     }
-
-    @media (min-width: 768px) {
-      .app-container { --app-max-width: 480px; }
-    }
-
+    @media (min-width: 768px) { .app-container { --app-max-width: 480px; } }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -954,42 +534,12 @@
         transition-duration: 0.01ms !important;
       }
     }
-
     @media (prefers-contrast: high) {
       :root { --color-accent: #00ffcc; --color-text-primary: #ffffff; --color-text-secondary: #cccccc; }
       .input-bar, .download-card, .guide-card { border-width: 2px; }
     }
-
-    .retry-btn {
-      background: transparent;
-      border: 1px solid var(--color-accent);
-      color: var(--color-accent);
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-size: 0.75rem;
-      margin-left: var(--space-sm);
-      transition: all var(--transition-fast);
-    }
-
-    .retry-btn:hover { background: rgba(0, 212, 170, 0.15); }
-
-    .ios-hint {
-      background: rgba(0, 212, 170, 0.1);
-      border: 1px solid rgba(0, 212, 170, 0.3);
-      border-radius: var(--radius-md);
-      padding: var(--space-md);
-      margin-top: var(--space-md);
-      font-size: 0.8125rem;
-      color: var(--color-text-secondary);
-      display: none;
-    }
-
-    .ios-hint.visible { display: block; }
-    .ios-hint strong { color: var(--color-accent); }
   </style>
 </head>
-
 <body>
   <div class="toast-container" id="toastContainer" role="region" aria-live="polite" aria-label="Notifications"></div>
   <div class="menu-overlay" id="menuOverlay" aria-hidden="true"></div>
@@ -1007,51 +557,42 @@
       </button>
     </div>
     <ul class="menu-list" role="menubar">
-      <li>
-        <button class="menu-item" id="menuDownloads" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg>
-          <span>Downloads</span>
-        </button>
-      </li>
-      <li>
-        <button class="menu-item" id="menuShareApp" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/>
-            <path d="M8 12l8-6M8 12l8 6"/>
-          </svg>
-          <span>Share App</span>
-        </button>
-      </li>
-      <li>
-        <button class="menu-item" id="menuRateApp" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5-4.7-4.6 6.5-1z"/>
-          </svg>
-          <span>Rate App</span>
-        </button>
-      </li>
-      <li>
-        <button class="menu-item" id="menuHelp" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4M12 17h0"/>
-          </svg>
-          <span>Help</span>
-        </button>
-      </li>
-      <li>
-        <button class="menu-item" id="menuPrivacy" role="menuitem">
-          <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="6" y="11" width="12" height="9" rx="2"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/>
-          </svg>
-          <span>Privacy</span>
-        </button>
-      </li>
+      <li><button class="menu-item" id="menuDownloads" role="menuitem">
+        <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 19h14"/></svg>
+        <span>Downloads</span>
+      </button></li>
+      <li><button class="menu-item" id="menuShareApp" role="menuitem">
+        <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/>
+          <path d="M8 12l8-6M8 12l8 6"/>
+        </svg>
+        <span>Share App</span>
+      </button></li>
+      <li><button class="menu-item" id="menuRateApp" role="menuitem">
+        <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3l2.9 5.9 6.5 1-4.7 4.6 1.1 6.5L12 18l-5.8 3 1.1-6.5-4.7-4.6 6.5-1z"/>
+        </svg>
+        <span>Rate App</span>
+      </button></li>
+      <li><button class="menu-item" id="menuHelp" role="menuitem">
+        <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4M12 17h0"/>
+        </svg>
+        <span>Help</span>
+      </button></li>
+      <li><button class="menu-item" id="menuPrivacy" role="menuitem">
+        <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="6" y="11" width="12" height="9" rx="2"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/>
+        </svg>
+        <span>Privacy</span>
+      </button></li>
     </ul>
   </nav>
 
   <div class="app-container">
     <header class="app-header">
-      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="hamburgerMenu">
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"
+              aria-expanded="false" aria-controls="hamburgerMenu">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 12h18M3 6h18M3 18h18"/>
         </svg>
@@ -1070,10 +611,8 @@
       </nav>
     </div>
 
-    <!-- Tab: Enter URL -->
     <section class="tab-content active" id="tab-enter-url" role="tabpanel" aria-labelledby="tabBtnEnterUrl">
       <div class="input-bar-container">
-        <!-- FIX 10: removed redundant onsubmit="return false" -->
         <form class="input-bar" id="downloadForm">
           <div class="format-selector">
             <button type="button" class="format-btn" id="formatBtn"
@@ -1084,9 +623,7 @@
               <svg viewBox="0 0 24 24" id="formatIconAudio" style="display:none" aria-hidden="true">
                 <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
               </svg>
-              <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 10l5 5 5-5z"/>
-              </svg>
+              <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg>
             </button>
             <div class="format-dropdown" id="formatDropdown" role="listbox" aria-label="Download format options">
               <button type="button" class="format-option selected" data-format="video"
@@ -1109,7 +646,6 @@
               </button>
             </div>
           </div>
-
           <div class="input-wrapper">
             <label for="linkInput" class="sr-only">Video URL</label>
             <input type="url" id="linkInput"
@@ -1117,32 +653,27 @@
                    autocomplete="off" maxlength="2000" inputmode="url"
                    aria-describedby="input-help">
           </div>
-
-          <button type="button" class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">
-            Paste
-          </button>
-
+          <button type="button" class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">Paste</button>
           <button type="submit" class="submit-btn" id="submitBtn" aria-label="Start download">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
             </svg>
           </button>
+          <button type="button" class="cancel-btn" id="cancelBtn" aria-label="Cancel download" hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
         </form>
         <span id="input-help" class="sr-only">Supported platforms: TikTok, Instagram, YouTube, and Facebook</span>
       </div>
-
       <div class="message-container">
         <p id="message" role="status" aria-live="polite"></p>
       </div>
-
       <div id="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div id="progress-track">
-          <div id="progress-fill"></div>
-        </div>
+        <div id="progress-track"><div id="progress-fill"></div></div>
         <div id="progress-label">0%</div>
       </div>
-
-      <!-- Quality Selector — hidden for audio format -->
       <div class="quality-selector" id="qualitySelector">
         <div class="quality-label">Download Quality</div>
         <div class="quality-options" role="group" aria-label="Select video quality">
@@ -1152,11 +683,9 @@
           <button class="quality-btn" data-quality="best" aria-pressed="false">Best</button>
         </div>
       </div>
-
       <div class="ios-hint" id="iosHint">
         <strong>iPhone/iPad:</strong> Videos open in Safari for playback. Tap the share button to save to Photos.
       </div>
-
       <div class="user-guide">
         <div class="guide-card">
           <div class="guide-title">Quick Guide</div>
@@ -1182,8 +711,6 @@
       </div>
     </section>
 
-    <!-- Tab: Downloads -->
-    <!-- FIX 9: added aria-hidden="true" to match initial hidden state -->
     <section class="tab-content" id="tab-downloads" role="tabpanel"
              aria-labelledby="tabBtnDownloads" aria-hidden="true" hidden>
       <div class="downloads-container">
@@ -1191,17 +718,10 @@
           <h2 class="downloads-title">Downloads</h2>
           <span class="downloads-count" id="downloadsCount">0 items</span>
         </div>
-        <div class="downloads-list" id="downloadsList" role="list" aria-label="Downloaded videos">
-          <div class="empty-state" id="emptyState">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            <h3>No downloads yet</h3>
-            <p>Your downloaded videos will appear here</p>
-          </div>
-        </div>
+        <div class="downloads-list" id="downloadsList" role="list" aria-label="Downloaded videos"></div>
       </div>
     </section>
 
-    <!-- Video Modal -->
     <div class="video-modal" id="videoModal" aria-hidden="true" role="dialog"
          aria-label="Video preview" aria-modal="true">
       <div class="video-modal-content" id="videoModalContent">
@@ -1210,15 +730,15 @@
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
+        <!-- crossorigin set dynamically in VideoModal.open() — Bug 8 fix -->
         <video class="video-modal-player" id="videoModalPlayer"
-               controls playsinline preload="auto" crossorigin="anonymous"></video>
+               controls playsinline preload="auto"></video>
       </div>
     </div>
 
     <footer class="footer"></footer>
   </div>
 
-  <!-- Global Download Menu -->
   <div class="menu-dropdown global-download-menu" id="globalDownloadMenu" role="menu" aria-hidden="true"></div>
 
   <script>
@@ -1233,17 +753,24 @@
       )
         ? 'http://localhost:3000/download'
         : 'https://flashvidz-backend.onrender.com/download',
+
+      ALLOWED_THUMB_HOSTS: Object.freeze([
+        'tiktokcdn.com','tiktokv.com','muscdn.com',
+        'cdninstagram.com','instagram.com','fbcdn.net',
+        'ytimg.com','youtube.com','ggpht.com',
+        'flashvidz-backend.onrender.com'
+      ]),
+
       MAX_FILE_SIZE: 500 * 1024 * 1024,
       MAX_FILENAME_LENGTH: 180,
       STORAGE_KEY: 'flashvidz_downloads',
       MAX_DOWNLOADS_HISTORY: 50,
       TOAST_DURATION: 4000,
-      SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook'],
+      SUPPORTED_PLATFORMS: ['tiktok','instagram','youtube','facebook'],
       MAX_RETRIES: 3,
       RETRY_DELAY: 2000
     });
 
-    // FIX 12: Define IS_IOS and IS_ANDROID once — removed duplicate CONFIG.IS_IOS
     const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const IS_ANDROID = /Android/i.test(navigator.userAgent);
@@ -1260,27 +787,26 @@
       activeDownloadMenuContext: null,
       isDownloading: false,
       lastUrl: null,
-      lastFormat: null
+      lastFormat: null,
+      _menuFocusTrapCleanup: null
     };
 
     // ==================== DOM CACHE ====================
     const elements = {};
 
     function cacheElements() {
-      const ids = [
+      [
         'toastContainer','menuOverlay','hamburgerMenu','closeMenuBtn',
         'hamburgerBtn','tabIndicator','tabBtnEnterUrl','tabBtnDownloads',
         'tab-enter-url','tab-downloads','formatBtn','formatDropdown',
         'formatIconVideo','formatIconAudio','optionVideo','optionAudio',
-        'linkInput','pasteBtn','submitBtn','downloadForm','message',
-        'downloadsCount','downloadsList','emptyState','videoModal',
-        'videoModalContent','videoModalPlayer','videoModalClose',
+        'linkInput','pasteBtn','submitBtn','cancelBtn','downloadForm',
+        'message','downloadsCount','downloadsList',
+        'videoModal','videoModalContent','videoModalPlayer','videoModalClose',
         'globalDownloadMenu','menuDownloads','menuShareApp','menuRateApp',
         'menuHelp','menuPrivacy','iosHint',
-        'progress-wrap','progress-fill','progress-label',
-        'qualitySelector'
-      ];
-      ids.forEach(id => { elements[id] = document.getElementById(id); });
+        'progress-wrap','progress-fill','progress-label','qualitySelector'
+      ].forEach(id => { elements[id] = document.getElementById(id); });
     }
 
     // ==================== SECURITY ====================
@@ -1294,20 +820,20 @@
 
       normalizeFileName(filename) {
         if (typeof filename !== 'string') return 'flashvidz-download';
-        let sanitized = filename
+        let s = filename
           .replace(/[\\/:*?"<>|]/g, '_')
           .replace(/[\x00-\x1f\x7f]/g, '')
           .replace(/^\.+/, '')
           .trim();
-        if (sanitized.length > CONFIG.MAX_FILENAME_LENGTH) {
-          const ext = sanitized.lastIndexOf('.');
-          if (ext > 0 && ext > sanitized.length - 10) {
-            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH - (sanitized.length - ext)) + sanitized.slice(ext);
+        if (s.length > CONFIG.MAX_FILENAME_LENGTH) {
+          const ext = s.lastIndexOf('.');
+          if (ext > 0 && ext > s.length - 10) {
+            s = s.slice(0, CONFIG.MAX_FILENAME_LENGTH - (s.length - ext)) + s.slice(ext);
           } else {
-            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH);
+            s = s.slice(0, CONFIG.MAX_FILENAME_LENGTH);
           }
         }
-        return sanitized || 'flashvidz-download';
+        return s || 'flashvidz-download';
       },
 
       normalizeStoredUrl(value) {
@@ -1315,37 +841,90 @@
         if (!trimmed || trimmed.length > 2000) return null;
         try {
           const parsed = new URL(trimmed);
-          if (!['http:', 'https:'].includes(parsed.protocol)) return null;
-          const hostname = parsed.hostname.toLowerCase();
-          if (hostname === 'localhost' || hostname.endsWith('.local')) return null;
-          if (/^127\./.test(hostname) || /^10\./.test(hostname) || /^192\.168\./.test(hostname)) return null;
-          if (hostname.startsWith('172.')) {
-            const second = parseInt(hostname.split('.')[1], 10);
-            if (second >= 16 && second <= 31) return null;
+          if (!['http:','https:'].includes(parsed.protocol)) return null;
+          const h = parsed.hostname.toLowerCase();
+          if (h === 'localhost' || h.endsWith('.local')) return null;
+          if (/^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h)) return null;
+          if (h.startsWith('172.')) {
+            const n = parseInt(h.split('.')[1], 10);
+            if (n >= 16 && n <= 31) return null;
           }
-          if (hostname.startsWith('169.254.')) return null;
-          if (hostname === '::1' || hostname.startsWith('fe80:') ||
-              hostname.startsWith('fc') || hostname.startsWith('fd')) return null;
+          if (h.startsWith('169.254.')) return null;
+          if (h === '::1' || h.startsWith('fe80:') || h.startsWith('fc') || h.startsWith('fd')) return null;
           return trimmed;
-        } catch {
-          return null;
-        }
+        } catch { return null; }
       },
 
-      isValidHttpUrl(value) {
-        return this.normalizeStoredUrl(value) !== null;
+      isValidHttpUrl(value) { return this.normalizeStoredUrl(value) !== null; },
+
+      // BUG 12 FIX: block data:image/svg+xml — only allow safe raster data URIs
+      isSafeThumbnailUrl(url) {
+        if (typeof url !== 'string' || !url.trim()) return false;
+        if (url.startsWith('blob:')) return true;
+        // Only allow raster base64 data URIs — SVG can contain scripts
+        if (url.startsWith('data:image/jpeg;base64,') ||
+            url.startsWith('data:image/png;base64,')  ||
+            url.startsWith('data:image/webp;base64,') ||
+            url.startsWith('data:image/gif;base64,'))  return true;
+        if (url.startsWith('data:')) return false; // block all other data: including SVG
+        try {
+          const parsed = new URL(url);
+          if (!['http:','https:'].includes(parsed.protocol)) return false;
+          const hostname = parsed.hostname.toLowerCase();
+          return CONFIG.ALLOWED_THUMB_HOSTS.some(
+            allowed => hostname === allowed || hostname.endsWith('.' + allowed)
+          );
+        } catch { return false; }
       }
     };
+
+    // ==================== FOCUS TRAP ====================
+    // BUG 5 FIX: use getBoundingClientRect() instead of offsetParent
+    // so position:fixed elements (like the close button) are not excluded
+    function createFocusTrap(element) {
+      const sel = [
+        'button:not([disabled])','[href]',
+        'input:not([disabled])','select:not([disabled])',
+        'textarea:not([disabled])','[tabindex]:not([tabindex="-1"])'
+      ].join(', ');
+
+      function getFocusable() {
+        return Array.from(element.querySelectorAll(sel)).filter(el => {
+          if (el.closest('[hidden]') || el.hasAttribute('disabled')) return false;
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0;
+        });
+      }
+
+      function handleKeyDown(e) {
+        if (e.key !== 'Tab') return;
+        const focusable = getFocusable();
+        if (!focusable.length) { e.preventDefault(); return; }
+        const first = focusable[0];
+        const last  = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first || !element.contains(document.activeElement)) {
+            e.preventDefault(); last.focus();
+          }
+        } else {
+          if (document.activeElement === last || !element.contains(document.activeElement)) {
+            e.preventDefault(); first.focus();
+          }
+        }
+      }
+
+      element.addEventListener('keydown', handleKeyDown);
+      return () => element.removeEventListener('keydown', handleKeyDown);
+    }
 
     // ==================== TOAST ====================
     const Toast = {
       icons: {
-        success: '<svg class="toast-icon success" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
-        error:   '<svg class="toast-icon error"   viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
-        info:    '<svg class="toast-icon info"    viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
-        warning: '<svg class="toast-icon warning" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>'
+        success: '<svg class="toast-icon success" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+        error:   '<svg class="toast-icon error"   viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+        info:    '<svg class="toast-icon info"    viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+        warning: '<svg class="toast-icon warning" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>'
       },
-
       show(message, type = 'info', duration = CONFIG.TOAST_DURATION) {
         const toast = document.createElement('div');
         toast.className = 'toast';
@@ -1355,114 +934,106 @@
           ${this.icons[type] || this.icons.info}
           <span class="toast-message">${SecurityUtils.escapeHtml(message)}</span>
           <button class="toast-close" aria-label="Dismiss notification">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>
-          </button>
-        `;
-        const closeToast = () => {
-          toast.classList.add('hiding');
-          setTimeout(() => toast.remove(), 300);
-        };
-        toast.querySelector('.toast-close').addEventListener('click', closeToast);
+          </button>`;
+        const close = () => { toast.classList.add('hiding'); setTimeout(() => toast.remove(), 300); };
+        toast.querySelector('.toast-close').addEventListener('click', close);
         elements.toastContainer.appendChild(toast);
-        if (duration > 0) setTimeout(closeToast, duration);
+        if (duration > 0) setTimeout(close, duration);
         return toast;
       },
-
-      success(msg) { return this.show(msg, 'success'); },
-      error(msg)   { return this.show(msg, 'error'); },
-      info(msg)    { return this.show(msg, 'info'); },
-      warning(msg, duration = 6000) { return this.show(msg, 'warning', duration); }
+      success(msg, dur)          { return this.show(msg, 'success', dur); },
+      error(msg, dur)            { return this.show(msg, 'error', dur); },
+      info(msg, dur)             { return this.show(msg, 'info', dur); },
+      warning(msg, dur = 6000)   { return this.show(msg, 'warning', dur); }
     };
 
     // ==================== STORAGE ====================
     const Storage = {
       loadDownloads() {
         try {
-          const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
-          return stored ? JSON.parse(stored) : [];
-        } catch {
-          localStorage.removeItem(CONFIG.STORAGE_KEY);
-          return [];
-        }
+          const s = localStorage.getItem(CONFIG.STORAGE_KEY);
+          return s ? JSON.parse(s) : [];
+        } catch { localStorage.removeItem(CONFIG.STORAGE_KEY); return []; }
       },
 
+      // BUG 4 FIX: bounded loop with MAX_TRIM_PASSES prevents infinite loop
       saveDownloads(downloads) {
-        try {
-          localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(downloads));
-        } catch (e) {
-          console.error('Failed to save downloads:', e);
-          Toast.error('Failed to save download history');
+        let data = Array.isArray(downloads) ? [...downloads] : [];
+        const MAX_PASSES = 10;
+        for (let pass = 0; pass <= MAX_PASSES; pass++) {
+          try {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+            return true;
+          } catch (e) {
+            const isQuota = e.name === 'QuotaExceededError' ||
+                            e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+                            e.code === 22;
+            if (isQuota && data.length > 1) {
+              data = data.slice(0, Math.max(1, Math.floor(data.length * 0.75)));
+            } else {
+              console.error('saveDownloads failed:', e);
+              Toast.error(isQuota
+                ? 'Storage full. Clear browser data to save history.'
+                : 'Failed to save download history');
+              return false;
+            }
+          }
         }
+        Toast.error('Storage full. Clear browser data to save history.');
+        return false;
       },
 
       getSettings() {
-        const defaults = { format: 'video', quality: 'best', autoDownload: false };
+        const def = { format: 'video', quality: '720p', autoDownload: false };
         try {
-          const stored = localStorage.getItem('flashvidz_settings');
-          if (!stored) return defaults;
-          const parsed = JSON.parse(stored);
+          const s = localStorage.getItem('flashvidz_settings');
+          if (!s) return def;
+          const p = JSON.parse(s);
           return {
-            format: parsed.format === 'audio' ? 'audio' : 'video',
-            quality: ['best','1080p','720p','480p'].includes(parsed.quality) ? parsed.quality : '720p',
-            autoDownload: parsed.autoDownload === true
+            format:      p.format === 'audio' ? 'audio' : 'video',
+            quality:     ['best','1080p','720p','480p'].includes(p.quality) ? p.quality : '720p',
+            autoDownload: p.autoDownload === true
           };
-        } catch {
-          return defaults;
-        }
+        } catch { return def; }
       },
 
       saveSettings(settings) {
-        try {
-          localStorage.setItem('flashvidz_settings', JSON.stringify(settings));
-        } catch (e) {
-          console.error('Failed to save settings:', e);
-        }
+        try { localStorage.setItem('flashvidz_settings', JSON.stringify(settings)); }
+        catch (e) { console.error('Failed to save settings:', e); }
       }
     };
 
     // ==================== QUALITY SELECTOR ====================
     const QualitySelector = {
-      _selected: '720p', // default — good balance of quality and speed
+      _selected: '720p',
 
       init() {
-        const buttons = elements.qualitySelector?.querySelectorAll('.quality-btn');
-        buttons?.forEach(btn => {
+        elements.qualitySelector?.querySelectorAll('.quality-btn').forEach(btn => {
           btn.addEventListener('click', () => this.select(btn.dataset.quality));
         });
-        // Show/hide based on initial format
-        this.updateVisibility();
+        // NOTE: updateVisibility() is NOT called here — it's called after
+        // FormatSelector.select() in init() to avoid the BUG 15 ordering issue
       },
 
       select(quality) {
-        if (!['1080p', '720p', '480p', 'best'].includes(quality)) return;
+        if (!['1080p','720p','480p','best'].includes(quality)) return;
         this._selected = quality;
-
-        // Update button states
-        const buttons = elements.qualitySelector?.querySelectorAll('.quality-btn');
-        buttons?.forEach(btn => {
-          const isActive = btn.dataset.quality === quality;
-          btn.classList.toggle('active', isActive);
-          btn.setAttribute('aria-pressed', String(isActive));
+        elements.qualitySelector?.querySelectorAll('.quality-btn').forEach(btn => {
+          const active = btn.dataset.quality === quality;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-pressed', String(active));
         });
-
-        // Persist to settings
-        const settings = Storage.getSettings();
-        Storage.saveSettings({ ...settings, quality });
+        const s = Storage.getSettings();
+        Storage.saveSettings({ ...s, quality });
       },
 
-      get() {
-        return this._selected;
-      },
+      get() { return this._selected; },
 
       updateVisibility() {
-        // Only show for video — quality doesn't apply to audio
-        if (selectedFormat === 'video') {
-          elements.qualitySelector?.classList.add('visible');
-        } else {
-          elements.qualitySelector?.classList.remove('visible');
-        }
+        elements.qualitySelector?.classList.toggle('visible', selectedFormat === 'video');
       }
     };
 
@@ -1478,29 +1049,16 @@
           }
         });
       },
-
-      toggle() {
-        elements.formatDropdown.classList.contains('active') ? this.close() : this.open();
-      },
-
-      open() {
-        elements.formatDropdown.classList.add('active');
-        elements.formatBtn.setAttribute('aria-expanded', 'true');
-      },
-
-      close() {
-        elements.formatDropdown.classList.remove('active');
-        elements.formatBtn.setAttribute('aria-expanded', 'false');
-      },
-
+      toggle() { elements.formatDropdown.classList.contains('active') ? this.close() : this.open(); },
+      open()   { elements.formatDropdown.classList.add('active'); elements.formatBtn.setAttribute('aria-expanded','true'); },
+      close()  { elements.formatDropdown.classList.remove('active'); elements.formatBtn.setAttribute('aria-expanded','false'); },
       select(format) {
         selectedFormat = format === 'audio' ? 'audio' : 'video';
-        const settings = Storage.getSettings();
-        Storage.saveSettings({ ...settings, format: selectedFormat });
-
+        const s = Storage.getSettings();
+        Storage.saveSettings({ ...s, format: selectedFormat });
         const isVideo = selectedFormat === 'video';
         elements.formatIconVideo.style.display = isVideo ? 'block' : 'none';
-        elements.formatIconAudio.style.display = isVideo ? 'none' : 'block';
+        elements.formatIconAudio.style.display = isVideo ? 'none'  : 'block';
         elements.optionVideo.setAttribute('aria-selected', String(isVideo));
         elements.optionAudio.setAttribute('aria-selected', String(!isVideo));
         elements.optionVideo.classList.toggle('selected', isVideo);
@@ -1516,20 +1074,15 @@
         elements.hamburgerBtn.addEventListener('click', () => this.open());
         elements.closeMenuBtn.addEventListener('click', () => this.close());
         elements.menuOverlay.addEventListener('click', () => this.close());
-
         elements.menuDownloads.addEventListener('click', () => { this.close(); TabManager.switch('downloads'); });
         elements.menuShareApp.addEventListener('click', () => { this.close(); this.shareApp(); });
-        elements.menuRateApp.addEventListener('click', () => { this.close(); Toast.info('Rate App — Feature coming soon'); });
-        elements.menuHelp.addEventListener('click', () => { this.close(); Toast.info('Help & Support — contact: support@flashvidz.com', 'info', 6000); });
-        elements.menuPrivacy.addEventListener('click', () => { this.close(); Toast.info('Privacy — Feature coming soon'); });
-
+        elements.menuRateApp.addEventListener('click',  () => { this.close(); Toast.info('Rate App — Feature coming soon'); });
+        elements.menuHelp.addEventListener('click',     () => { this.close(); Toast.info('Help & Support — contact: support@flashvidz.com', 6000); });
+        elements.menuPrivacy.addEventListener('click',  () => { this.close(); Toast.info('Privacy — Feature coming soon'); });
         document.addEventListener('keydown', e => {
-          if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) {
-            this.close();
-          }
+          if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) this.close();
         });
       },
-
       open() {
         elements.hamburgerMenu.classList.add('active');
         elements.menuOverlay.classList.add('active');
@@ -1537,9 +1090,11 @@
         elements.hamburgerBtn.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
         elements.closeMenuBtn.focus();
+        state._menuFocusTrapCleanup = createFocusTrap(elements.hamburgerMenu);
       },
-
       close() {
+        state._menuFocusTrapCleanup?.();
+        state._menuFocusTrapCleanup = null;
         elements.hamburgerMenu.classList.remove('active');
         elements.menuOverlay.classList.remove('active');
         elements.hamburgerMenu.setAttribute('aria-hidden', 'true');
@@ -1547,120 +1102,98 @@
         document.body.style.overflow = '';
         elements.hamburgerBtn.focus();
       },
-
       async shareApp() {
-        const shareData = {
-          title: 'FlashVidz',
-          text: 'Download videos from TikTok, Instagram, YouTube, and Facebook',
-          url: window.location.href
-        };
+        const data = { title: 'FlashVidz', text: 'Download videos from TikTok, Instagram, YouTube, and Facebook', url: window.location.href };
         if (navigator.share) {
-          try {
-            await navigator.share(shareData);
-          } catch (err) {
-            if (err.name !== 'AbortError') this.copyToClipboard(window.location.href);
-          }
+          try { await navigator.share(data); }
+          catch (e) { if (e.name !== 'AbortError') this.copyToClipboard(window.location.href); }
         } else {
           this.copyToClipboard(window.location.href);
         }
       },
-
       async copyToClipboard(text) {
         try {
           if (navigator.clipboard?.writeText) {
             await navigator.clipboard.writeText(text);
           } else {
             const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.setAttribute('readonly', '');
+            ta.value = text; ta.setAttribute('readonly','');
             ta.style.cssText = 'position:absolute;left:-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
           }
           Toast.success('Link copied to clipboard');
-        } catch {
-          Toast.error('Failed to copy link');
-        }
+        } catch { Toast.error('Failed to copy link'); }
       }
     };
 
     // ==================== TAB MANAGER ====================
     const TabManager = {
       init() {
-        elements.tabBtnEnterUrl.addEventListener('click', () => this.switch('enter-url'));
-        elements.tabBtnDownloads.addEventListener('click', () => this.switch('downloads'));
+        elements.tabBtnEnterUrl.addEventListener('click',   () => this.switch('enter-url'));
+        elements.tabBtnDownloads.addEventListener('click',  () => this.switch('downloads'));
       },
-
       switch(tabId) {
         const isDownloads = tabId === 'downloads';
-
         if (!isDownloads) {
+          // BUG 7 FIX: show sensible progress state when switching back mid-download
           if (isActivelyDownloading()) {
             setMessage('Please wait...', 'loading');
             ProgressBar.show();
-            ProgressBar.set(FakeProgress._current);
+            ProgressBar.set(FakeProgress._current > 0 ? FakeProgress._current : 10);
           } else {
             setMessage('', '');
             ProgressBar.hide();
           }
         }
-
-        elements.tabBtnEnterUrl.setAttribute('aria-selected', String(!isDownloads));
+        elements.tabBtnEnterUrl.setAttribute('aria-selected',  String(!isDownloads));
         elements.tabBtnDownloads.setAttribute('aria-selected', String(isDownloads));
-        elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads);
+        elements.tabBtnEnterUrl.classList.toggle('active',  !isDownloads);
         elements.tabBtnDownloads.classList.toggle('active', isDownloads);
         elements.tabIndicator.classList.toggle('downloads', isDownloads);
-
         elements['tab-enter-url'].classList.toggle('active', !isDownloads);
         elements['tab-enter-url'].hidden = isDownloads;
-        // FIX 9: sync aria-hidden with hidden attribute
         elements['tab-enter-url'].setAttribute('aria-hidden', String(isDownloads));
-
         elements['tab-downloads'].classList.toggle('active', isDownloads);
         elements['tab-downloads'].hidden = !isDownloads;
         elements['tab-downloads'].setAttribute('aria-hidden', String(!isDownloads));
-
         if (isDownloads) DownloadsManager.render();
       }
     };
 
     // ==================== MESSAGE ====================
     function setMessage(text, type = '') {
-      const msg = elements.message;
-      msg.textContent = text;
-      msg.className = type;
+      elements.message.textContent = text;
+      elements.message.className = type;
     }
 
     // ==================== DOWNLOADS MANAGER ====================
     const DownloadsManager = {
-      DOWNLOAD_MENU_ACTIONS: [
+      ACTIONS: [
         { action: 'download', label: 'Save',   className: 'save' },
         { action: 'share',    label: 'Share',  className: 'share' },
         { action: 'remove',   label: 'Delete', className: 'delete' }
       ],
 
       init() {
-        this.populateMenu();
+        this._populateMenu();
         document.addEventListener('click', e => {
           if (!e.target.closest('.menu-wrapper') && !e.target.closest('#globalDownloadMenu')) {
             this.hideMenu();
           }
         });
         elements.downloadsList?.addEventListener('scroll', () => {
-          clearTimeout(this._scrollTimeout);
-          this._scrollTimeout = setTimeout(() => this.hideMenu(), 100);
+          clearTimeout(this._scrollTimer);
+          this._scrollTimer = setTimeout(() => this.hideMenu(), 100);
         });
-        elements.globalDownloadMenu.addEventListener('click', e => this.handleMenuAction(e));
+        elements.globalDownloadMenu.addEventListener('click', e => this._handleMenuAction(e));
       },
 
-      populateMenu() {
-        elements.globalDownloadMenu.innerHTML = this.DOWNLOAD_MENU_ACTIONS.map(
-          ({ action, label, className }) =>
-            `<button class="menu-item ${SecurityUtils.escapeHtml(className)}" ` +
-            `data-action="${SecurityUtils.escapeHtml(action)}" role="menuitem">` +
-            `${SecurityUtils.escapeHtml(label)}</button>`
+      _populateMenu() {
+        elements.globalDownloadMenu.innerHTML = this.ACTIONS.map(({ action, label, className }) =>
+          `<button class="menu-item ${SecurityUtils.escapeHtml(className)}" ` +
+          `data-action="${SecurityUtils.escapeHtml(action)}" role="menuitem">` +
+          `${SecurityUtils.escapeHtml(label)}</button>`
         ).join('');
       },
 
@@ -1670,163 +1203,150 @@
         state.activeDownloadMenuContext = null;
       },
 
-      showMenu(anchorBtn, context) {
+      showMenu(anchor, context) {
         state.activeDownloadMenuContext = context;
         elements.globalDownloadMenu.classList.add('active');
         elements.globalDownloadMenu.setAttribute('aria-hidden', 'false');
-
         requestAnimationFrame(() => {
-          const rect = anchorBtn.getBoundingClientRect();
-          const menuWidth = elements.globalDownloadMenu.offsetWidth;
-          const menuHeight = elements.globalDownloadMenu.offsetHeight;
-          const vp = 8;
-          const gap = 6;
-          const vw = window.innerWidth;
-          const vh = window.innerHeight;
-
-          let top  = rect.bottom + gap;
-          let left = rect.right - menuWidth;
-
+          const r = anchor.getBoundingClientRect();
+          const mw = elements.globalDownloadMenu.offsetWidth;
+          const mh = elements.globalDownloadMenu.offsetHeight;
+          const vp = 8, gap = 6, vw = window.innerWidth, vh = window.innerHeight;
+          let top = r.bottom + gap, left = r.right - mw;
           if (left < vp) left = vp;
-          if (left > vw - menuWidth - vp) left = vw - menuWidth - vp;
-          if (top + menuHeight > vh - vp) top = rect.top - menuHeight - gap;
+          if (left > vw - mw - vp) left = vw - mw - vp;
+          if (top + mh > vh - vp) top = r.top - mh - gap;
           if (top < vp) top = vp;
-
           elements.globalDownloadMenu.style.top  = `${top}px`;
           elements.globalDownloadMenu.style.left = `${left}px`;
         });
       },
 
-      async handleMenuAction(e) {
+      async _handleMenuAction(e) {
         e.stopPropagation();
-        const actionButton = e.target.closest('.menu-item');
-        if (!actionButton || !state.activeDownloadMenuContext) return;
-
+        const btn = e.target.closest('.menu-item');
+        if (!btn || !state.activeDownloadMenuContext) return;
         const { item, fileName, fileSize } = state.activeDownloadMenuContext;
-        const action = actionButton.dataset.action;
+        const action = btn.dataset.action;
         this.hideMenu();
-
-        switch (action) {
-          case 'download': await this.downloadItem(item, fileName, fileSize); break;
-          case 'share':    await this.shareItem(item, fileName); break;
-          case 'remove':   this.removeItem(item.id); break;
-        }
+        if (action === 'download') await this._downloadItem(item, fileName, fileSize);
+        else if (action === 'share') await this._shareItem(item, fileName);
+        else if (action === 'remove') this.removeItem(item.id);
       },
 
-      async downloadItem(item, fileName) {
+      async _downloadItem(item, fileName) {
         if (isActivelyDownloading()) { Toast.info('A download is already in progress'); return; }
         try {
-          const downloadLink = item.downloadUrl || item.url;
-          const playLink     = item.viewUrl || item.fileUrl || item.url;
-          if (!downloadLink) throw new Error('Missing download URL');
-
-          if (IS_IOS) return DownloadFlow.openForIOS(playLink, fileName);
-
+          const dl  = item.downloadUrl || item.url;
+          const pl  = item.viewUrl || item.fileUrl || item.url;
+          if (!dl) throw new Error('Missing download URL');
+          if (IS_IOS) return DownloadFlow.openForIOS(pl, fileName);
           Toast.info('Starting download...');
-          const abortCtl = new AbortController();
-          await DownloadFlow.run(downloadLink, fileName, () => {}, abortCtl.signal);
+          await DownloadFlow.run(dl, fileName, () => {}, new AbortController().signal);
           Toast.success('Download started! Check your Gallery/Downloads folder.');
-        } catch (error) {
-          Toast.error(error.message || 'Download failed');
-        }
+        } catch (e) { Toast.error(e.message || 'Download failed'); }
       },
 
-      async shareItem(item, fileName) {
-        const shareUrl = SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl :
-                         SecurityUtils.isValidHttpUrl(item.fileUrl)     ? item.fileUrl : null;
-        if (!shareUrl) { Toast.error('Missing share URL for this item'); return; }
-
+      async _shareItem(item, fileName) {
+        const url = SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl :
+                    SecurityUtils.isValidHttpUrl(item.fileUrl)     ? item.fileUrl : null;
+        if (!url) { Toast.error('Missing share URL for this item'); return; }
         if (navigator.share) {
-          try {
-            await navigator.share({ title: 'FlashVidz Download', text: fileName, url: shareUrl });
-          } catch (error) {
-            if (error.name !== 'AbortError') await HamburgerMenu.copyToClipboard(shareUrl);
-          }
-        } else {
-          await HamburgerMenu.copyToClipboard(shareUrl);
-        }
+          try { await navigator.share({ title: 'FlashVidz Download', text: fileName, url }); }
+          catch (e) { if (e.name !== 'AbortError') await HamburgerMenu.copyToClipboard(url); }
+        } else { await HamburgerMenu.copyToClipboard(url); }
       },
 
+      // BUG 9 FIX: non-blocking inline confirmation instead of confirm()
       removeItem(id) {
-        if (confirm('Remove this download from history?')) {
+        const existing = document.getElementById('confirm-remove-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.id = 'confirm-remove-toast';
+        toast.className = 'toast';
+        toast.setAttribute('role', 'alertdialog');
+        toast.setAttribute('aria-modal', 'true');
+        toast.setAttribute('aria-label', 'Confirm removal');
+        toast.innerHTML = `
+          <span class="toast-message">Remove this download?</span>
+          <button class="retry-btn" id="confirmRemoveYes">Remove</button>
+          <button class="toast-close" id="confirmRemoveNo" aria-label="Cancel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>`;
+        elements.toastContainer.appendChild(toast);
+
+        const autoRemove = setTimeout(() => toast.remove(), 8000);
+        document.getElementById('confirmRemoveYes').addEventListener('click', () => {
+          clearTimeout(autoRemove); toast.remove();
           const downloads = Storage.loadDownloads();
-          const index = downloads.findIndex(d => d.id === id);
-          if (index > -1) {
-            downloads.splice(index, 1);
-            Storage.saveDownloads(downloads);
-            this.render();
-            Toast.success('Download removed');
-          }
-        }
+          const idx = downloads.findIndex(d => d.id === id);
+          if (idx > -1) { downloads.splice(idx, 1); Storage.saveDownloads(downloads); this.render(); Toast.success('Download removed'); }
+        });
+        document.getElementById('confirmRemoveNo').addEventListener('click', () => { clearTimeout(autoRemove); toast.remove(); });
       },
 
       add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration, title) {
         const downloads = Storage.loadDownloads();
         const now = Date.now();
-        const download = {
+        const rawThumb = typeof thumbnail === 'string' ? thumbnail.trim() : '';
+        const safeThumbnail = rawThumb && SecurityUtils.isSafeThumbnailUrl(rawThumb) ? rawThumb : null;
+        const entry = {
           id: now.toString(),
           title: typeof title === 'string' ? title.trim().slice(0, 200) : null,
           downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
-          fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),
-          viewUrl: SecurityUtils.normalizeStoredUrl(viewUrl),
+          fileUrl:     SecurityUtils.normalizeStoredUrl(viewUrl),
+          viewUrl:     SecurityUtils.normalizeStoredUrl(viewUrl),
           format,
-          fileName: typeof fileName === 'string'
-            ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH)
-            : 'flashvidz_download',
-          fileSize: Number.isFinite(Number(fileSize)) && Number(fileSize) > 0
-            ? Number(fileSize) : null,
-          thumbnail: typeof thumbnail === 'string' && thumbnail.trim().length > 5
-            ? thumbnail.trim() : null,
+          fileName: typeof fileName === 'string' ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH) : 'flashvidz_download',
+          fileSize: Number.isFinite(Number(fileSize)) && Number(fileSize) > 0 ? Number(fileSize) : null,
+          thumbnail: safeThumbnail,
           duration: duration || null,
           timestamp: now
         };
-        if (!download.downloadUrl) return null;
-        downloads.unshift(download);
+        if (!entry.downloadUrl) return null;
+        downloads.unshift(entry);
         if (downloads.length > CONFIG.MAX_DOWNLOADS_HISTORY) downloads.pop();
         Storage.saveDownloads(downloads);
-        return download;
+        return entry;
       },
 
-      formatFileSize(bytes) {
-        const num = Number(bytes);
-        if (!Number.isFinite(num) || num <= 0) return '—';
-        const k = 1024;
-        const sizes = ['B','KB','MB','GB'];
-        const i = Math.floor(Math.log(num) / Math.log(k));
-        return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      _formatSize(bytes) {
+        const n = Number(bytes);
+        if (!Number.isFinite(n) || n <= 0) return '—';
+        const k = 1024, s = ['B','KB','MB','GB'];
+        const i = Math.floor(Math.log(n) / Math.log(k));
+        return parseFloat((n / Math.pow(k, i)).toFixed(1)) + ' ' + s[i];
       },
 
-      formatDate(timestamp) {
-        const parsed = Number(timestamp);
-        const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      _formatDate(ts) {
+        const d = Number.isFinite(Number(ts)) && Number(ts) > 0 ? new Date(Number(ts)) : new Date();
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       },
 
       render() {
         const downloads = Storage.loadDownloads();
         this.hideMenu();
         elements.downloadsList.innerHTML = '';
-
-        if (downloads.length === 0) {
+        if (!downloads.length) {
           elements.downloadsList.innerHTML = `
             <div class="empty-state">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-              <h3>No downloads yet</h3>
-              <p>Your downloaded videos will appear here</p>
+              <h3>No downloads yet</h3><p>Your downloaded videos will appear here</p>
             </div>`;
           elements.downloadsCount.textContent = '0 items';
           return;
         }
-
-        elements.downloadsCount.textContent =
-          `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
-
-        const fragment = document.createDocumentFragment();
-        downloads.forEach(item => fragment.appendChild(this.createCard(item)));
-        elements.downloadsList.appendChild(fragment);
+        elements.downloadsCount.textContent = `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
+        const frag = document.createDocumentFragment();
+        downloads.forEach(item => frag.appendChild(this._createCard(item)));
+        elements.downloadsList.appendChild(frag);
       },
 
-      createCard(item) {
+      _createCard(item) {
         const card = document.createElement('div');
         card.className = 'download-card';
         card.setAttribute('role', 'listitem');
@@ -1836,95 +1356,104 @@
         const fileName     = item.fileName || item.filename || 'flashvidz_download';
         const displayTitle = item.title || fileName;
         const fileSize     = Number(item.fileSize ?? item.fileSizeBytes ?? item.size ?? 0);
-        const displayDate  = this.formatDate(item.timestamp);
-        const baseUrl      = CONFIG.API_URL.replace(/\/download\/?$/, '');
-        const defaultThumb = `${baseUrl}/default-thumbnail.svg`;
-        const hasThumbnail = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0;
-        const thumbnailUrl = hasThumbnail ? item.thumbnail.trim() : defaultThumb;
+        const rawThumb     = typeof item.thumbnail === 'string' ? item.thumbnail.trim() : '';
+        const hasThumbnail = rawThumb.length > 0 && SecurityUtils.isSafeThumbnailUrl(rawThumb);
 
-        const mediaIconPath = isVideo
+        const iconPath = isVideo
           ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
           : 'M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z';
 
-        const isExternalCdn = ['tiktok','instagram','fbcdn','ytimg','youtube']
-          .some(s => thumbnailUrl.includes(s));
-        const referrerAttr  = isExternalCdn ? 'referrerpolicy="no-referrer"' : '';
-        const durationBadge = item.duration
-          ? `<span class="video-duration">${SecurityUtils.escapeHtml(String(item.duration))}</span>`
-          : '';
+        // Build thumbnail with DOM APIs — no user data injected via innerHTML
+        const thumbWrap = document.createElement('div');
+        thumbWrap.className = `download-thumbnail-small${hasThumbnail ? ' has-thumbnail' : ''}`;
 
-        card.innerHTML = `
-          <div class="download-info-row">
-            <div class="download-thumbnail-small ${hasThumbnail ? 'has-thumbnail' : ''}">
-              <img class="thumb-img"
-                   src="${SecurityUtils.escapeHtml(thumbnailUrl)}"
-                   alt="thumbnail" loading="eager"
-                   crossorigin="anonymous" ${referrerAttr}
-                   data-fallback="${SecurityUtils.escapeHtml(defaultThumb)}">
-              <svg class="thumbnail-fallback" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="${mediaIconPath}"/>
-              </svg>
-              ${durationBadge}
-            </div>
-            <div class="download-info">
-              <div class="download-filename"
-                   title="${SecurityUtils.escapeHtml(displayTitle)}">
-                ${SecurityUtils.escapeHtml(displayTitle)}
-              </div>
-              <div class="download-meta">
-                <div class="meta-left">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
-                  </svg>
-                  ${SecurityUtils.escapeHtml(displayDate)}
-                </div>
-                <span class="meta-size">${SecurityUtils.escapeHtml(this.formatFileSize(fileSize))}</span>
-              </div>
-            </div>
-            <div class="menu-wrapper">
-              <button class="menu-btn" aria-label="More options" title="More options">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        `;
+        const fallbackSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        fallbackSvg.setAttribute('viewBox', '0 0 24 24');
+        fallbackSvg.setAttribute('aria-hidden', 'true');
+        fallbackSvg.style.display = hasThumbnail ? 'none' : 'block';
+        const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        pathEl.setAttribute('d', iconPath);
+        fallbackSvg.appendChild(pathEl);
 
-        // FIX 2: proper named function reference — no arguments.callee
-        const thumbImg = card.querySelector('.thumb-img');
-        if (thumbImg) {
-          const onThumbError = () => {
-            thumbImg.removeEventListener('error', onThumbError);
-            const fallback = thumbImg.dataset.fallback;
-            if (fallback && thumbImg.src !== fallback) thumbImg.src = fallback;
+        if (hasThumbnail) {
+          const img = document.createElement('img');
+          img.alt = 'thumbnail';
+          img.loading = 'eager';
+          img.crossOrigin = 'anonymous';
+          const isExternal = ['tiktok','instagram','fbcdn','ytimg','youtube']
+            .some(s => rawThumb.includes(s));
+          if (isExternal) img.referrerPolicy = 'no-referrer';
+          // Named error handler — no arguments.callee (BUG carried from before, confirmed safe)
+          const onImgError = () => {
+            img.removeEventListener('error', onImgError);
+            img.style.display = 'none';
+            thumbWrap.classList.remove('has-thumbnail');
+            fallbackSvg.style.display = 'block';
           };
-          thumbImg.addEventListener('error', onThumbError);
+          img.addEventListener('error', onImgError);
+          img.src = rawThumb; // safe — validated by isSafeThumbnailUrl
+          thumbWrap.appendChild(img);
+        }
+        thumbWrap.appendChild(fallbackSvg);
+
+        if (item.duration) {
+          const dur = document.createElement('span');
+          dur.className = 'video-duration';
+          dur.textContent = String(item.duration);
+          thumbWrap.appendChild(dur);
         }
 
-        const menuBtn = card.querySelector('.menu-btn');
+        // Info section — safe because all dynamic values go through escapeHtml
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'download-info';
+        infoDiv.innerHTML = `
+          <div class="download-filename" title="${SecurityUtils.escapeHtml(displayTitle)}">
+            ${SecurityUtils.escapeHtml(displayTitle)}
+          </div>
+          <div class="download-meta">
+            <div class="meta-left">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
+              </svg>
+              ${SecurityUtils.escapeHtml(this._formatDate(item.timestamp))}
+            </div>
+            <span class="meta-size">${SecurityUtils.escapeHtml(this._formatSize(fileSize))}</span>
+          </div>`;
+
+        // BUG 11 FIX: set aria-label via DOM property — prevents HTML entity
+        // double-encoding (e.g. &amp; announced as "ampersand" by screen readers)
+        const menuWrap = document.createElement('div');
+        menuWrap.className = 'menu-wrapper';
+        const menuBtn = document.createElement('button');
+        menuBtn.className = 'menu-btn';
+        menuBtn.title = 'More options';
+        // setAttribute decodes entities correctly for ARIA — plain text value
+        menuBtn.setAttribute('aria-label', `More options for ${displayTitle}`);
+        menuBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+        </svg>`;
+        menuWrap.appendChild(menuBtn);
+
+        const infoRow = document.createElement('div');
+        infoRow.className = 'download-info-row';
+        infoRow.appendChild(thumbWrap);
+        infoRow.appendChild(infoDiv);
+        infoRow.appendChild(menuWrap);
+        card.appendChild(infoRow);
+
         menuBtn.addEventListener('click', e => {
           e.stopPropagation();
           const isOpen = state.activeDownloadMenuContext?.id === item.id &&
                          elements.globalDownloadMenu.classList.contains('active');
-          if (isOpen) {
-            this.hideMenu();
-          } else {
-            this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize });
-          }
+          isOpen ? this.hideMenu() : this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize });
         });
 
         card.addEventListener('click', e => {
           if (e.target.closest('button')) return;
-          if (isActivelyDownloading()) {
-            Toast.info('Please wait for current download to complete');
-            return;
-          }
+          if (isActivelyDownloading()) { Toast.info('Please wait for current download to complete'); return; }
           const playLink = item.viewUrl || item.fileUrl || item.url;
           if (!isVideo) {
-            IS_IOS
-              ? DownloadFlow.openForIOS(playLink, fileName)
-              : Toast.info('Audio preview not supported yet');
+            IS_IOS ? DownloadFlow.openForIOS(playLink, fileName) : Toast.info('Audio preview not supported yet');
             return;
           }
           if (!playLink) { Toast.error('Video preview unavailable: missing URL'); return; }
@@ -1941,54 +1470,54 @@
 
     // ==================== VIDEO MODAL ====================
     const VideoModal = {
-      previewErrorShown: false,
-
+      _errorShown: false,
       init() {
         elements.videoModalClose.addEventListener('click', () => this.close());
         elements.videoModal.addEventListener('click', e => {
           if (!elements.videoModalContent.contains(e.target)) this.close();
         });
-
         window.addEventListener('popstate', () => {
           if (elements.videoModal.classList.contains('active')) {
-            state.closingFromPopState = true;
-            this.close();
-            state.closingFromPopState = false;
+            state.closingFromPopState = true; this.close(); state.closingFromPopState = false;
           }
         });
-
         elements.videoModalPlayer.addEventListener('error', () => {
           if (!elements.videoModal.classList.contains('active') || isActivelyDownloading()) return;
-          if (this.previewErrorShown) return;
-          this.previewErrorShown = true;
+          if (this._errorShown) return;
+          this._errorShown = true;
           Toast.warning('Preview not supported. You can still download the video.');
         });
-
         elements.videoModalPlayer.addEventListener('loadeddata', () => {
-          this.previewErrorShown = false;
-          const msg = elements.message;
+          this._errorShown = false;
           if (elements.videoModal.classList.contains('active') &&
-              msg?.classList.contains('loading') &&
-              msg.textContent === 'Loading preview...') {
+              elements.message?.classList.contains('loading') &&
+              elements.message.textContent === 'Loading preview...') {
             setMessage('', '');
           }
         });
       },
 
+      // BUG 8 FIX: set crossorigin dynamically based on URL origin
       open(fileUrl) {
         if (IS_IOS) { DownloadFlow.openForIOS(fileUrl, 'video'); return; }
+        const url = SecurityUtils.normalizeStoredUrl(fileUrl);
+        if (!url) { if (!isActivelyDownloading()) Toast.error('Video preview unavailable: missing URL'); return; }
 
-        const normalizedUrl = SecurityUtils.normalizeStoredUrl(fileUrl);
-        if (!normalizedUrl) {
-          if (!isActivelyDownloading()) Toast.error('Video preview unavailable: missing URL');
-          return;
-        }
-
-        this.previewErrorShown = false;
+        this._errorShown = false;
         setMessage('Loading preview...', 'loading');
         elements.videoModalPlayer.pause();
         elements.videoModalPlayer.removeAttribute('src');
-        elements.videoModalPlayer.src = normalizedUrl;
+
+        // Set crossorigin only for same-origin or blob URLs to avoid CORS
+        // failures on CDN redirect chains
+        const isSameOriginOrBlob = url.startsWith('blob:') || url.startsWith(window.location.origin);
+        if (isSameOriginOrBlob) {
+          elements.videoModalPlayer.setAttribute('crossorigin', 'anonymous');
+        } else {
+          elements.videoModalPlayer.removeAttribute('crossorigin');
+        }
+
+        elements.videoModalPlayer.src = url;
         elements.videoModalPlayer.load();
         elements.videoModal.classList.add('active');
         elements.videoModal.setAttribute('aria-hidden', 'false');
@@ -1999,14 +1528,12 @@
           state.modalHistoryPushed = true;
         }
 
-        const playPromise = elements.videoModalPlayer.play();
-        if (playPromise?.catch) {
-          playPromise.catch(() => {
-            if (elements.videoModal.classList.contains('active') && !isActivelyDownloading()) {
-              setMessage('Tap play to start video preview', 'loading');
-            }
-          });
-        }
+        const p = elements.videoModalPlayer.play();
+        p?.catch?.(() => {
+          if (elements.videoModal.classList.contains('active') && !isActivelyDownloading()) {
+            setMessage('Tap play to start video preview', 'loading');
+          }
+        });
       },
 
       close() {
@@ -2015,122 +1542,109 @@
         elements.videoModalPlayer.pause();
         elements.videoModalPlayer.removeAttribute('src');
         elements.videoModalPlayer.load();
-        this.previewErrorShown = false;
+        this._errorShown = false;
         document.body.style.overflow = '';
-
         if (state.modalHistoryPushed && history.state?.videoModal && !state.closingFromPopState) {
-          state.modalHistoryPushed = false;
-          history.back();
-        } else {
-          state.modalHistoryPushed = false;
-        }
+          state.modalHistoryPushed = false; history.back();
+        } else { state.modalHistoryPushed = false; }
       }
     };
 
     // ==================== DOWNLOAD FLOW ====================
     const DownloadFlow = {
+      // BUG 3 FIX: click anchor synchronously — blob data is in memory,
+      // no need to defer; revoke after 10s safety margin for slow devices
       async run(downloadUrl, fileName, onProgress, signal) {
-        const controller = new AbortController();
-
-        const abortHandler = () => controller.abort();
+        const ctrl = new AbortController();
+        const onAbort = () => ctrl.abort();
         if (signal) {
           if (signal.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
-          signal.addEventListener('abort', abortHandler, { once: true });
+          signal.addEventListener('abort', onAbort, { once: true });
         }
 
         let blobUrl = null;
-
         try {
-          const response = await fetch(downloadUrl, { signal: controller.signal });
-          if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+          const res = await fetch(downloadUrl, { signal: ctrl.signal });
+          if (!res.ok) throw new Error(`Download failed: ${res.status}`);
 
-          const contentLength = +(response.headers.get('content-length')) || 0;
-          const reader = response.body.getReader();
-          const chunks = [];
-          let received = 0;
+          const contentLength = +(res.headers.get('content-length')) || 0;
+          const reader = res.body.getReader();
+          const chunks = []; let received = 0;
 
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             if (value) { chunks.push(value); received += value.length; }
-            if (contentLength > 0) {
-              onProgress?.(Math.min(100, Math.round(received / contentLength * 100)));
-            }
+            if (contentLength > 0) onProgress?.(Math.min(100, Math.round(received / contentLength * 100)));
           }
-
           onProgress?.(100);
 
-          const serverMimeType = response.headers.get('content-type')?.split(';')[0]?.trim();
-          const extForMime = (fileName.split('.').pop() || '').toLowerCase();
-          const MIME_MAP = {
-            mp4: 'video/mp4', m4a: 'audio/mp4', mp3: 'audio/mpeg',
-            mov: 'video/quicktime', webm: 'video/webm', mkv: 'video/x-matroska',
-            ogg: 'audio/ogg', opus: 'audio/opus'
-          };
-          const blobType = serverMimeType || MIME_MAP[extForMime] || 'video/mp4';
-          const blob = new Blob(chunks, { type: blobType });
+          const serverMime = res.headers.get('content-type')?.split(';')[0]?.trim();
+          const ext = (fileName.split('.').pop() || '').toLowerCase();
+          const MIME = { mp4:'video/mp4', m4a:'audio/mp4', mp3:'audio/mpeg', mov:'video/quicktime', webm:'video/webm', mkv:'video/x-matroska', ogg:'audio/ogg', opus:'audio/opus' };
+          const blob = new Blob(chunks, { type: serverMime || MIME[ext] || 'video/mp4' });
 
-          // FIX 5: track blobUrl in state.activeObjectUrls to prevent leaks
           blobUrl = URL.createObjectURL(blob);
           state.activeObjectUrls.add(blobUrl);
 
-          try {
-            const normalizedName = SecurityUtils.normalizeFileName(fileName);
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = normalizedName;
-            a.rel = 'noopener noreferrer';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          } finally {
-            // Revoke and remove from tracker after browser starts the save
-            setTimeout(() => {
-              URL.revokeObjectURL(blobUrl);
-              state.activeObjectUrls.delete(blobUrl);
-            }, 5000);
-          }
+          const a = document.createElement('a');
+          a.href     = blobUrl;
+          a.download = SecurityUtils.normalizeFileName(fileName);
+          a.rel      = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click(); // synchronous — blob is in memory, no network needed
+          document.body.removeChild(a);
+
+          // 10s safety margin — plenty of time for browser to start the save
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+            state.activeObjectUrls.delete(blobUrl);
+          }, 10000);
 
           return received || contentLength;
         } catch (err) {
-          // FIX 5 & 7: removed dead cleanedUp variable; just rethrow cleanly
-          // If blobUrl was created before the error, revoke it immediately
-          if (blobUrl) {
-            URL.revokeObjectURL(blobUrl);
-            state.activeObjectUrls.delete(blobUrl);
-          }
+          if (blobUrl) { URL.revokeObjectURL(blobUrl); state.activeObjectUrls.delete(blobUrl); }
           throw err;
         } finally {
-          signal?.removeEventListener('abort', abortHandler);
+          signal?.removeEventListener('abort', onAbort);
         }
       },
 
       runAndroidNative(downloadUrl, fileName, onProgress) {
         onProgress?.(100);
-        const newWin = window.open(downloadUrl, '_blank', 'noopener,noreferrer');
-        if (!newWin) window.location.href = downloadUrl;
+        if (!SecurityUtils.isValidHttpUrl(downloadUrl)) {
+          return Promise.reject(new Error('Invalid download URL'));
+        }
+        const win = window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
+          const a = document.createElement('a');
+          a.href = downloadUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
+          a.style.display = 'none';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
         return Promise.resolve(0);
       },
 
       openForIOS(url, fileName) {
-        if (!url) {
+        if (!url || !SecurityUtils.isValidHttpUrl(url)) {
           Toast.error('Invalid URL');
           return Promise.reject(new Error('Invalid URL'));
         }
         Toast.info('Opening in Safari. Use the share button to save to Photos.');
-        const newWindow = window.open(url, '_blank');
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        const win = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!win || win.closed || typeof win.closed === 'undefined') {
           Toast.warning('Popup blocked. Opening video now.', 8000);
-          window.location.href = url;
+          const a = document.createElement('a');
+          a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+          a.style.display = 'none';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
         }
         return Promise.resolve(0);
       },
 
       runHybrid(downloadUrl, playUrl, fileName, fileSize, onProgress, signal) {
         if (IS_IOS) {
-          if (signal?.aborted) {
-            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
-          }
+          if (signal?.aborted) return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
           return this.openForIOS(playUrl || downloadUrl, fileName);
         }
         if (IS_ANDROID) return this.runAndroidNative(downloadUrl, fileName, onProgress);
@@ -2141,11 +1655,11 @@
     // ==================== PLATFORM DETECTION ====================
     function detectPlatform(link) {
       if (!SecurityUtils.isValidHttpUrl(link)) return 'unknown';
-      const url = link.toLowerCase();
-      if (url.includes('tiktok.com'))                               return 'tiktok';
-      if (url.includes('instagram.com'))                            return 'instagram';
-      if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-      if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
+      const u = link.toLowerCase();
+      if (u.includes('tiktok.com'))                              return 'tiktok';
+      if (u.includes('instagram.com'))                           return 'instagram';
+      if (u.includes('youtube.com') || u.includes('youtu.be'))  return 'youtube';
+      if (u.includes('facebook.com') || u.includes('fb.watch')) return 'facebook';
       return 'unknown';
     }
 
@@ -2155,42 +1669,59 @@
       hide() { elements['progress-wrap']?.classList.remove('visible'); },
       set(pct) {
         const p = Math.min(100, Math.max(0, Math.round(pct)));
-        if (elements['progress-fill']) elements['progress-fill'].style.width = p + '%';
+        if (elements['progress-fill'])  elements['progress-fill'].style.width = p + '%';
         if (elements['progress-label']) elements['progress-label'].textContent = p + '%';
         elements['progress-wrap']?.setAttribute('aria-valuenow', p);
       }
     };
 
+    // BUG 1 FIX: use a cancellation flag instead of re-reading _ownedDownloadId
+    // so reset() cannot silently break a pending finish() callback
     const FakeProgress = {
       _timerId: null,
       _current: 0,
+      _ownedDownloadId: null,
+      _cancelFinish: null, // cancellation callback for pending finish()
 
-      start() {
+      start(downloadId) {
+        // Cancel any pending finish from a previous download
+        this._cancelFinish?.();
+        this._cancelFinish = null;
         this.stop();
         this._current = 0;
+        this._ownedDownloadId = downloadId;
         ProgressBar.show();
         ProgressBar.set(0);
         this._timerId = setInterval(() => {
-          const remaining = 80 - this._current;
-          if (remaining <= 0) return;
-          const step = Math.max(0.5, remaining * 0.07);
-          this._current = Math.min(80, this._current + step);
+          const rem = 80 - this._current;
+          if (rem <= 0) return;
+          this._current = Math.min(80, this._current + Math.max(0.5, rem * 0.07));
           ProgressBar.set(this._current);
         }, 400);
       },
 
-      // FIX 8: finish() now accepts a callback so callers can set success message
-      // AFTER the progress bar completes — avoids the race condition where
-      // FakeProgress.finish() was called immediately after server response
-      // but before runHybrid() completed.
       finish(onDone) {
+        let cancelled = false;
+        // Store cancellation fn so reset() or start() can cancel this finish
+        this._cancelFinish = () => { cancelled = true; };
         this.stop();
         this._current = 100;
         ProgressBar.set(100);
-        setTimeout(() => { ProgressBar.hide(); onDone?.(); }, 600);
+        setTimeout(() => {
+          if (!cancelled) { ProgressBar.hide(); onDone?.(); }
+          if (this._cancelFinish && !cancelled) this._cancelFinish = null;
+        }, 600);
       },
 
-      reset() { this.stop(); ProgressBar.hide(); this._current = 0; },
+      reset() {
+        // Cancel any in-flight finish() before resetting
+        this._cancelFinish?.();
+        this._cancelFinish = null;
+        this.stop();
+        ProgressBar.hide();
+        this._current = 0;
+        this._ownedDownloadId = null;
+      },
 
       stop() {
         if (this._timerId) { clearInterval(this._timerId); this._timerId = null; }
@@ -2203,34 +1734,21 @@
       elements.submitBtn.disabled = isActive;
       elements.submitBtn.classList.toggle('loading', isActive);
       elements.pasteBtn.disabled = isActive;
+      if (elements.cancelBtn) elements.cancelBtn.hidden = !isActive;
     }
 
-    // FIX 6: resetUI no longer uses a stale downloadId check that could
-    // skip the reset when a new download started before the timeout fired.
-    // Instead we pass the downloadId at call-time and only skip if a NEWER
-    // download is actively running (state.isDownloading && id mismatch).
-    function resetUI(delay = 2000, downloadId) {
+    function resetUI(delay, downloadId) {
       setTimeout(() => {
-        // Only skip reset if a DIFFERENT download is currently active
-        if (downloadId !== undefined &&
-            downloadId !== state.currentDownloadId &&
-            state.isDownloading) {
-          return;
-        }
+        if (downloadId !== undefined && downloadId !== state.currentDownloadId && state.isDownloading) return;
         setDownloading(false);
-      }, delay);
+      }, delay ?? 2000);
     }
 
-    function isActivelyDownloading() {
-      return state.isDownloading;
-    }
+    function isActivelyDownloading() { return state.isDownloading; }
 
-    // FIX 3: showErrorWithRetry uses createTextNode (already XSS-safe),
-    // so we must NOT call escapeHtml() — that would double-encode entities.
     function showErrorWithRetry(message) {
       const msg = elements.message;
       msg.textContent = '';
-      // createTextNode is inherently safe — no escapeHtml needed
       msg.appendChild(document.createTextNode(message + ' '));
       const btn = document.createElement('button');
       btn.className = 'retry-btn';
@@ -2242,29 +1760,36 @@
 
     // ==================== DOWNLOAD HANDLER ====================
     async function pasteLink() {
-      const btn = elements.pasteBtn;
-      btn.disabled = true;
+      elements.pasteBtn.disabled = true;
       try {
+        if (navigator.permissions) {
+          try {
+            const perm = await navigator.permissions.query({ name: 'clipboard-read' });
+            if (perm.state === 'denied') {
+              Toast.error('Clipboard access denied. Please paste manually (Ctrl+V).');
+              elements.linkInput.focus();
+              return;
+            }
+          } catch { /* permissions.query not supported for clipboard-read everywhere */ }
+        }
         const text = await navigator.clipboard.readText();
         elements.linkInput.value = text.trim().slice(0, 2000);
         maybeAutoDownload();
-      } catch (error) {
-        const message = window.isSecureContext === false
+      } catch (e) {
+        Toast.error(window.isSecureContext === false
           ? 'Clipboard requires HTTPS or localhost'
-          : 'Could not read clipboard. Please paste manually.';
-        Toast.error(message);
-        console.error('Clipboard read failed:', error);
+          : 'Please paste manually (Ctrl+V or long-press).');
+        elements.linkInput.focus();
+        console.error('Clipboard read failed:', e);
       } finally {
-        btn.disabled = false;
+        elements.pasteBtn.disabled = false;
       }
     }
 
     function maybeAutoDownload() {
       const settings = Storage.getSettings();
       const link = elements.linkInput.value.trim();
-      // FIX 11: removed redundant elements.submitBtn.disabled check
-      if (!settings.autoDownload || !link ||
-          !SecurityUtils.isValidHttpUrl(link) || isActivelyDownloading()) return;
+      if (!settings.autoDownload || !link || !SecurityUtils.isValidHttpUrl(link) || isActivelyDownloading()) return;
       handleDownload();
     }
 
@@ -2276,37 +1801,27 @@
       }
     }
 
-    // FIX 4: handleDownloadWithRetry now works correctly because handleDownload
-    // rethrows retryable errors (those containing 'try again later' or 'busy').
-    // Previously handleDownload swallowed all errors — now it only swallows
-    // non-retryable ones and rethrows retryable ones so the retry loop fires.
     async function handleDownloadWithRetry(retryCount = 0) {
       state.lastUrl    = elements.linkInput.value.trim().slice(0, 2000);
       state.lastFormat = selectedFormat;
-
       try {
         await handleDownload();
       } catch (err) {
-        const isRetryable = err.message?.includes('try again later') ||
-                            err.message?.includes('busy');
+        const isRetryable = err.message?.includes('try again later') || err.message?.includes('busy');
         if (isRetryable && retryCount < CONFIG.MAX_RETRIES) {
           const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
-          setMessage(
-            `Server busy. Retrying in ${delay / 1000}s… (${retryCount + 1}/${CONFIG.MAX_RETRIES})`,
-            'loading'
-          );
+          setMessage(`Server busy. Retrying in ${delay / 1000}s… (${retryCount + 1}/${CONFIG.MAX_RETRIES})`, 'loading');
           setTimeout(() => handleDownloadWithRetry(retryCount + 1), delay);
         }
-        // Non-retryable errors are already shown inside handleDownload
       }
     }
 
     async function handleDownload() {
+      // BUG 6 FIX: guard BEFORE setDownloading to prevent stuck disabled state
+      if (state.isDownloading) return;
+
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
-      const settings = Storage.getSettings();
-
-      if (state.isDownloading) return;
 
       const updateMessage = (text, type = '') => {
         if (downloadId !== state.currentDownloadId) return;
@@ -2317,7 +1832,6 @@
 
       if (!link) {
         updateMessage('Enter a video link', 'error');
-        // FIX 6: pass downloadId so resetUI knows which download this belongs to
         resetUI(0, downloadId);
         return;
       }
@@ -2330,31 +1844,29 @@
       }
 
       if (IS_IOS) elements.iosHint?.classList.add('visible');
-
-      updateMessage('Starting download...', 'loading');
+      updateMessage('Please wait...', 'loading');
 
       if (state.abortController) state.abortController.abort();
       state.abortController = new AbortController();
 
       try {
-        setMessage('Please wait...', 'loading');
-        FakeProgress.start();
+        FakeProgress.start(downloadId);
 
-        const response = await fetch(CONFIG.API_URL, {
+        const res = await fetch(CONFIG.API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: link, format: selectedFormat, quality: QualitySelector.get() }),
           signal: state.abortController.signal
         });
 
-        const data = await response.json().catch(() => null);
+        const data = await res.json().catch(() => null);
 
-        if (!response.ok) {
-          if (response.status === 503) throw new Error('Server busy, try again later');
-          if (response.status === 429) throw new Error('Too many requests. Please wait a moment.');
-          if (response.status === 413) throw new Error('File too large');
-          if (response.status === 504) throw new Error('Download timeout. Server may be overloaded.');
-          throw new Error(data?.error || `Server error: ${response.status}`);
+        if (!res.ok) {
+          if (res.status === 503) throw new Error('Server busy, try again later');
+          if (res.status === 429) throw new Error('Too many requests. Please wait a moment.');
+          if (res.status === 413) throw new Error('File too large');
+          if (res.status === 504) throw new Error('Download timeout. Server may be overloaded.');
+          throw new Error(data?.error || `Server error: ${res.status}`);
         }
 
         if (!data?.success) throw new Error(data?.error || 'Invalid response from server');
@@ -2363,116 +1875,115 @@
         if (!downloadUrl) throw new Error('Invalid response from server');
 
         if (IS_IOS && !data?.isIOSCompatible) {
-          elements.iosHint.classList.add('visible');
+          elements.iosHint?.classList.add('visible');
         } else {
-          elements.iosHint.classList.remove('visible');
+          elements.iosHint?.classList.remove('visible');
         }
 
         const playUrl = IS_IOS
           ? SecurityUtils.normalizeStoredUrl(data.viewUrl || data.url)
           : (SecurityUtils.normalizeStoredUrl(data.url) || downloadUrl);
 
-        const responseFormat = data.format || selectedFormat;
-        const ext = responseFormat === 'audio' ? 'm4a' : 'mp4';
-        const rawTitle = data.title && typeof data.title === 'string' ? data.title.trim() : '';
-        const backendFileName = rawTitle
+        const fmt      = data.format || selectedFormat;
+        const ext      = fmt === 'audio' ? 'm4a' : 'mp4';
+        const rawTitle = typeof data.title === 'string' ? data.title.trim() : '';
+        const fileName = rawTitle
           ? SecurityUtils.normalizeFileName(
-              rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '')
-                      .replace(/\s+/g, '_')
-                      .slice(0, 80) + '_FlashVidz.' + ext
+              rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '').replace(/\s+/g, '_').slice(0, 80) + '_FlashVidz.' + ext
             )
           : (data.fileName || `flashvidz_${platform}_${Date.now()}.${ext}`);
-        const backendFileSize = Number(data.fileSizeBytes) || 0;
+        const backendSize = Number(data.fileSizeBytes) || 0;
 
         if (data.warning) Toast.warning(data.warning);
         if (IS_IOS && data.isIOSCompatible === false && !data.warning) {
           Toast.warning('This video may not play on iPhone. Try downloading instead.');
         }
 
-        const titleParam = rawTitle
-          ? '&title=' + encodeURIComponent(
-              rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '').trim().slice(0, 100)
-            )
-          : '';
-        const downloadUrlWithTitle = downloadUrl
-          ? downloadUrl + (downloadUrl.includes('?') ? titleParam : titleParam.replace('&', '?'))
-          : downloadUrl;
+        // BUG 10 FIX: use URLSearchParams to build URL cleanly
+        const downloadUrlWithTitle = (() => {
+          if (!downloadUrl || !rawTitle) return downloadUrl;
+          try {
+            const u = new URL(downloadUrl);
+            u.searchParams.set('title', rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '').trim().slice(0, 100));
+            return u.toString();
+          } catch { return downloadUrl; }
+        })();
 
-        // FIX 8: runHybrid is awaited BEFORE FakeProgress.finish() so the
-        // progress bar only completes after the actual download/open is done.
-        const downloadedFileSize = await DownloadFlow.runHybrid(
-          downloadUrlWithTitle,
-          playUrl,
-          backendFileName,
-          backendFileSize,
+        const downloadedSize = await DownloadFlow.runHybrid(
+          downloadUrlWithTitle, playUrl, fileName, backendSize,
           progress => { if (!IS_IOS) updateMessage(`Downloading… ${progress}%`, 'loading'); },
           state.abortController.signal
         );
 
-        // FIX 8: FakeProgress.finish() called AFTER runHybrid completes
         FakeProgress.finish(() => {
           if (downloadId !== state.currentDownloadId) return;
-          if (IS_IOS) {
-            setMessage('Opened in Safari! Tap share button to save.', 'success');
-          } else {
-            setMessage('Download complete!', 'success');
-          }
+          setMessage(IS_IOS ? 'Opened in Safari! Tap share button to save.' : 'Download complete!', 'success');
         });
 
-        const finalFileSize = downloadedFileSize > 0
-          ? downloadedFileSize
-          : backendFileSize > 0 ? backendFileSize : null;
-
         DownloadsManager.add(
-          downloadUrl, playUrl, responseFormat,
-          backendFileName, finalFileSize,
+          downloadUrl, playUrl, fmt, fileName,
+          downloadedSize > 0 ? downloadedSize : backendSize || null,
           data.thumbnailCdn || data.thumbnail,
           data.duration, data.title
         );
 
         if (downloadId !== state.currentDownloadId) return;
-
-        if (IS_IOS) {
-          Toast.success('Video opened in Safari');
-        } else {
-          Toast.success('Download complete! Check Gallery/Downloads');
-        }
-
+        Toast.success(IS_IOS ? 'Video opened in Safari' : 'Download complete! Check Gallery/Downloads');
         TabManager.switch('downloads');
         elements.linkInput.value = '';
 
       } catch (err) {
         if (err.name === 'AbortError') { FakeProgress.reset(); return; }
         FakeProgress.reset();
-
         console.error('Download error:', err);
-        let errorMsg = err.message || 'Download failed';
+        let msg = err.message || 'Download failed';
 
         if (platform === 'instagram' || platform === 'facebook') {
-          if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
-            errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
-          } else if (errorMsg.includes('private')) {
-            errorMsg = `This ${platform} post is private.`;
+          if (msg.includes('login') || msg.includes('cookie')) {
+            msg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
+          } else if (msg.includes('private')) {
+            msg = `This ${platform} post is private.`;
           }
         } else if (platform === 'youtube') {
-          if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
-            errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
+          if (msg.includes('unavailable') || msg.includes('bot') || msg.includes('sign in')) {
+            msg = 'YouTube download failed. Video may be age-restricted or blocked.';
           }
         }
 
-        if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
-          showErrorWithRetry(errorMsg);
-          // FIX 4: rethrow so handleDownloadWithRetry's catch block can retry
-          resetUI(2000, downloadId);
-          throw err;
+        // BUG 2 FIX: removed resetUI from catch — finally handles it exclusively
+        if (msg.includes('try again later') || msg.includes('busy')) {
+          showErrorWithRetry(msg);
+          throw err; // rethrow for handleDownloadWithRetry retry logic
         } else {
-          updateMessage(errorMsg, 'error');
-          Toast.error(errorMsg);
+          updateMessage(msg, 'error');
+          Toast.error(msg);
         }
-
       } finally {
         if (downloadId === state.currentDownloadId) state.abortController = null;
-        resetUI(2000, downloadId);
+        resetUI(2000, downloadId); // single call — always runs
+      }
+    }
+
+    // ==================== CANCEL BUTTON ====================
+    function initCancelButton() {
+      elements.cancelBtn?.addEventListener('click', () => {
+        if (!isActivelyDownloading()) return;
+        state.abortController?.abort();
+        FakeProgress.reset();
+        setDownloading(false);
+        setMessage('Download cancelled', 'error');
+        Toast.info('Download cancelled');
+      });
+    }
+
+    // ==================== SERVICE WORKER ====================
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(r => console.log('SW registered:', r.scope))
+            .catch(e => console.warn('SW registration failed (sw.js may not exist yet):', e));
+        });
       }
     }
 
@@ -2483,35 +1994,33 @@
 
       const settings = Storage.getSettings();
       selectedFormat = settings.format === 'audio' ? 'audio' : 'video';
-      FormatSelector.select(selectedFormat);
+
+      // BUG 15 FIX: init and select quality BEFORE FormatSelector.select()
+      // so QualitySelector._selected is set when updateVisibility() is called
       QualitySelector.init();
       QualitySelector.select(settings.quality || '720p');
+
+      // This calls QualitySelector.updateVisibility() internally — _selected is already set
+      FormatSelector.select(selectedFormat);
 
       HamburgerMenu.init();
       TabManager.init();
       DownloadsManager.init();
       VideoModal.init();
-
-      if (IS_IOS && elements.iosHint) elements.iosHint.classList.add('visible');
+      initCancelButton();
 
       elements.pasteBtn.addEventListener('click', pasteLink);
       elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
+      elements.downloadForm.addEventListener('submit', e => { e.preventDefault(); handleDownloadWithRetry(0); });
 
-      // FIX 10: form submit handled here — no inline onsubmit needed
-      elements.downloadForm.addEventListener('submit', e => {
-        e.preventDefault();
-        handleDownloadWithRetry(0);
-      });
-
-      let inputDebounceTimer = null;
+      let debounceTimer = null;
       elements.linkInput.addEventListener('input', () => {
-        clearTimeout(inputDebounceTimer);
-        inputDebounceTimer = setTimeout(maybeAutoDownload, 400);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(maybeAutoDownload, 400);
       });
 
       document.addEventListener('keydown', e => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'v' &&
-            document.activeElement !== elements.linkInput) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'v' && document.activeElement !== elements.linkInput) {
           elements.linkInput.focus();
         }
         if (e.key === 'Escape' && elements.videoModal.classList.contains('active')) {
@@ -2521,42 +2030,37 @@
 
       window.addEventListener('beforeunload', () => {
         state.abortController?.abort();
-        state.activeObjectUrls.forEach(url => {
-          try { URL.revokeObjectURL(url); } catch {}
-        });
+        state.activeObjectUrls.forEach(u => { try { URL.revokeObjectURL(u); } catch {} });
         state.activeObjectUrls.clear();
       });
 
-      // FIX 13: capture the controller reference at hide-time so a NEW download
-      // that starts while the tab is hidden is never accidentally aborted.
-      let visibilityHideTime = 0;
-      let hiddenAbortController = null;
-
+      // BUG 14 FIX: null-guard on state.abortController before comparing
+      let hideTime = 0, hiddenCtrl = null;
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden' && state.abortController) {
-          visibilityHideTime = Date.now();
-          hiddenAbortController = state.abortController;
-        } else if (document.visibilityState === 'visible' && visibilityHideTime > 0) {
-          const hiddenMs = Date.now() - visibilityHideTime;
-          visibilityHideTime = 0;
-          // Only abort if it's the SAME controller captured at hide-time
-          if (hiddenMs > 30000 && hiddenAbortController &&
-              hiddenAbortController === state.abortController) {
+          hideTime = Date.now();
+          hiddenCtrl = state.abortController;
+        } else if (document.visibilityState === 'visible' && hideTime > 0) {
+          const elapsed = Date.now() - hideTime;
+          hideTime = 0;
+          if (elapsed > 30000 &&
+              hiddenCtrl !== null &&
+              state.abortController !== null &&           // guard: completed downloads set this to null
+              hiddenCtrl === state.abortController) {
             state.abortController.abort();
             Toast.info('Download aborted after 30s in background');
           }
-          hiddenAbortController = null;
+          hiddenCtrl = null;
         }
       });
 
       DownloadsManager.render();
+      registerServiceWorker();
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
+    document.readyState === 'loading'
+      ? document.addEventListener('DOMContentLoaded', init)
+      : init();
   </script>
 </body>
 </html>
