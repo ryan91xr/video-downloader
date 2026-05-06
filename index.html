@@ -1491,7 +1491,7 @@
         if (!isDownloads) {
           if (isActivelyDownloading()) {
             setMessage('Please wait...', 'loading');
-            ProgressBar.show();
+            ProgressBar.restore();
             ProgressBar.set(FakeProgress._current);
           } else {
             setMessage('', '');
@@ -2043,7 +2043,11 @@
 
     // ==================== PROGRESS BAR ====================
     const ProgressBar = {
+      // show() — use for fresh start (resets to 0)
       show() { elements['progress-wrap']?.classList.add('visible'); this.set(0); },
+      // restore() — use when switching back to Enter URL tab mid-download
+      // makes the bar visible WITHOUT resetting the percentage
+      restore() { elements['progress-wrap']?.classList.add('visible'); },
       hide() { elements['progress-wrap']?.classList.remove('visible'); },
       set(pct) {
         const p = Math.min(100, Math.max(0, Math.round(pct)));
