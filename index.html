@@ -569,7 +569,7 @@
     .quality-selector {
       width: 100%;
       margin-top: var(--space-md);
-      display: none; /* hidden by default — shown only for video format */
+      display: none;
     }
 
     .quality-selector.visible {
@@ -1073,7 +1073,6 @@
     <!-- Tab: Enter URL -->
     <section class="tab-content active" id="tab-enter-url" role="tabpanel" aria-labelledby="tabBtnEnterUrl">
       <div class="input-bar-container">
-        <!-- FIX 10: removed redundant onsubmit="return false" -->
         <form class="input-bar" id="downloadForm">
           <div class="format-selector">
             <button type="button" class="format-btn" id="formatBtn"
@@ -1142,7 +1141,6 @@
         <div id="progress-label">0%</div>
       </div>
 
-      <!-- Quality Selector — hidden for audio format -->
       <div class="quality-selector" id="qualitySelector">
         <div class="quality-label">Download Quality</div>
         <div class="quality-options" role="group" aria-label="Select video quality">
@@ -1183,7 +1181,6 @@
     </section>
 
     <!-- Tab: Downloads -->
-    <!-- FIX 9: added aria-hidden="true" to match initial hidden state -->
     <section class="tab-content" id="tab-downloads" role="tabpanel"
              aria-labelledby="tabBtnDownloads" aria-hidden="true" hidden>
       <div class="downloads-container">
@@ -1243,7 +1240,6 @@
       RETRY_DELAY: 2000
     });
 
-    // FIX 12: Define IS_IOS and IS_ANDROID once — removed duplicate CONFIG.IS_IOS
     const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const IS_ANDROID = /Android/i.test(navigator.userAgent);
@@ -1424,30 +1420,25 @@
 
     // ==================== QUALITY SELECTOR ====================
     const QualitySelector = {
-      _selected: '720p', // default — good balance of quality and speed
+      _selected: '720p',
 
       init() {
         const buttons = elements.qualitySelector?.querySelectorAll('.quality-btn');
         buttons?.forEach(btn => {
           btn.addEventListener('click', () => this.select(btn.dataset.quality));
         });
-        // Show/hide based on initial format
         this.updateVisibility();
       },
 
       select(quality) {
         if (!['1080p', '720p', '480p', 'best'].includes(quality)) return;
         this._selected = quality;
-
-        // Update button states
         const buttons = elements.qualitySelector?.querySelectorAll('.quality-btn');
         buttons?.forEach(btn => {
           const isActive = btn.dataset.quality === quality;
           btn.classList.toggle('active', isActive);
           btn.setAttribute('aria-pressed', String(isActive));
         });
-
-        // Persist to settings
         const settings = Storage.getSettings();
         Storage.saveSettings({ ...settings, quality });
       },
@@ -1457,7 +1448,6 @@
       },
 
       updateVisibility() {
-        // Only show for video — quality doesn't apply to audio
         if (selectedFormat === 'video') {
           elements.qualitySelector?.classList.add('visible');
         } else {
@@ -1497,7 +1487,6 @@
         selectedFormat = format === 'audio' ? 'audio' : 'video';
         const settings = Storage.getSettings();
         Storage.saveSettings({ ...settings, format: selectedFormat });
-
         const isVideo = selectedFormat === 'video';
         elements.formatIconVideo.style.display = isVideo ? 'block' : 'none';
         elements.formatIconAudio.style.display = isVideo ? 'none' : 'block';
@@ -1516,13 +1505,11 @@
         elements.hamburgerBtn.addEventListener('click', () => this.open());
         elements.closeMenuBtn.addEventListener('click', () => this.close());
         elements.menuOverlay.addEventListener('click', () => this.close());
-
         elements.menuDownloads.addEventListener('click', () => { this.close(); TabManager.switch('downloads'); });
         elements.menuShareApp.addEventListener('click', () => { this.close(); this.shareApp(); });
         elements.menuRateApp.addEventListener('click', () => { this.close(); Toast.info('Rate App — Feature coming soon'); });
         elements.menuHelp.addEventListener('click', () => { this.close(); Toast.info('Help & Support — contact: support@flashvidz.com', 'info', 6000); });
         elements.menuPrivacy.addEventListener('click', () => { this.close(); Toast.info('Privacy — Feature coming soon'); });
-
         document.addEventListener('keydown', e => {
           if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) {
             this.close();
@@ -1615,7 +1602,6 @@
 
         elements['tab-enter-url'].classList.toggle('active', !isDownloads);
         elements['tab-enter-url'].hidden = isDownloads;
-        // FIX 9: sync aria-hidden with hidden attribute
         elements['tab-enter-url'].setAttribute('aria-hidden', String(isDownloads));
 
         elements['tab-downloads'].classList.toggle('active', isDownloads);
@@ -1713,7 +1699,13 @@
         }
       },
 
-      async downloadItem(item, fileName) {
+      // ============================================================
+      // FIX #2: Added missing fileSize parameter to downloadItem
+      // Previously the parameter was passed at the call site but
+      // silently dropped because the function signature only had
+      // (item, fileName) — it now correctly receives all three args.
+      // ============================================================
+      async downloadItem(item, fileName, fileSize) {
         if (isActivelyDownloading()) { Toast.info('A download is already in progress'); return; }
         try {
           const downloadLink = item.downloadUrl || item.url;
@@ -1839,8 +1831,20 @@
         const displayDate  = this.formatDate(item.timestamp);
         const baseUrl      = CONFIG.API_URL.replace(/\/download\/?$/, '');
         const defaultThumb = `${baseUrl}/default-thumbnail.svg`;
-        const hasThumbnail = typeof item.thumbnail === 'string' && item.thumbnail.trim().length > 0;
-        const thumbnailUrl = hasThumbnail ? item.thumbnail.trim() : defaultThumb;
+
+        // ============================================================
+        // FIX #6: Validate thumbnail URL from localStorage before use.
+        // A manually tampered localStorage entry could contain a
+        // non-HTTP URL. isValidHttpUrl() (which calls normalizeStoredUrl)
+        // ensures the URL is a real http/https address that is not a
+        // private/local IP, preventing open-redirect style abuse.
+        // ============================================================
+        const rawThumbnail = typeof item.thumbnail === 'string'
+          ? item.thumbnail.trim()
+          : '';
+        const hasThumbnail = rawThumbnail.length > 0 &&
+          SecurityUtils.isValidHttpUrl(rawThumbnail);
+        const thumbnailUrl = hasThumbnail ? rawThumbnail : defaultThumb;
 
         const mediaIconPath = isVideo
           ? 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'
@@ -1891,7 +1895,6 @@
           </div>
         `;
 
-        // FIX 2: proper named function reference — no arguments.callee
         const thumbImg = card.querySelector('.thumb-img');
         if (thumbImg) {
           const onThumbError = () => {
@@ -2070,7 +2073,6 @@
           const blobType = serverMimeType || MIME_MAP[extForMime] || 'video/mp4';
           const blob = new Blob(chunks, { type: blobType });
 
-          // FIX 5: track blobUrl in state.activeObjectUrls to prevent leaks
           blobUrl = URL.createObjectURL(blob);
           state.activeObjectUrls.add(blobUrl);
 
@@ -2084,7 +2086,6 @@
             a.click();
             document.body.removeChild(a);
           } finally {
-            // Revoke and remove from tracker after browser starts the save
             setTimeout(() => {
               URL.revokeObjectURL(blobUrl);
               state.activeObjectUrls.delete(blobUrl);
@@ -2093,8 +2094,6 @@
 
           return received || contentLength;
         } catch (err) {
-          // FIX 5 & 7: removed dead cleanedUp variable; just rethrow cleanly
-          // If blobUrl was created before the error, revoke it immediately
           if (blobUrl) {
             URL.revokeObjectURL(blobUrl);
             state.activeObjectUrls.delete(blobUrl);
@@ -2179,10 +2178,6 @@
         }, 400);
       },
 
-      // FIX 8: finish() now accepts a callback so callers can set success message
-      // AFTER the progress bar completes — avoids the race condition where
-      // FakeProgress.finish() was called immediately after server response
-      // but before runHybrid() completed.
       finish(onDone) {
         this.stop();
         this._current = 100;
@@ -2205,13 +2200,8 @@
       elements.pasteBtn.disabled = isActive;
     }
 
-    // FIX 6: resetUI no longer uses a stale downloadId check that could
-    // skip the reset when a new download started before the timeout fired.
-    // Instead we pass the downloadId at call-time and only skip if a NEWER
-    // download is actively running (state.isDownloading && id mismatch).
     function resetUI(delay = 2000, downloadId) {
       setTimeout(() => {
-        // Only skip reset if a DIFFERENT download is currently active
         if (downloadId !== undefined &&
             downloadId !== state.currentDownloadId &&
             state.isDownloading) {
@@ -2225,12 +2215,9 @@
       return state.isDownloading;
     }
 
-    // FIX 3: showErrorWithRetry uses createTextNode (already XSS-safe),
-    // so we must NOT call escapeHtml() — that would double-encode entities.
     function showErrorWithRetry(message) {
       const msg = elements.message;
       msg.textContent = '';
-      // createTextNode is inherently safe — no escapeHtml needed
       msg.appendChild(document.createTextNode(message + ' '));
       const btn = document.createElement('button');
       btn.className = 'retry-btn';
@@ -2262,7 +2249,6 @@
     function maybeAutoDownload() {
       const settings = Storage.getSettings();
       const link = elements.linkInput.value.trim();
-      // FIX 11: removed redundant elements.submitBtn.disabled check
       if (!settings.autoDownload || !link ||
           !SecurityUtils.isValidHttpUrl(link) || isActivelyDownloading()) return;
       handleDownload();
@@ -2276,10 +2262,6 @@
       }
     }
 
-    // FIX 4: handleDownloadWithRetry now works correctly because handleDownload
-    // rethrows retryable errors (those containing 'try again later' or 'busy').
-    // Previously handleDownload swallowed all errors — now it only swallows
-    // non-retryable ones and rethrows retryable ones so the retry loop fires.
     async function handleDownloadWithRetry(retryCount = 0) {
       state.lastUrl    = elements.linkInput.value.trim().slice(0, 2000);
       state.lastFormat = selectedFormat;
@@ -2297,14 +2279,12 @@
           );
           setTimeout(() => handleDownloadWithRetry(retryCount + 1), delay);
         }
-        // Non-retryable errors are already shown inside handleDownload
       }
     }
 
     async function handleDownload() {
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
-      const settings = Storage.getSettings();
 
       if (state.isDownloading) return;
 
@@ -2317,7 +2297,6 @@
 
       if (!link) {
         updateMessage('Enter a video link', 'error');
-        // FIX 6: pass downloadId so resetUI knows which download this belongs to
         resetUI(0, downloadId);
         return;
       }
@@ -2398,8 +2377,6 @@
           ? downloadUrl + (downloadUrl.includes('?') ? titleParam : titleParam.replace('&', '?'))
           : downloadUrl;
 
-        // FIX 8: runHybrid is awaited BEFORE FakeProgress.finish() so the
-        // progress bar only completes after the actual download/open is done.
         const downloadedFileSize = await DownloadFlow.runHybrid(
           downloadUrlWithTitle,
           playUrl,
@@ -2409,7 +2386,6 @@
           state.abortController.signal
         );
 
-        // FIX 8: FakeProgress.finish() called AFTER runHybrid completes
         FakeProgress.finish(() => {
           if (downloadId !== state.currentDownloadId) return;
           if (IS_IOS) {
@@ -2442,9 +2418,24 @@
         elements.linkInput.value = '';
 
       } catch (err) {
-        if (err.name === 'AbortError') { FakeProgress.reset(); return; }
-        FakeProgress.reset();
+        // ============================================================
+        // FIX #1: AbortError is now handled BEFORE reaching the finally
+        // block. We perform all cleanup here immediately and return,
+        // so the finally block's resetUI call never fires for aborts.
+        // This prevents a delayed setDownloading(false) from interfering
+        // with any new download that starts right after an abort.
+        // ============================================================
+        if (err.name === 'AbortError') {
+          FakeProgress.reset();
+          // Clean up immediately — do NOT rely on finally for this case
+          if (downloadId === state.currentDownloadId) {
+            state.abortController = null;
+            setDownloading(false);
+          }
+          return;
+        }
 
+        FakeProgress.reset();
         console.error('Download error:', err);
         let errorMsg = err.message || 'Download failed';
 
@@ -2462,7 +2453,6 @@
 
         if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
           showErrorWithRetry(errorMsg);
-          // FIX 4: rethrow so handleDownloadWithRetry's catch block can retry
           resetUI(2000, downloadId);
           throw err;
         } else {
@@ -2471,8 +2461,17 @@
         }
 
       } finally {
-        if (downloadId === state.currentDownloadId) state.abortController = null;
-        resetUI(2000, downloadId);
+        // ============================================================
+        // FIX #1 (continued): finally only runs cleanup for non-abort
+        // paths. AbortError returns early above, so this block is
+        // skipped entirely for aborts. For all other outcomes (success
+        // or non-abort errors) we clean up the controller and reset UI
+        // only if this is still the active download.
+        // ============================================================
+        if (downloadId === state.currentDownloadId) {
+          state.abortController = null;
+          resetUI(2000, downloadId);
+        }
       }
     }
 
@@ -2497,7 +2496,6 @@
       elements.pasteBtn.addEventListener('click', pasteLink);
       elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
 
-      // FIX 10: form submit handled here — no inline onsubmit needed
       elements.downloadForm.addEventListener('submit', e => {
         e.preventDefault();
         handleDownloadWithRetry(0);
@@ -2527,8 +2525,6 @@
         state.activeObjectUrls.clear();
       });
 
-      // FIX 13: capture the controller reference at hide-time so a NEW download
-      // that starts while the tab is hidden is never accidentally aborted.
       let visibilityHideTime = 0;
       let hiddenAbortController = null;
 
@@ -2539,7 +2535,6 @@
         } else if (document.visibilityState === 'visible' && visibilityHideTime > 0) {
           const hiddenMs = Date.now() - visibilityHideTime;
           visibilityHideTime = 0;
-          // Only abort if it's the SAME controller captured at hide-time
           if (hiddenMs > 30000 && hiddenAbortController &&
               hiddenAbortController === state.abortController) {
             state.abortController.abort();
