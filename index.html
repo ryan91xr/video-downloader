@@ -1498,7 +1498,7 @@
         elements.menuDownloads.addEventListener('click', () => { this.close(); TabManager.switch('downloads'); });
         elements.menuShareApp.addEventListener('click', () => { this.close(); this.shareApp(); });
         elements.menuRateApp.addEventListener('click', () => { this.close(); Toast.info('Rate App — Feature coming soon'); });
-        elements.menuHelp.addEventListener('click', () => { this.close(); Toast.info('Help & Support — contact: support@flashvidz.com', 'info', 6000); });
+        elements.menuHelp.addEventListener('click', () => { this.close(); Toast.show('Help & Support — contact: support@flashvidz.com', 'info', 6000); });
         elements.menuPrivacy.addEventListener('click', () => { this.close(); Toast.info('Privacy — Feature coming soon'); });
         document.addEventListener('keydown', e => {
           if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) {
@@ -1748,7 +1748,13 @@
         const downloads = Storage.loadDownloads();
         const now = Date.now();
         const download = {
-          id: now.toString(),
+        // FIX #4: Use crypto.randomUUID() instead of Date.now() to avoid ID
+        // collisions when two downloads complete within the same millisecond
+        // (e.g. fast connections or retry flows). Falls back to timestamp +
+        // random suffix in the unlikely case crypto.randomUUID is unavailable.
+        id: (typeof crypto?.randomUUID === 'function')
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
           title: typeof title === 'string' ? title.trim().slice(0, 200) : null,
           downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
           fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),
@@ -2271,15 +2277,23 @@
             'loading'
           );
           setTimeout(() => handleDownloadWithRetry(retryCount + 1), delay);
+        } else {
+          // FIX #2: re-throw non-retryable errors so callers and future
+          // error-logging layers can observe them. Previously these were
+          // silently swallowed after the UI message was already set.
+          throw err;
         }
       }
     }
 
     async function handleDownload() {
+      // FIX #1: Guard BEFORE incrementing the ID so a rejected call never
+      // invalidates the active download's downloadId, which would cause all
+      // its updateMessage / resetUI / abort-guard checks to bail prematurely.
+      if (state.isDownloading) return;
+
       const downloadId = ++state.currentDownloadId;
       const link = elements.linkInput.value.trim().slice(0, 2000);
-
-      if (state.isDownloading) return;
 
       const updateMessage = (text, type = '') => {
         if (downloadId !== state.currentDownloadId) return;
@@ -2362,14 +2376,22 @@
           Toast.warning('This video may not play on iPhone. Try downloading instead.');
         }
 
-        const titleParam = rawTitle
-          ? '&title=' + encodeURIComponent(
+        // FIX #3: Use the URL API to append the title param so it always lands
+        // in the query string — not after a '#' fragment if one exists in the URL.
+        let downloadUrlWithTitle = downloadUrl;
+        if (downloadUrl && rawTitle) {
+          try {
+            const u = new URL(downloadUrl);
+            u.searchParams.set(
+              'title',
               rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '').trim().slice(0, 100)
-            )
-          : '';
-        const downloadUrlWithTitle = downloadUrl
-          ? downloadUrl + (downloadUrl.includes('?') ? titleParam : titleParam.replace('&', '?'))
-          : downloadUrl;
+            );
+            downloadUrlWithTitle = u.toString();
+          } catch {
+            // Malformed URL — fall back to original without title param
+            downloadUrlWithTitle = downloadUrl;
+          }
+        }
 
         const downloadedFileSize = await DownloadFlow.runHybrid(
           downloadUrlWithTitle,
