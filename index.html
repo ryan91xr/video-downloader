@@ -2104,8 +2104,21 @@
 
       runAndroidNative(downloadUrl, fileName, onProgress) {
         onProgress?.(100);
+        // Always use a hidden anchor click — this triggers the browser's
+        // native download manager without navigating away from the page.
+        // window.open() is kept as a first attempt for compatibility, but
+        // the window.location.href fallback is replaced with an <a> click
+        // so a popup blocker (e.g. Brave) never redirects the current tab.
         const newWin = window.open(downloadUrl, '_blank', 'noopener,noreferrer');
-        if (!newWin) window.location.href = downloadUrl;
+        if (!newWin) {
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = SecurityUtils.normalizeFileName(fileName);
+          a.rel = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
         return Promise.resolve(0);
       },
 
