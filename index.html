@@ -2143,7 +2143,10 @@
           }
           return this.openForIOS(playUrl || downloadUrl, fileName);
         }
-        if (IS_ANDROID) return this.runAndroidNative(downloadUrl, fileName, onProgress);
+        // FIX: Android previously used runAndroidNative (window.open / anchor click),
+        // but Brave and other Android browsers intercept both and redirect the current
+        // tab to the backend URL, leaving the app. The fetch/blob path (run()) streams
+        // the file into memory and triggers a local blob URL download — no navigation.
         return this.run(downloadUrl, fileName, onProgress, signal);
       }
     };
