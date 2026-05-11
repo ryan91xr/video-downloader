@@ -14,7 +14,7 @@
     :root {
       --bg-primary: #0d1b21;
       --bg-card: #1a252b;
-      --bg-input: #2a3a40;
+      --bg-input: #151f24;
       --accent: #00d4aa;
       --text-primary: #ffffff;
       --text-secondary: #8a9aa0;
@@ -309,16 +309,17 @@
     .input-bar {
       display: flex;
       align-items: center;
-      background: var(--bg-input);
+      background: var(--bg-card);
       border-radius: var(--radius-full);
       padding: 4px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-medium);
       height: 52px;
-      transition: border-color 150ms ease;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
     }
 
     .input-bar:focus-within {
-      border-color: rgba(0, 212, 170, 0.4);
+      border-color: rgba(0, 212, 170, 0.45);
+      box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.06);
     }
 
     .format-selector { 
@@ -335,7 +336,7 @@
       padding: 10px;
       border-radius: var(--radius-full);
       border: none;
-      background: var(--bg-card);
+      background: var(--bg-input);
       color: var(--accent);
       cursor: pointer;
       transition: all 150ms ease;
@@ -2371,8 +2372,19 @@
         const newWindow = window.open(url, '_blank');
         if (!newWindow || newWindow.closed ||
             typeof newWindow.closed === 'undefined') {
-          Toast.warning('Popup blocked. Opening video now.', 8000);
-          window.location.href = url;
+          // FIX Bug 2: window.location.href navigates the current tab away from
+          // the app when the popup is blocked on iOS Safari. Using a hidden
+          // anchor click instead tells the browser to open/download the URL
+          // without leaving the page.
+          Toast.warning('Popup blocked. Trying direct link.', 8000);
+          const a = document.createElement('a');
+          a.href = url;
+          if (fileName) a.download = fileName;
+          a.rel = 'noopener noreferrer';
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
         }
         return Promise.resolve(0);
       },
@@ -2468,7 +2480,13 @@
         elements.linkInput.value = state.lastUrl;
         selectedFormat           = state.lastFormat;
         handleDownloadWithRetry(0).catch(err => {
-          if (err.name !== 'AbortError') console.error('Retry error:', err);
+          if (err.name !== 'AbortError') {
+            console.error('Retry error:', err);
+            // FIX Bug 1: non-retryable errors thrown from handleDownloadWithRetry
+            // were never resetting the UI here, leaving the spinner stuck forever.
+            setDownloading(false);
+            setMessage('Download failed. Please try again.', 'error');
+          }
         });
       }
     }
