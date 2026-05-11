@@ -8,10 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>FlashVidz - Video Downloader</title>
-  
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-  
+
   <style>
     /* ==================== CSS VARIABLES ==================== */
     :root {
@@ -151,7 +148,6 @@
     }
 
     .app-title span { color: var(--color-accent); }
-
 
     .menu-overlay {
       position: fixed;
@@ -555,16 +551,13 @@
 
     .toast-close:hover { background: rgba(255, 255, 255, 0.1); color: var(--color-text-primary); }
 
-    /* ==================== QUALITY SELECTOR ==================== */
     .quality-selector {
       width: 100%;
       margin-top: var(--space-md);
       display: none;
     }
 
-    .quality-selector.visible {
-      display: block;
-    }
+    .quality-selector.visible { display: block; }
 
     .quality-label {
       font-size: 0.75rem;
@@ -661,7 +654,6 @@
     .guide-text strong { color: var(--color-text-primary); font-weight: 600; }
 
     .downloads-container { padding: 0; }
-
     .downloads-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
     .downloads-title { font-size: 1.125rem; font-weight: 600; color: var(--color-text-primary); }
 
@@ -900,56 +892,6 @@
 
     .footer { margin-top: auto; font-size: 0.75rem; color: var(--color-text-muted); text-align: center; padding: var(--space-lg) var(--space-md); }
 
-    .platform-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 2px 8px;
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--color-text-secondary);
-    }
-
-    .platform-badge.tiktok { background: rgba(0, 0, 0, 0.5); color: #fff; }
-    .platform-badge.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
-    .platform-badge.youtube { background: #ff0000; color: #fff; }
-    .platform-badge.facebook { background: #1877f2; color: #fff; }
-
-    .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
-      background-size: 200% 100%;
-      animation: skeleton-loading 1.5s infinite;
-      border-radius: var(--radius-sm);
-    }
-
-    @media (max-width: 480px) {
-      :root { --space-lg: 16px; --space-xl: 24px; }
-      .app-header { padding: var(--space-sm) var(--space-md); }
-      .tab-content, .tabs-container { padding-left: var(--space-md); padding-right: var(--space-md); }
-      .download-thumbnail-small { width: 90px; height: 65px; }
-    }
-
-    @media (min-width: 768px) {
-      .app-container { --app-max-width: 480px; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    @media (prefers-contrast: high) {
-      :root { --color-accent: #00ffcc; --color-text-primary: #ffffff; --color-text-secondary: #cccccc; }
-      .input-bar, .download-card, .guide-card { border-width: 2px; }
-    }
-
     .retry-btn {
       background: transparent;
       border: 1px solid var(--color-accent);
@@ -977,6 +919,30 @@
 
     .ios-hint.visible { display: block; }
     .ios-hint strong { color: var(--color-accent); }
+
+    @media (max-width: 480px) {
+      :root { --space-lg: 16px; --space-xl: 24px; }
+      .app-header { padding: var(--space-sm) var(--space-md); }
+      .tab-content, .tabs-container { padding-left: var(--space-md); padding-right: var(--space-md); }
+      .download-thumbnail-small { width: 90px; height: 65px; }
+    }
+
+    @media (min-width: 768px) {
+      .app-container { --app-max-width: 480px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (prefers-contrast: high) {
+      :root { --color-accent: #00ffcc; --color-text-primary: #ffffff; --color-text-secondary: #cccccc; }
+      .input-bar, .download-card, .guide-card { border-width: 2px; }
+    }
   </style>
 </head>
 
@@ -1041,32 +1007,39 @@
 
   <div class="app-container">
     <header class="app-header">
-      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="hamburgerMenu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"
+              aria-expanded="false" aria-controls="hamburgerMenu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
           <path d="M3 12h18M3 6h18M3 18h18"/>
         </svg>
       </button>
       <h1 class="app-title">Flash<span>Vidz</span></h1>
-
     </header>
 
     <div class="tabs-container">
       <nav class="tabs-nav" role="tablist" aria-label="Main tabs">
-        <button class="tab-btn active" id="tabBtnEnterUrl" data-tab="enter-url" role="tab"
-                aria-selected="true" aria-controls="tab-enter-url">Enter URL</button>
-        <button class="tab-btn" id="tabBtnDownloads" data-tab="downloads" role="tab"
-                aria-selected="false" aria-controls="tab-downloads">Downloads</button>
+        <button class="tab-btn active" id="tabBtnEnterUrl" data-tab="enter-url"
+                role="tab" aria-selected="true" aria-controls="tab-enter-url">
+          Enter URL
+        </button>
+        <button class="tab-btn" id="tabBtnDownloads" data-tab="downloads"
+                role="tab" aria-selected="false" aria-controls="tab-downloads">
+          Downloads
+        </button>
         <div class="tab-indicator" id="tabIndicator" aria-hidden="true"></div>
       </nav>
     </div>
 
     <!-- Tab: Enter URL -->
-    <section class="tab-content active" id="tab-enter-url" role="tabpanel" aria-labelledby="tabBtnEnterUrl">
+    <section class="tab-content active" id="tab-enter-url"
+             role="tabpanel" aria-labelledby="tabBtnEnterUrl">
       <div class="input-bar-container">
         <form class="input-bar" id="downloadForm">
           <div class="format-selector">
             <button type="button" class="format-btn" id="formatBtn"
-                    aria-label="Select download format" aria-expanded="false" aria-haspopup="listbox">
+                    aria-label="Select download format"
+                    aria-expanded="false" aria-haspopup="listbox">
               <svg viewBox="0 0 24 24" id="formatIconVideo" aria-hidden="true">
                 <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
               </svg>
@@ -1077,7 +1050,8 @@
                 <path d="M7 10l5 5 5-5z"/>
               </svg>
             </button>
-            <div class="format-dropdown" id="formatDropdown" role="listbox" aria-label="Download format options">
+            <div class="format-dropdown" id="formatDropdown"
+                 role="listbox" aria-label="Download format options">
               <button type="button" class="format-option selected" data-format="video"
                       id="optionVideo" role="option" aria-selected="true" aria-label="Video MP4">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1107,24 +1081,27 @@
                    aria-describedby="input-help">
           </div>
 
-          <button type="button" class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">
-            Paste
-          </button>
+          <button type="button" class="paste-btn-bar" id="pasteBtn"
+                  aria-label="Paste link from clipboard">Paste</button>
 
-          <button type="submit" class="submit-btn" id="submitBtn" aria-label="Start download">
+          <button type="submit" class="submit-btn" id="submitBtn"
+                  aria-label="Start download">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
             </svg>
           </button>
         </form>
-        <span id="input-help" class="sr-only">Supported platforms: TikTok, Instagram, YouTube, and Facebook</span>
+        <span id="input-help" class="sr-only">
+          Supported platforms: TikTok, Instagram, YouTube, and Facebook
+        </span>
       </div>
 
       <div class="message-container">
         <p id="message" role="status" aria-live="polite"></p>
       </div>
 
-      <div id="progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div id="progress-wrap" role="progressbar"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div id="progress-track">
           <div id="progress-fill"></div>
         </div>
@@ -1142,7 +1119,8 @@
       </div>
 
       <div class="ios-hint" id="iosHint">
-        <strong>iPhone/iPad:</strong> Videos open in Safari for playback. Tap the share button to save to Photos.
+        <strong>iPhone/iPad:</strong> Videos open in Safari for playback.
+        Tap the share button to save to Photos.
       </div>
 
       <div class="user-guide">
@@ -1151,19 +1129,27 @@
           <ol class="guide-list">
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">1</span>
-              <span class="guide-text"><strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar</span>
+              <span class="guide-text">
+                <strong>Copy URL</strong> — Navigate to the video and copy its link
+              </span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">2</span>
-              <span class="guide-text"><strong>Paste Link</strong> — Click the paste button or manually enter the URL above</span>
+              <span class="guide-text">
+                <strong>Paste Link</strong> — Click the paste button or enter the URL above
+              </span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">3</span>
-              <span class="guide-text"><strong>Download</strong> — Press the arrow button and wait for processing to complete</span>
+              <span class="guide-text">
+                <strong>Download</strong> — Press the arrow button and wait for processing
+              </span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">4</span>
-              <span class="guide-text"><strong>Save File</strong> — Video saves automatically to your downloads folder</span>
+              <span class="guide-text">
+                <strong>Save File</strong> — Video saves automatically to your downloads folder
+              </span>
             </li>
           </ol>
         </div>
@@ -1171,34 +1157,33 @@
     </section>
 
     <!-- Tab: Downloads -->
-    <section class="tab-content" id="tab-downloads" role="tabpanel"
-             aria-labelledby="tabBtnDownloads" aria-hidden="true" hidden>
+    <section class="tab-content" id="tab-downloads"
+             role="tabpanel" aria-labelledby="tabBtnDownloads"
+             aria-hidden="true" hidden>
       <div class="downloads-container">
         <div class="downloads-header">
           <h2 class="downloads-title">Downloads</h2>
           <span class="downloads-count" id="downloadsCount">0 items</span>
         </div>
-        <div class="downloads-list" id="downloadsList" role="list" aria-label="Downloaded videos">
-          <div class="empty-state" id="emptyState">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            <h3>No downloads yet</h3>
-            <p>Your downloaded videos will appear here</p>
-          </div>
-        </div>
+        <div class="downloads-list" id="downloadsList"
+             role="list" aria-label="Downloaded videos"></div>
       </div>
     </section>
 
     <!-- Video Modal -->
-    <div class="video-modal" id="videoModal" aria-hidden="true" role="dialog"
-         aria-label="Video preview" aria-modal="true">
+    <div class="video-modal" id="videoModal" aria-hidden="true"
+         role="dialog" aria-label="Video preview" aria-modal="true">
       <div class="video-modal-content" id="videoModalContent">
-        <button class="video-modal-close" id="videoModalClose" aria-label="Close video preview">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button class="video-modal-close" id="videoModalClose"
+                aria-label="Close video preview">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
         <video class="video-modal-player" id="videoModalPlayer"
-               controls playsinline preload="auto" crossorigin="anonymous"></video>
+               controls playsinline preload="auto"
+               crossorigin="anonymous"></video>
       </div>
     </div>
 
@@ -1206,7 +1191,8 @@
   </div>
 
   <!-- Global Download Menu -->
-  <div class="menu-dropdown global-download-menu" id="globalDownloadMenu" role="menu" aria-hidden="true"></div>
+  <div class="menu-dropdown global-download-menu" id="globalDownloadMenu"
+       role="menu" aria-hidden="true"></div>
 
   <script>
     'use strict';
@@ -1220,38 +1206,48 @@
       )
         ? 'http://localhost:3000/download'
         : 'https://flashvidz-backend.onrender.com/download',
-      MAX_FILE_SIZE: 500 * 1024 * 1024,
-      MAX_FILENAME_LENGTH: 180,
-      STORAGE_KEY: 'flashvidz_downloads',
-      MAX_DOWNLOADS_HISTORY: 50,
-      TOAST_DURATION: 4000,
-      SUPPORTED_PLATFORMS: ['tiktok', 'instagram', 'youtube', 'facebook'],
-      MAX_RETRIES: 3,
-      RETRY_DELAY: 2000
+
+      // FIX 1 — Request headers for lightweight API abuse deterrence.
+      // These are validated server-side to filter out direct API calls
+      // that bypass the frontend. Not a security boundary on their own,
+      // but raise the effort bar for casual scrapers.
+      API_REQUEST_HEADERS: Object.freeze({
+        'X-Client-Version': '1.0',
+        'X-Requested-With':  'FlashVidz'
+      }),
+
+      MAX_FILE_SIZE:          500 * 1024 * 1024, // 500 MB
+      MAX_FILENAME_LENGTH:    180,
+      STORAGE_KEY:            'flashvidz_downloads',
+      MAX_DOWNLOADS_HISTORY:  50,
+      TOAST_DURATION:         4000,
+      SUPPORTED_PLATFORMS:    ['tiktok', 'instagram', 'youtube', 'facebook'],
+      MAX_RETRIES:            3,
+      RETRY_DELAY:            2000
     });
 
     const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const IS_ANDROID = /Android/i.test(navigator.userAgent);
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
     // ==================== STATE ====================
     let selectedFormat = 'video';
 
     const state = {
-      abortController: null,
-      currentDownloadId: 0,
-      modalHistoryPushed: false,
-      closingFromPopState: false,
-      activeObjectUrls: new Set(),
+      abortController:          null,
+      currentDownloadId:        0,
+      modalHistoryPushed:       false,
+      closingFromPopState:      false,
+      activeObjectUrls:         new Set(),
       activeDownloadMenuContext: null,
-      isDownloading: false,
-      lastUrl: null,
-      lastFormat: null
+      isDownloading:            false,
+      lastUrl:                  null,
+      lastFormat:               null
     };
 
     // ==================== DOM CACHE ====================
     const elements = {};
 
+    // FIX 10 — warn about missing elements in dev so typos are caught early.
     function cacheElements() {
       const ids = [
         'toastContainer','menuOverlay','hamburgerMenu','closeMenuBtn',
@@ -1259,14 +1255,19 @@
         'tab-enter-url','tab-downloads','formatBtn','formatDropdown',
         'formatIconVideo','formatIconAudio','optionVideo','optionAudio',
         'linkInput','pasteBtn','submitBtn','downloadForm','message',
-        'downloadsCount','downloadsList','emptyState','videoModal',
+        'downloadsCount','downloadsList','videoModal',
         'videoModalContent','videoModalPlayer','videoModalClose',
         'globalDownloadMenu','menuDownloads','menuShareApp','menuRateApp',
         'menuHelp','menuPrivacy','iosHint',
         'progress-wrap','progress-fill','progress-label',
         'qualitySelector'
       ];
-      ids.forEach(id => { elements[id] = document.getElementById(id); });
+      ids.forEach(id => {
+        elements[id] = document.getElementById(id);
+        if (!elements[id] && window.location.hostname === 'localhost') {
+          console.warn(`[FlashVidz] Missing DOM element: #${id}`);
+        }
+      });
     }
 
     // ==================== SECURITY ====================
@@ -1288,7 +1289,8 @@
         if (sanitized.length > CONFIG.MAX_FILENAME_LENGTH) {
           const ext = sanitized.lastIndexOf('.');
           if (ext > 0 && ext > sanitized.length - 10) {
-            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH - (sanitized.length - ext)) + sanitized.slice(ext);
+            sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH -
+              (sanitized.length - ext)) + sanitized.slice(ext);
           } else {
             sanitized = sanitized.slice(0, CONFIG.MAX_FILENAME_LENGTH);
           }
@@ -1296,22 +1298,42 @@
         return sanitized || 'flashvidz-download';
       },
 
+      // FIX 5 — strip IPv6 brackets before comparing hostnames so
+      // addresses like [::1] and [fe80::1] are correctly rejected.
       normalizeStoredUrl(value) {
         const trimmed = typeof value === 'string' ? value.trim() : '';
         if (!trimmed || trimmed.length > 2000) return null;
         try {
           const parsed = new URL(trimmed);
           if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+
+          // URL.hostname wraps IPv6 in brackets: "[::1]" — strip them.
           const hostname = parsed.hostname.toLowerCase();
-          if (hostname === 'localhost' || hostname.endsWith('.local')) return null;
-          if (/^127\./.test(hostname) || /^10\./.test(hostname) || /^192\.168\./.test(hostname)) return null;
-          if (hostname.startsWith('172.')) {
-            const second = parseInt(hostname.split('.')[1], 10);
-            if (second >= 16 && second <= 31) return null;
-          }
-          if (hostname.startsWith('169.254.')) return null;
-          if (hostname === '::1' || hostname.startsWith('fe80:') ||
-              hostname.startsWith('fc') || hostname.startsWith('fd')) return null;
+          const rawHost  = hostname.startsWith('[') && hostname.endsWith(']')
+            ? hostname.slice(1, -1)
+            : hostname;
+
+          const is172Private = (() => {
+            if (!/^172\./.test(rawHost)) return false;
+            const second = parseInt(rawHost.split('.')[1], 10);
+            return second >= 16 && second <= 31;
+          })();
+
+          const privatePatterns = [
+            rawHost === 'localhost',
+            rawHost.endsWith('.local'),
+            /^127\./.test(rawHost),
+            /^10\./.test(rawHost),
+            /^192\.168\./.test(rawHost),
+            /^169\.254\./.test(rawHost),
+            rawHost === '::1',
+            rawHost.startsWith('fe80:'),
+            rawHost.startsWith('fc'),
+            rawHost.startsWith('fd'),
+            is172Private
+          ];
+
+          if (privatePatterns.some(Boolean)) return null;
           return trimmed;
         } catch {
           return null;
@@ -1325,6 +1347,8 @@
 
     // ==================== TOAST ====================
     const Toast = {
+      _VALID_TYPES: new Set(['success', 'error', 'info', 'warning']),
+
       icons: {
         success: '<svg class="toast-icon success" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
         error:   '<svg class="toast-icon error"   viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
@@ -1333,15 +1357,18 @@
       },
 
       show(message, type = 'info', duration = CONFIG.TOAST_DURATION) {
-        const toast = document.createElement('div');
+        // Validate type to a known set — prevents className injection
+        const safeType = this._VALID_TYPES.has(type) ? type : 'info';
+        const toast    = document.createElement('div');
         toast.className = 'toast';
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'polite');
         toast.innerHTML = `
-          ${this.icons[type] || this.icons.info}
+          ${this.icons[safeType]}
           <span class="toast-message">${SecurityUtils.escapeHtml(message)}</span>
           <button class="toast-close" aria-label="Dismiss notification">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
               <path d="M18 6L6 18M6 6l12 12"/>
             </svg>
           </button>
@@ -1356,10 +1383,10 @@
         return toast;
       },
 
-      success(msg) { return this.show(msg, 'success'); },
-      error(msg)   { return this.show(msg, 'error'); },
-      info(msg)    { return this.show(msg, 'info'); },
-      warning(msg, duration = 6000) { return this.show(msg, 'warning', duration); }
+      success(msg)              { return this.show(msg, 'success'); },
+      error(msg)                { return this.show(msg, 'error'); },
+      info(msg)                 { return this.show(msg, 'info'); },
+      warning(msg, dur = 6000)  { return this.show(msg, 'warning', dur); }
     };
 
     // ==================== STORAGE ====================
@@ -1384,14 +1411,15 @@
       },
 
       getSettings() {
-        const defaults = { format: 'video', quality: 'best', autoDownload: false };
+        const defaults = { format: 'video', quality: '720p', autoDownload: false };
         try {
           const stored = localStorage.getItem('flashvidz_settings');
           if (!stored) return defaults;
           const parsed = JSON.parse(stored);
           return {
-            format: parsed.format === 'audio' ? 'audio' : 'video',
-            quality: ['best','1080p','720p','480p'].includes(parsed.quality) ? parsed.quality : '720p',
+            format:      parsed.format === 'audio' ? 'audio' : 'video',
+            quality:     ['best','1080p','720p','480p'].includes(parsed.quality)
+                           ? parsed.quality : '720p',
             autoDownload: parsed.autoDownload === true
           };
         } catch {
@@ -1421,7 +1449,7 @@
       },
 
       select(quality) {
-        if (!['1080p', '720p', '480p', 'best'].includes(quality)) return;
+        if (!['1080p','720p','480p','best'].includes(quality)) return;
         this._selected = quality;
         const buttons = elements.qualitySelector?.querySelectorAll('.quality-btn');
         buttons?.forEach(btn => {
@@ -1433,9 +1461,7 @@
         Storage.saveSettings({ ...settings, quality });
       },
 
-      get() {
-        return this._selected;
-      },
+      get() { return this._selected; },
 
       updateVisibility() {
         if (selectedFormat === 'video') {
@@ -1449,25 +1475,34 @@
     // ==================== FORMAT SELECTOR ====================
     const FormatSelector = {
       init() {
-        elements.formatBtn.addEventListener('click', e => { e.stopPropagation(); this.toggle(); });
-        elements.optionVideo.addEventListener('click', e => { e.stopPropagation(); this.select('video'); });
-        elements.optionAudio.addEventListener('click', e => { e.stopPropagation(); this.select('audio'); });
+        elements.formatBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          this.toggle();
+        });
+        elements.optionVideo.addEventListener('click', e => {
+          e.stopPropagation();
+          this.select('video');
+        });
+        elements.optionAudio.addEventListener('click', e => {
+          e.stopPropagation();
+          this.select('audio');
+        });
         document.addEventListener('click', e => {
-          if (!elements.formatBtn.contains(e.target) && !elements.formatDropdown.contains(e.target)) {
+          if (!elements.formatBtn.contains(e.target) &&
+              !elements.formatDropdown.contains(e.target)) {
             this.close();
           }
         });
       },
 
       toggle() {
-        elements.formatDropdown.classList.contains('active') ? this.close() : this.open();
+        elements.formatDropdown.classList.contains('active')
+          ? this.close() : this.open();
       },
-
       open() {
         elements.formatDropdown.classList.add('active');
         elements.formatBtn.setAttribute('aria-expanded', 'true');
       },
-
       close() {
         elements.formatDropdown.classList.remove('active');
         elements.formatBtn.setAttribute('aria-expanded', 'false');
@@ -1479,7 +1514,7 @@
         Storage.saveSettings({ ...settings, format: selectedFormat });
         const isVideo = selectedFormat === 'video';
         elements.formatIconVideo.style.display = isVideo ? 'block' : 'none';
-        elements.formatIconAudio.style.display = isVideo ? 'none' : 'block';
+        elements.formatIconAudio.style.display = isVideo ? 'none'  : 'block';
         elements.optionVideo.setAttribute('aria-selected', String(isVideo));
         elements.optionAudio.setAttribute('aria-selected', String(!isVideo));
         elements.optionVideo.classList.toggle('selected', isVideo);
@@ -1495,13 +1530,25 @@
         elements.hamburgerBtn.addEventListener('click', () => this.open());
         elements.closeMenuBtn.addEventListener('click', () => this.close());
         elements.menuOverlay.addEventListener('click', () => this.close());
-        elements.menuDownloads.addEventListener('click', () => { this.close(); TabManager.switch('downloads'); });
-        elements.menuShareApp.addEventListener('click', () => { this.close(); this.shareApp(); });
-        elements.menuRateApp.addEventListener('click', () => { this.close(); Toast.info('Rate App — Feature coming soon'); });
-        elements.menuHelp.addEventListener('click', () => { this.close(); Toast.show('Help & Support — contact: support@flashvidz.com', 'info', 6000); });
-        elements.menuPrivacy.addEventListener('click', () => { this.close(); Toast.info('Privacy — Feature coming soon'); });
+        elements.menuDownloads.addEventListener('click', () => {
+          this.close(); TabManager.switch('downloads');
+        });
+        elements.menuShareApp.addEventListener('click', () => {
+          this.close(); this.shareApp();
+        });
+        elements.menuRateApp.addEventListener('click', () => {
+          this.close(); Toast.info('Rate App — Feature coming soon');
+        });
+        elements.menuHelp.addEventListener('click', () => {
+          this.close();
+          Toast.show('Help & Support — contact: support@flashvidz.com', 'info', 6000);
+        });
+        elements.menuPrivacy.addEventListener('click', () => {
+          this.close(); Toast.info('Privacy — Feature coming soon');
+        });
         document.addEventListener('keydown', e => {
-          if (e.key === 'Escape' && elements.hamburgerMenu.classList.contains('active')) {
+          if (e.key === 'Escape' &&
+              elements.hamburgerMenu.classList.contains('active')) {
             this.close();
           }
         });
@@ -1528,8 +1575,8 @@
       async shareApp() {
         const shareData = {
           title: 'FlashVidz',
-          text: 'Download videos from TikTok, Instagram, YouTube, and Facebook',
-          url: window.location.href
+          text:  'Download videos from TikTok, Instagram, YouTube, and Facebook',
+          url:   window.location.href
         };
         if (navigator.share) {
           try {
@@ -1566,7 +1613,7 @@
     // ==================== TAB MANAGER ====================
     const TabManager = {
       init() {
-        elements.tabBtnEnterUrl.addEventListener('click', () => this.switch('enter-url'));
+        elements.tabBtnEnterUrl.addEventListener('click',  () => this.switch('enter-url'));
         elements.tabBtnDownloads.addEventListener('click', () => this.switch('downloads'));
       },
 
@@ -1586,9 +1633,9 @@
           }
         }
 
-        elements.tabBtnEnterUrl.setAttribute('aria-selected', String(!isDownloads));
+        elements.tabBtnEnterUrl.setAttribute('aria-selected',  String(!isDownloads));
         elements.tabBtnDownloads.setAttribute('aria-selected', String(isDownloads));
-        elements.tabBtnEnterUrl.classList.toggle('active', !isDownloads);
+        elements.tabBtnEnterUrl.classList.toggle('active',  !isDownloads);
         elements.tabBtnDownloads.classList.toggle('active', isDownloads);
         elements.tabIndicator.classList.toggle('downloads', isDownloads);
 
@@ -1608,21 +1655,76 @@
     function setMessage(text, type = '') {
       const msg = elements.message;
       msg.textContent = text;
-      msg.className = type;
+      msg.className   = type;
     }
+
+    // ==================== PROGRESS BAR ====================
+    const ProgressBar = {
+      show()    { elements['progress-wrap']?.classList.add('visible'); this.set(0); },
+      restore() { elements['progress-wrap']?.classList.add('visible'); },
+      hide()    { elements['progress-wrap']?.classList.remove('visible'); },
+      set(pct) {
+        const p = Math.min(100, Math.max(0, Math.round(pct)));
+        if (elements['progress-fill'])  elements['progress-fill'].style.width = p + '%';
+        if (elements['progress-label']) elements['progress-label'].textContent = p + '%';
+        elements['progress-wrap']?.setAttribute('aria-valuenow', p);
+      }
+    };
+
+    // FIX 4 — generation counter prevents a stale interval firing after
+    // stop() on rapid re-submits (clearInterval isn't always synchronous
+    // across all JS engines before the next tick).
+    const FakeProgress = {
+      _timerId:    null,
+      _current:    0,
+      _generation: 0,
+
+      start() {
+        this.stop();
+        const gen     = ++this._generation;
+        this._current = 0;
+        ProgressBar.show();
+        ProgressBar.set(0);
+        this._timerId = setInterval(() => {
+          if (gen !== this._generation) return; // stale — discard
+          const remaining = 80 - this._current;
+          if (remaining <= 0) return;
+          const step    = Math.max(0.5, remaining * 0.07);
+          this._current = Math.min(80, this._current + step);
+          ProgressBar.set(this._current);
+        }, 400);
+      },
+
+      finish(onDone) {
+        this.stop();
+        this._current = 100;
+        ProgressBar.set(100);
+        setTimeout(() => { ProgressBar.hide(); onDone?.(); }, 600);
+      },
+
+      reset() { this.stop(); ProgressBar.hide(); this._current = 0; },
+
+      stop() {
+        if (this._timerId) {
+          clearInterval(this._timerId);
+          this._timerId = null;
+        }
+      }
+    };
 
     // ==================== DOWNLOADS MANAGER ====================
     const DownloadsManager = {
       DOWNLOAD_MENU_ACTIONS: [
-        { action: 'download', label: 'Save',   className: 'save' },
-        { action: 'share',    label: 'Share',  className: 'share' },
+        { action: 'download', label: 'Save',   className: 'save'   },
+        { action: 'share',    label: 'Share',  className: 'share'  },
         { action: 'remove',   label: 'Delete', className: 'delete' }
       ],
 
       init() {
         this.populateMenu();
         document.addEventListener('click', e => {
-          if (!e.target.closest('.menu-wrapper') && !e.target.closest('#globalDownloadMenu')) {
+          if (!e.target.closest('.menu-wrapper') &&
+              !e.target.closest('#globalDownloadMenu')) {
             this.hideMenu();
           }
         });
@@ -1630,16 +1732,17 @@
           clearTimeout(this._scrollTimeout);
           this._scrollTimeout = setTimeout(() => this.hideMenu(), 100);
         });
-        elements.globalDownloadMenu.addEventListener('click', e => this.handleMenuAction(e));
+        elements.globalDownloadMenu.addEventListener('click',
+          e => this.handleMenuAction(e));
       },
 
       populateMenu() {
-        elements.globalDownloadMenu.innerHTML = this.DOWNLOAD_MENU_ACTIONS.map(
-          ({ action, label, className }) =>
+        elements.globalDownloadMenu.innerHTML =
+          this.DOWNLOAD_MENU_ACTIONS.map(({ action, label, className }) =>
             `<button class="menu-item ${SecurityUtils.escapeHtml(className)}" ` +
             `data-action="${SecurityUtils.escapeHtml(action)}" role="menuitem">` +
             `${SecurityUtils.escapeHtml(label)}</button>`
-        ).join('');
+          ).join('');
       },
 
       hideMenu() {
@@ -1654,22 +1757,17 @@
         elements.globalDownloadMenu.setAttribute('aria-hidden', 'false');
 
         requestAnimationFrame(() => {
-          const rect = anchorBtn.getBoundingClientRect();
-          const menuWidth = elements.globalDownloadMenu.offsetWidth;
+          const rect       = anchorBtn.getBoundingClientRect();
+          const menuWidth  = elements.globalDownloadMenu.offsetWidth;
           const menuHeight = elements.globalDownloadMenu.offsetHeight;
-          const vp = 8;
-          const gap = 6;
-          const vw = window.innerWidth;
-          const vh = window.innerHeight;
-
+          const vp = 8, gap = 6;
+          const vw = window.innerWidth, vh = window.innerHeight;
           let top  = rect.bottom + gap;
-          let left = rect.right - menuWidth;
-
-          if (left < vp) left = vp;
-          if (left > vw - menuWidth - vp) left = vw - menuWidth - vp;
-          if (top + menuHeight > vh - vp) top = rect.top - menuHeight - gap;
-          if (top < vp) top = vp;
-
+          let left = rect.right  - menuWidth;
+          if (left < vp)                    left = vp;
+          if (left > vw - menuWidth - vp)   left = vw - menuWidth - vp;
+          if (top + menuHeight > vh - vp)   top  = rect.top - menuHeight - gap;
+          if (top < vp)                     top  = vp;
           elements.globalDownloadMenu.style.top  = `${top}px`;
           elements.globalDownloadMenu.style.left = `${left}px`;
         });
@@ -1679,33 +1777,26 @@
         e.stopPropagation();
         const actionButton = e.target.closest('.menu-item');
         if (!actionButton || !state.activeDownloadMenuContext) return;
-
         const { item, fileName, fileSize } = state.activeDownloadMenuContext;
         const action = actionButton.dataset.action;
         this.hideMenu();
-
         switch (action) {
           case 'download': await this.downloadItem(item, fileName, fileSize); break;
-          case 'share':    await this.shareItem(item, fileName); break;
-          case 'remove':   this.removeItem(item.id); break;
+          case 'share':    await this.shareItem(item, fileName);              break;
+          case 'remove':        this.removeItem(item.id);                    break;
         }
       },
 
-      // ============================================================
-      // FIX #2: Added missing fileSize parameter to downloadItem
-      // Previously the parameter was passed at the call site but
-      // silently dropped because the function signature only had
-      // (item, fileName) — it now correctly receives all three args.
-      // ============================================================
       async downloadItem(item, fileName, fileSize) {
-        if (isActivelyDownloading()) { Toast.info('A download is already in progress'); return; }
+        if (isActivelyDownloading()) {
+          Toast.info('A download is already in progress');
+          return;
+        }
         try {
           const downloadLink = item.downloadUrl || item.url;
           const playLink     = item.viewUrl || item.fileUrl || item.url;
           if (!downloadLink) throw new Error('Missing download URL');
-
-          if (IS_IOS) return DownloadFlow.openForIOS(playLink, fileName);
-
+          if (IS_IOS)  return DownloadFlow.openForIOS(playLink, fileName);
           Toast.info('Starting download...');
           const abortCtl = new AbortController();
           await DownloadFlow.run(downloadLink, fileName, () => {}, abortCtl.signal);
@@ -1716,15 +1807,19 @@
       },
 
       async shareItem(item, fileName) {
-        const shareUrl = SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl :
-                         SecurityUtils.isValidHttpUrl(item.fileUrl)     ? item.fileUrl : null;
+        const shareUrl =
+          SecurityUtils.isValidHttpUrl(item.downloadUrl) ? item.downloadUrl :
+          SecurityUtils.isValidHttpUrl(item.fileUrl)     ? item.fileUrl : null;
         if (!shareUrl) { Toast.error('Missing share URL for this item'); return; }
-
         if (navigator.share) {
           try {
-            await navigator.share({ title: 'FlashVidz Download', text: fileName, url: shareUrl });
+            await navigator.share({
+              title: 'FlashVidz Download', text: fileName, url: shareUrl
+            });
           } catch (error) {
-            if (error.name !== 'AbortError') await HamburgerMenu.copyToClipboard(shareUrl);
+            if (error.name !== 'AbortError') {
+              await HamburgerMenu.copyToClipboard(shareUrl);
+            }
           }
         } else {
           await HamburgerMenu.copyToClipboard(shareUrl);
@@ -1734,7 +1829,7 @@
       removeItem(id) {
         if (confirm('Remove this download from history?')) {
           const downloads = Storage.loadDownloads();
-          const index = downloads.findIndex(d => d.id === id);
+          const index     = downloads.findIndex(d => d.id === id);
           if (index > -1) {
             downloads.splice(index, 1);
             Storage.saveDownloads(downloads);
@@ -1746,29 +1841,24 @@
 
       add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration, title) {
         const downloads = Storage.loadDownloads();
-        const now = Date.now();
-        const download = {
-        // FIX #4: Use crypto.randomUUID() instead of Date.now() to avoid ID
-        // collisions when two downloads complete within the same millisecond
-        // (e.g. fast connections or retry flows). Falls back to timestamp +
-        // random suffix in the unlikely case crypto.randomUUID is unavailable.
-        id: (typeof crypto?.randomUUID === 'function')
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          title: typeof title === 'string' ? title.trim().slice(0, 200) : null,
+        const download  = {
+          id: (typeof crypto?.randomUUID === 'function')
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          title:       typeof title    === 'string' ? title.trim().slice(0, 200) : null,
           downloadUrl: SecurityUtils.normalizeStoredUrl(downloadUrl),
-          fileUrl: SecurityUtils.normalizeStoredUrl(viewUrl),
-          viewUrl: SecurityUtils.normalizeStoredUrl(viewUrl),
+          fileUrl:     SecurityUtils.normalizeStoredUrl(viewUrl),
+          viewUrl:     SecurityUtils.normalizeStoredUrl(viewUrl),
           format,
-          fileName: typeof fileName === 'string'
+          fileName:    typeof fileName === 'string'
             ? fileName.trim().slice(0, CONFIG.MAX_FILENAME_LENGTH)
             : 'flashvidz_download',
-          fileSize: Number.isFinite(Number(fileSize)) && Number(fileSize) > 0
+          fileSize:    Number.isFinite(Number(fileSize)) && Number(fileSize) > 0
             ? Number(fileSize) : null,
-          thumbnail: typeof thumbnail === 'string' && thumbnail.trim().length > 5
+          thumbnail:   typeof thumbnail === 'string' && thumbnail.trim().length > 5
             ? thumbnail.trim() : null,
-          duration: duration || null,
-          timestamp: now
+          duration:    duration || null,
+          timestamp:   Date.now()
         };
         if (!download.downloadUrl) return null;
         downloads.unshift(download);
@@ -1780,16 +1870,20 @@
       formatFileSize(bytes) {
         const num = Number(bytes);
         if (!Number.isFinite(num) || num <= 0) return '—';
-        const k = 1024;
+        const k     = 1024;
         const sizes = ['B','KB','MB','GB'];
-        const i = Math.floor(Math.log(num) / Math.log(k));
+        const i     = Math.floor(Math.log(num) / Math.log(k));
         return parseFloat((num / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
       },
 
+      // FIX 8 — return "Unknown date" instead of silently showing today's
+      // date when the stored timestamp is missing or invalid.
       formatDate(timestamp) {
         const parsed = Number(timestamp);
-        const date = Number.isFinite(parsed) && parsed > 0 ? new Date(parsed) : new Date();
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        if (!Number.isFinite(parsed) || parsed <= 0) return 'Unknown date';
+        return new Date(parsed).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        });
       },
 
       render() {
@@ -1800,7 +1894,9 @@
         if (downloads.length === 0) {
           elements.downloadsList.innerHTML = `
             <div class="empty-state">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+              </svg>
               <h3>No downloads yet</h3>
               <p>Your downloaded videos will appear here</p>
             </div>`;
@@ -1810,7 +1906,6 @@
 
         elements.downloadsCount.textContent =
           `${downloads.length} item${downloads.length !== 1 ? 's' : ''}`;
-
         const fragment = document.createDocumentFragment();
         downloads.forEach(item => fragment.appendChild(this.createCard(item)));
         elements.downloadsList.appendChild(fragment);
@@ -1830,16 +1925,10 @@
         const baseUrl      = CONFIG.API_URL.replace(/\/download\/?$/, '');
         const defaultThumb = `${baseUrl}/default-thumbnail.svg`;
 
-        // ============================================================
-        // FIX #6: Validate thumbnail URL from localStorage before use.
-        // A manually tampered localStorage entry could contain a
-        // non-HTTP URL. isValidHttpUrl() (which calls normalizeStoredUrl)
-        // ensures the URL is a real http/https address that is not a
-        // private/local IP, preventing open-redirect style abuse.
-        // ============================================================
+        // FIX 6 — validate thumbnail from localStorage before use to
+        // prevent open-redirect / mixed-content from tampered storage.
         const rawThumbnail = typeof item.thumbnail === 'string'
-          ? item.thumbnail.trim()
-          : '';
+          ? item.thumbnail.trim() : '';
         const hasThumbnail = rawThumbnail.length > 0 &&
           SecurityUtils.isValidHttpUrl(rawThumbnail);
         const thumbnailUrl = hasThumbnail ? rawThumbnail : defaultThumb;
@@ -1880,7 +1969,9 @@
                   </svg>
                   ${SecurityUtils.escapeHtml(displayDate)}
                 </div>
-                <span class="meta-size">${SecurityUtils.escapeHtml(this.formatFileSize(fileSize))}</span>
+                <span class="meta-size">
+                  ${SecurityUtils.escapeHtml(this.formatFileSize(fileSize))}
+                </span>
               </div>
             </div>
             <div class="menu-wrapper">
@@ -1906,13 +1997,11 @@
         const menuBtn = card.querySelector('.menu-btn');
         menuBtn.addEventListener('click', e => {
           e.stopPropagation();
-          const isOpen = state.activeDownloadMenuContext?.id === item.id &&
-                         elements.globalDownloadMenu.classList.contains('active');
-          if (isOpen) {
-            this.hideMenu();
-          } else {
-            this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize });
-          }
+          const isOpen =
+            state.activeDownloadMenuContext?.id === item.id &&
+            elements.globalDownloadMenu.classList.contains('active');
+          if (isOpen) { this.hideMenu(); }
+          else { this.showMenu(menuBtn, { id: item.id, item, fileName, fileSize }); }
         });
 
         card.addEventListener('click', e => {
@@ -1928,7 +2017,10 @@
               : Toast.info('Audio preview not supported yet');
             return;
           }
-          if (!playLink) { Toast.error('Video preview unavailable: missing URL'); return; }
+          if (!playLink) {
+            Toast.error('Video preview unavailable: missing URL');
+            return;
+          }
           IS_IOS ? DownloadFlow.openForIOS(playLink, fileName) : VideoModal.open(playLink);
         });
 
@@ -1949,7 +2041,6 @@
         elements.videoModal.addEventListener('click', e => {
           if (!elements.videoModalContent.contains(e.target)) this.close();
         });
-
         window.addEventListener('popstate', () => {
           if (elements.videoModal.classList.contains('active')) {
             state.closingFromPopState = true;
@@ -1957,14 +2048,13 @@
             state.closingFromPopState = false;
           }
         });
-
         elements.videoModalPlayer.addEventListener('error', () => {
-          if (!elements.videoModal.classList.contains('active') || isActivelyDownloading()) return;
+          if (!elements.videoModal.classList.contains('active') ||
+              isActivelyDownloading()) return;
           if (this.previewErrorShown) return;
           this.previewErrorShown = true;
           Toast.warning('Preview not supported. You can still download the video.');
         });
-
         elements.videoModalPlayer.addEventListener('loadeddata', () => {
           this.previewErrorShown = false;
           const msg = elements.message;
@@ -1978,13 +2068,13 @@
 
       open(fileUrl) {
         if (IS_IOS) { DownloadFlow.openForIOS(fileUrl, 'video'); return; }
-
         const normalizedUrl = SecurityUtils.normalizeStoredUrl(fileUrl);
         if (!normalizedUrl) {
-          if (!isActivelyDownloading()) Toast.error('Video preview unavailable: missing URL');
+          if (!isActivelyDownloading()) {
+            Toast.error('Video preview unavailable: missing URL');
+          }
           return;
         }
-
         this.previewErrorShown = false;
         setMessage('Loading preview...', 'loading');
         elements.videoModalPlayer.pause();
@@ -1994,16 +2084,15 @@
         elements.videoModal.classList.add('active');
         elements.videoModal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
-
         if (!state.modalHistoryPushed) {
           history.pushState({ videoModal: true }, '');
           state.modalHistoryPushed = true;
         }
-
         const playPromise = elements.videoModalPlayer.play();
         if (playPromise?.catch) {
           playPromise.catch(() => {
-            if (elements.videoModal.classList.contains('active') && !isActivelyDownloading()) {
+            if (elements.videoModal.classList.contains('active') &&
+                !isActivelyDownloading()) {
               setMessage('Tap play to start video preview', 'loading');
             }
           });
@@ -2018,8 +2107,8 @@
         elements.videoModalPlayer.load();
         this.previewErrorShown = false;
         document.body.style.overflow = '';
-
-        if (state.modalHistoryPushed && history.state?.videoModal && !state.closingFromPopState) {
+        if (state.modalHistoryPushed && history.state?.videoModal &&
+            !state.closingFromPopState) {
           state.modalHistoryPushed = false;
           history.back();
         } else {
@@ -2030,22 +2119,48 @@
 
     // ==================== DOWNLOAD FLOW ====================
     const DownloadFlow = {
+      // FIX 2 — Stream large files directly to disk via the File System
+      // Access API where available, eliminating the RAM buffer entirely.
+      // Falls back to the chunk-array approach with an explicit size guard
+      // so a 500 MB file never silently OOMs the tab.
       async run(downloadUrl, fileName, onProgress, signal) {
-        const controller = new AbortController();
-
+        const controller  = new AbortController();
         const abortHandler = () => controller.abort();
         if (signal) {
-          if (signal.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
+          if (signal.aborted) {
+            throw new DOMException('The operation was aborted.', 'AbortError');
+          }
           signal.addEventListener('abort', abortHandler, { once: true });
         }
 
         let blobUrl = null;
-
         try {
           const response = await fetch(downloadUrl, { signal: controller.signal });
           if (!response.ok) throw new Error(`Download failed: ${response.status}`);
 
           const contentLength = +(response.headers.get('content-length')) || 0;
+
+          // Modern path — stream directly to disk; no RAM buffering at all.
+          if ('showSaveFilePicker' in window) {
+            try {
+              return await this._streamToFilePicker(
+                response, fileName, contentLength, onProgress
+              );
+            } catch (pickerErr) {
+              // User cancelled the picker or API unavailable — fall through.
+              if (pickerErr.name === 'AbortError') throw pickerErr;
+              console.warn('[FlashVidz] showSaveFilePicker failed, falling back:', pickerErr);
+            }
+          }
+
+          // Fallback — buffer in RAM with a hard size guard.
+          if (contentLength > CONFIG.MAX_FILE_SIZE) {
+            throw new Error(
+              `File is too large to buffer in the browser (max ${CONFIG.MAX_FILE_SIZE / 1024 / 1024} MB). ` +
+              'Try a different browser that supports the File System Access API.'
+            );
+          }
+
           const reader = response.body.getReader();
           const chunks = [];
           let received = 0;
@@ -2053,44 +2168,49 @@
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            if (value) { chunks.push(value); received += value.length; }
+            if (value) {
+              chunks.push(value);
+              received += value.length;
+              // Guard against Content-Length lying about the real size.
+              if (received > CONFIG.MAX_FILE_SIZE) {
+                reader.cancel();
+                throw new Error('File exceeds the maximum allowed download size');
+              }
+            }
             if (contentLength > 0) {
-              onProgress?.(Math.min(100, Math.round(received / contentLength * 100)));
+              onProgress?.(Math.min(99, Math.round(received / contentLength * 100)));
             }
           }
-
           onProgress?.(100);
 
-          const serverMimeType = response.headers.get('content-type')?.split(';')[0]?.trim();
-          const extForMime = (fileName.split('.').pop() || '').toLowerCase();
-          const MIME_MAP = {
+          const ext        = (fileName.split('.').pop() || '').toLowerCase();
+          const MIME_MAP   = {
             mp4: 'video/mp4', m4a: 'audio/mp4', mp3: 'audio/mpeg',
-            mov: 'video/quicktime', webm: 'video/webm', mkv: 'video/x-matroska',
-            ogg: 'audio/ogg', opus: 'audio/opus'
+            mov: 'video/quicktime', webm: 'video/webm',
+            mkv: 'video/x-matroska', ogg: 'audio/ogg', opus: 'audio/opus'
           };
-          const blobType = serverMimeType || MIME_MAP[extForMime] || 'video/mp4';
-          const blob = new Blob(chunks, { type: blobType });
+          const serverMime = response.headers.get('content-type')?.split(';')[0]?.trim();
+          const blobType   = serverMime || MIME_MAP[ext] || 'video/mp4';
+          const blob       = new Blob(chunks, { type: blobType });
 
           blobUrl = URL.createObjectURL(blob);
           state.activeObjectUrls.add(blobUrl);
 
-          try {
-            const normalizedName = SecurityUtils.normalizeFileName(fileName);
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = normalizedName;
-            a.rel = 'noopener noreferrer';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          } finally {
-            setTimeout(() => {
-              URL.revokeObjectURL(blobUrl);
-              state.activeObjectUrls.delete(blobUrl);
-            }, 5000);
-          }
+          const a    = document.createElement('a');
+          a.href     = blobUrl;
+          a.download = SecurityUtils.normalizeFileName(fileName);
+          a.rel      = 'noopener noreferrer';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
 
-          return received || contentLength;
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+            state.activeObjectUrls.delete(blobUrl);
+          }, 5000);
+
+          return received;
+
         } catch (err) {
           if (blobUrl) {
             URL.revokeObjectURL(blobUrl);
@@ -2102,24 +2222,40 @@
         }
       },
 
-      runAndroidNative(downloadUrl, fileName, onProgress) {
-        onProgress?.(100);
-        // Always use a hidden anchor click — this triggers the browser's
-        // native download manager without navigating away from the page.
-        // window.open() is kept as a first attempt for compatibility, but
-        // the window.location.href fallback is replaced with an <a> click
-        // so a popup blocker (e.g. Brave) never redirects the current tab.
-        const newWin = window.open(downloadUrl, '_blank', 'noopener,noreferrer');
-        if (!newWin) {
-          const a = document.createElement('a');
-          a.href = downloadUrl;
-          a.download = SecurityUtils.normalizeFileName(fileName);
-          a.rel = 'noopener noreferrer';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+      // Stream response body directly to a user-chosen file — zero RAM copy.
+      async _streamToFilePicker(response, fileName, contentLength, onProgress) {
+        const safeExt = (fileName.split('.').pop() || 'mp4').toLowerCase();
+        const accept  = safeExt === 'm4a' || safeExt === 'mp3'
+          ? { 'audio/*': [`.${safeExt}`] }
+          : { 'video/*': ['.mp4', '.webm', '.mov'] };
+
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: SecurityUtils.normalizeFileName(fileName),
+          types: [{ description: 'Media file', accept }]
+        });
+
+        const writable = await fileHandle.createWritable();
+        const reader   = response.body.getReader();
+        let received   = 0;
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            await writable.write(value);
+            received += value.length;
+            if (contentLength > 0) {
+              onProgress?.(Math.min(99, Math.round(received / contentLength * 100)));
+            }
+          }
+          onProgress?.(100);
+        } catch (err) {
+          await writable.abort();
+          throw err;
         }
-        return Promise.resolve(0);
+
+        await writable.close();
+        return received;
       },
 
       openForIOS(url, fileName) {
@@ -2129,7 +2265,8 @@
         }
         Toast.info('Opening in Safari. Use the share button to save to Photos.');
         const newWindow = window.open(url, '_blank');
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        if (!newWindow || newWindow.closed ||
+            typeof newWindow.closed === 'undefined') {
           Toast.warning('Popup blocked. Opening video now.', 8000);
           window.location.href = url;
         }
@@ -2139,14 +2276,15 @@
       runHybrid(downloadUrl, playUrl, fileName, fileSize, onProgress, signal) {
         if (IS_IOS) {
           if (signal?.aborted) {
-            return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+            return Promise.reject(
+              new DOMException('The operation was aborted.', 'AbortError')
+            );
           }
           return this.openForIOS(playUrl || downloadUrl, fileName);
         }
-        // FIX: Android previously used runAndroidNative (window.open / anchor click),
-        // but Brave and other Android browsers intercept both and redirect the current
-        // tab to the backend URL, leaving the app. The fetch/blob path (run()) streams
-        // the file into memory and triggers a local blob URL download — no navigation.
+        // Use streaming fetch/blob path on all non-iOS platforms.
+        // This avoids window.open() redirecting the current tab on
+        // browsers like Brave that block popups aggressively.
         return this.run(downloadUrl, fileName, onProgress, signal);
       }
     };
@@ -2162,80 +2300,33 @@
       return 'unknown';
     }
 
-    // ==================== PROGRESS BAR ====================
-    const ProgressBar = {
-      show()    { elements['progress-wrap']?.classList.add('visible'); this.set(0); },
-      restore() { elements['progress-wrap']?.classList.add('visible'); }, // show WITHOUT resetting %
-      hide()    { elements['progress-wrap']?.classList.remove('visible'); },
-      set(pct) {
-        const p = Math.min(100, Math.max(0, Math.round(pct)));
-        if (elements['progress-fill']) elements['progress-fill'].style.width = p + '%';
-        if (elements['progress-label']) elements['progress-label'].textContent = p + '%';
-        elements['progress-wrap']?.setAttribute('aria-valuenow', p);
-      }
-    };
-
-    const FakeProgress = {
-      _timerId: null,
-      _current: 0,
-
-      start() {
-        this.stop();
-        this._current = 0;
-        ProgressBar.show();
-        ProgressBar.set(0);
-        this._timerId = setInterval(() => {
-          const remaining = 80 - this._current;
-          if (remaining <= 0) return;
-          const step = Math.max(0.5, remaining * 0.07);
-          this._current = Math.min(80, this._current + step);
-          ProgressBar.set(this._current);
-        }, 400);
-      },
-
-      finish(onDone) {
-        this.stop();
-        this._current = 100;
-        ProgressBar.set(100);
-        setTimeout(() => { ProgressBar.hide(); onDone?.(); }, 600);
-      },
-
-      reset() { this.stop(); ProgressBar.hide(); this._current = 0; },
-
-      stop() {
-        if (this._timerId) { clearInterval(this._timerId); this._timerId = null; }
-      }
-    };
-
     // ==================== UI HELPERS ====================
     function setDownloading(isActive) {
       state.isDownloading = isActive;
-      elements.submitBtn.disabled = isActive;
-      elements.submitBtn.classList.toggle('loading', isActive);
-      elements.pasteBtn.disabled = isActive;
+      if (elements.submitBtn) {
+        elements.submitBtn.disabled = isActive;
+        elements.submitBtn.classList.toggle('loading', isActive);
+      }
+      if (elements.pasteBtn) elements.pasteBtn.disabled = isActive;
     }
 
     function resetUI(delay = 2000, downloadId) {
       setTimeout(() => {
         if (downloadId !== undefined &&
             downloadId !== state.currentDownloadId &&
-            state.isDownloading) {
-          return;
-        }
+            state.isDownloading) return;
         setDownloading(false);
       }, delay);
     }
 
-    function isActivelyDownloading() {
-      return state.isDownloading;
-    }
+    function isActivelyDownloading() { return state.isDownloading; }
 
     function showErrorWithRetry(message) {
       const msg = elements.message;
       msg.textContent = '';
       msg.appendChild(document.createTextNode(message + ' '));
-      const btn = document.createElement('button');
-      btn.className = 'retry-btn';
+      const btn   = document.createElement('button');
+      btn.className   = 'retry-btn';
       btn.textContent = 'Retry';
       btn.addEventListener('click', retryLastDownload);
       msg.appendChild(btn);
@@ -2244,10 +2335,10 @@
 
     // ==================== DOWNLOAD HANDLER ====================
     async function pasteLink() {
-      const btn = elements.pasteBtn;
-      btn.disabled = true;
+      const btn     = elements.pasteBtn;
+      btn.disabled  = true;
       try {
-        const text = await navigator.clipboard.readText();
+        const text            = await navigator.clipboard.readText();
         elements.linkInput.value = text.trim().slice(0, 2000);
         maybeAutoDownload();
       } catch (error) {
@@ -2263,17 +2354,21 @@
 
     function maybeAutoDownload() {
       const settings = Storage.getSettings();
-      const link = elements.linkInput.value.trim();
+      const link     = elements.linkInput.value.trim();
       if (!settings.autoDownload || !link ||
           !SecurityUtils.isValidHttpUrl(link) || isActivelyDownloading()) return;
-      handleDownload();
+      handleDownload().catch(err => {
+        if (err.name !== 'AbortError') console.error('Auto-download error:', err);
+      });
     }
 
     function retryLastDownload() {
       if (state.lastUrl && state.lastFormat) {
         elements.linkInput.value = state.lastUrl;
-        selectedFormat = state.lastFormat;
-        handleDownloadWithRetry(0);
+        selectedFormat           = state.lastFormat;
+        handleDownloadWithRetry(0).catch(err => {
+          if (err.name !== 'AbortError') console.error('Retry error:', err);
+        });
       }
     }
 
@@ -2284,32 +2379,35 @@
       try {
         await handleDownload();
       } catch (err) {
+        if (err.name === 'AbortError') return; // already cleaned up inside handleDownload
         const isRetryable = err.message?.includes('try again later') ||
                             err.message?.includes('busy');
         if (isRetryable && retryCount < CONFIG.MAX_RETRIES) {
           const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
           setMessage(
-            `Server busy. Retrying in ${delay / 1000}s… (${retryCount + 1}/${CONFIG.MAX_RETRIES})`,
+            `Server busy. Retrying in ${delay / 1000}s… ` +
+            `(${retryCount + 1}/${CONFIG.MAX_RETRIES})`,
             'loading'
           );
-          setTimeout(() => handleDownloadWithRetry(retryCount + 1), delay);
-        } else {
-          // FIX #2: re-throw non-retryable errors so callers and future
-          // error-logging layers can observe them. Previously these were
-          // silently swallowed after the UI message was already set.
-          throw err;
+          setTimeout(() => {
+            handleDownloadWithRetry(retryCount + 1).catch(e => {
+              if (e.name !== 'AbortError') console.error('Retry error:', e);
+            });
+          }, delay);
         }
+        // Non-retryable errors: UI message already set inside handleDownload.
+        // Re-throw so callers (.catch at entry points) can observe the failure.
+        throw err;
       }
     }
 
     async function handleDownload() {
-      // FIX #1: Guard BEFORE incrementing the ID so a rejected call never
-      // invalidates the active download's downloadId, which would cause all
-      // its updateMessage / resetUI / abort-guard checks to bail prematurely.
+      // Guard BEFORE incrementing so a rejected call never invalidates
+      // the active download's downloadId.
       if (state.isDownloading) return;
 
-      const downloadId = ++state.currentDownloadId;
-      const link = elements.linkInput.value.trim().slice(0, 2000);
+      const downloadId   = ++state.currentDownloadId;
+      const link         = elements.linkInput.value.trim().slice(0, 2000);
 
       const updateMessage = (text, type = '') => {
         if (downloadId !== state.currentDownloadId) return;
@@ -2326,12 +2424,19 @@
 
       const platform = detectPlatform(link);
       if (platform === 'unknown') {
-        updateMessage('Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook', 'error');
+        updateMessage(
+          'Unsupported platform. Use TikTok, Instagram, YouTube, or Facebook',
+          'error'
+        );
         resetUI(0, downloadId);
         return;
       }
 
-      if (IS_IOS) elements.iosHint?.classList.add('visible');
+      // FIX 7 — reset the iOS hint at the start of every download so it
+      // reflects the current state, not a stale one from a previous run.
+      if (elements.iosHint) {
+        elements.iosHint.classList.toggle('visible', IS_IOS);
+      }
 
       updateMessage('Starting download...', 'loading');
 
@@ -2344,9 +2449,17 @@
         elements.qualitySelector?.classList.remove('visible');
 
         const response = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: link, format: selectedFormat, quality: QualitySelector.get() }),
+          method:  'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // FIX 1 — attach deterrence headers on every API request.
+            ...CONFIG.API_REQUEST_HEADERS
+          },
+          body:   JSON.stringify({
+            url:     link,
+            format:  selectedFormat,
+            quality: QualitySelector.get()
+          }),
           signal: state.abortController.signal
         });
 
@@ -2365,35 +2478,37 @@
         const downloadUrl = SecurityUtils.normalizeStoredUrl(data.downloadUrl || data.url);
         if (!downloadUrl) throw new Error('Invalid response from server');
 
-        if (IS_IOS && !data?.isIOSCompatible) {
-          elements.iosHint.classList.add('visible');
-        } else {
-          elements.iosHint.classList.remove('visible');
+        // FIX 7 — update iOS hint based on server's compatibility flag.
+        if (elements.iosHint) {
+          elements.iosHint.classList.toggle(
+            'visible',
+            IS_IOS && data?.isIOSCompatible !== false
+          );
         }
 
         const playUrl = IS_IOS
           ? SecurityUtils.normalizeStoredUrl(data.viewUrl || data.url)
           : (SecurityUtils.normalizeStoredUrl(data.url) || downloadUrl);
 
-        const responseFormat = data.format || selectedFormat;
-        const ext = responseFormat === 'audio' ? 'm4a' : 'mp4';
-        const rawTitle = data.title && typeof data.title === 'string' ? data.title.trim() : '';
-        const backendFileName = rawTitle
+        const responseFormat    = data.format || selectedFormat;
+        const ext               = responseFormat === 'audio' ? 'm4a' : 'mp4';
+        const rawTitle          = typeof data.title === 'string' ? data.title.trim() : '';
+        const backendFileName   = rawTitle
           ? SecurityUtils.normalizeFileName(
               rawTitle.replace(/[^a-zA-Z0-9À-ɏ\s\-_]/g, '')
                       .replace(/\s+/g, '_')
                       .slice(0, 80) + '_FlashVidz.' + ext
             )
           : (data.fileName || `flashvidz_${platform}_${Date.now()}.${ext}`);
-        const backendFileSize = Number(data.fileSizeBytes) || 0;
+        const backendFileSize   = Number(data.fileSizeBytes) || 0;
 
         if (data.warning) Toast.warning(data.warning);
         if (IS_IOS && data.isIOSCompatible === false && !data.warning) {
           Toast.warning('This video may not play on iPhone. Try downloading instead.');
         }
 
-        // FIX #3: Use the URL API to append the title param so it always lands
-        // in the query string — not after a '#' fragment if one exists in the URL.
+        // FIX 3 — use the URL API to append the title param so it always
+        // lands in the query string, not after a '#' fragment.
         let downloadUrlWithTitle = downloadUrl;
         if (downloadUrl && rawTitle) {
           try {
@@ -2404,7 +2519,6 @@
             );
             downloadUrlWithTitle = u.toString();
           } catch {
-            // Malformed URL — fall back to original without title param
             downloadUrlWithTitle = downloadUrl;
           }
         }
@@ -2414,18 +2528,19 @@
           playUrl,
           backendFileName,
           backendFileSize,
-          progress => { if (!IS_IOS) updateMessage(`Downloading… ${progress}%`, 'loading'); },
+          progress => {
+            if (!IS_IOS) updateMessage(`Downloading… ${progress}%`, 'loading');
+          },
           state.abortController.signal
         );
 
         FakeProgress.finish(() => {
           QualitySelector.updateVisibility();
           if (downloadId !== state.currentDownloadId) return;
-          if (IS_IOS) {
-            setMessage('Opened in Safari! Tap share button to save.', 'success');
-          } else {
-            setMessage('Download complete!', 'success');
-          }
+          setMessage(
+            IS_IOS ? 'Opened in Safari! Tap share button to save.' : 'Download complete!',
+            'success'
+          );
         });
 
         const finalFileSize = downloadedFileSize > 0
@@ -2441,23 +2556,17 @@
 
         if (downloadId !== state.currentDownloadId) return;
 
-        if (IS_IOS) {
-          Toast.success('Video opened in Safari');
-        } else {
-          Toast.success('Download complete! Check Gallery/Downloads');
-        }
+        Toast.success(
+          IS_IOS
+            ? 'Video opened in Safari'
+            : 'Download complete! Check Gallery/Downloads'
+        );
 
         TabManager.switch('downloads');
         elements.linkInput.value = '';
 
       } catch (err) {
-        // ============================================================
-        // FIX #1: AbortError is now handled BEFORE reaching the finally
-        // block. We perform all cleanup here immediately and return,
-        // so the finally block's resetUI call never fires for aborts.
-        // This prevents a delayed setDownloading(false) from interfering
-        // with any new download that starts right after an abort.
-        // ============================================================
+        // AbortError — clean up immediately and return; finally is skipped.
         if (err.name === 'AbortError') {
           FakeProgress.reset();
           QualitySelector.updateVisibility();
@@ -2475,12 +2584,14 @@
 
         if (platform === 'instagram' || platform === 'facebook') {
           if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
-            errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} login required. Please try again later.`;
+            errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} ` +
+                       'login required. Please try again later.';
           } else if (errorMsg.includes('private')) {
             errorMsg = `This ${platform} post is private.`;
           }
         } else if (platform === 'youtube') {
-          if (errorMsg.includes('unavailable') || errorMsg.includes('bot') || errorMsg.includes('sign in')) {
+          if (errorMsg.includes('unavailable') || errorMsg.includes('bot') ||
+              errorMsg.includes('sign in')) {
             errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
           }
         }
@@ -2488,20 +2599,14 @@
         if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
           showErrorWithRetry(errorMsg);
           resetUI(2000, downloadId);
-          throw err;
+          throw err; // propagate so handleDownloadWithRetry can schedule retry
         } else {
           updateMessage(errorMsg, 'error');
           Toast.error(errorMsg);
         }
 
       } finally {
-        // ============================================================
-        // FIX #1 (continued): finally only runs cleanup for non-abort
-        // paths. AbortError returns early above, so this block is
-        // skipped entirely for aborts. For all other outcomes (success
-        // or non-abort errors) we clean up the controller and reset UI
-        // only if this is still the active download.
-        // ============================================================
+        // Only runs for non-AbortError paths (abort returns early above).
         if (downloadId === state.currentDownloadId) {
           state.abortController = null;
           resetUI(2000, downloadId);
@@ -2528,11 +2633,26 @@
       if (IS_IOS && elements.iosHint) elements.iosHint.classList.add('visible');
 
       elements.pasteBtn.addEventListener('click', pasteLink);
-      elements.submitBtn.addEventListener('click', () => handleDownloadWithRetry(0));
+
+      // FIX 3 (entry points) — attach .catch() to all async entry points so
+      // unhandled promise rejections never silently crash the download flow.
+      elements.submitBtn.addEventListener('click', () => {
+        handleDownloadWithRetry(0).catch(err => {
+          if (err.name !== 'AbortError') {
+            console.error('Unhandled download error:', err);
+            setDownloading(false);
+          }
+        });
+      });
 
       elements.downloadForm.addEventListener('submit', e => {
         e.preventDefault();
-        handleDownloadWithRetry(0);
+        handleDownloadWithRetry(0).catch(err => {
+          if (err.name !== 'AbortError') {
+            console.error('Unhandled download error:', err);
+            setDownloading(false);
+          }
+        });
       });
 
       let inputDebounceTimer = null;
@@ -2546,7 +2666,8 @@
             document.activeElement !== elements.linkInput) {
           elements.linkInput.focus();
         }
-        if (e.key === 'Escape' && elements.videoModal.classList.contains('active')) {
+        if (e.key === 'Escape' &&
+            elements.videoModal.classList.contains('active')) {
           VideoModal.close();
         }
       });
@@ -2559,14 +2680,15 @@
         state.activeObjectUrls.clear();
       });
 
-      let visibilityHideTime = 0;
+      let visibilityHideTime   = 0;
       let hiddenAbortController = null;
 
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden' && state.abortController) {
-          visibilityHideTime = Date.now();
-          hiddenAbortController = state.abortController;
-        } else if (document.visibilityState === 'visible' && visibilityHideTime > 0) {
+          visibilityHideTime       = Date.now();
+          hiddenAbortController    = state.abortController;
+        } else if (document.visibilityState === 'visible' &&
+                   visibilityHideTime > 0) {
           const hiddenMs = Date.now() - visibilityHideTime;
           visibilityHideTime = 0;
           if (hiddenMs > 30000 && hiddenAbortController &&
