@@ -12,15 +12,15 @@
   <style>
     /* ==================== STRICT FLAT COLOR SYSTEM ==================== */
     :root {
-      --bg-primary: #0d1b21;
-      --bg-card: #1a252b;
-      --bg-input: #2a3a40;
+      --bg-primary: #000000;
+      --bg-card: #111111;
+      --bg-input: #1c1c1e;
       --accent: #00d4aa;
       --text-primary: #ffffff;
-      --text-secondary: #8a9aa0;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-light: rgba(255, 255, 255, 0.06);
-      --border-medium: rgba(255, 255, 255, 0.12);
+      --text-secondary: #7a8a90;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-light: rgba(255, 255, 255, 0.05);
+      --border-medium: rgba(255, 255, 255, 0.10);
       --error: #ff6464;
       --accent-muted: rgba(0, 212, 170, 0.08);
       --accent-subtle: rgba(0, 212, 170, 0.15);
@@ -309,16 +309,16 @@
     .input-bar {
       display: flex;
       align-items: center;
-      background: var(--bg-input);
+      background: var(--bg-card);
       border-radius: var(--radius-full);
       padding: 4px;
       border: 1px solid var(--border-medium);
-      height: 52px;
+      height: 56px;
       transition: border-color 150ms ease, box-shadow 150ms ease;
     }
 
     .input-bar:focus-within {
-      border-color: rgba(0, 212, 170, 0.45);
+      border-color: rgba(0, 212, 170, 0.4);
       box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.06);
     }
 
@@ -336,12 +336,12 @@
       padding: 10px;
       border-radius: var(--radius-full);
       border: none;
-      background: var(--bg-card);
+      background: var(--bg-input);
       color: var(--accent);
       cursor: pointer;
       transition: all 150ms ease;
-      height: 40px;
-      min-width: 40px;
+      height: 44px;
+      min-width: 44px;
     }
 
     .format-btn:hover { 
@@ -472,8 +472,8 @@
     }
 
     .submit-btn {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       border: none;
       background: var(--accent);
@@ -484,7 +484,7 @@
       justify-content: center;
       transition: all 150ms ease;
       flex-shrink: 0;
-      margin-left: 2px;
+      margin-left: 4px;
     }
 
     .submit-btn:hover:not(:disabled) { 
@@ -630,10 +630,10 @@
     }
 
     .guide-card {
-      background: var(--bg-card);
+      background: #0d1a18;
       border-radius: var(--radius-lg);
       padding: var(--space-lg);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(0, 212, 170, 0.12);
     }
 
     .guide-title {
@@ -1117,9 +1117,9 @@
       gap: var(--space-sm);
       margin-top: var(--space-md);
       padding: var(--space-md);
-      background: var(--bg-card);
+      background: #0d1a18;
       border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
+      border: 1px solid rgba(0, 212, 170, 0.12);
     }
 
     .feature-item {
