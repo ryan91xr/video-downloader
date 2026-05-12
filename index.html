@@ -14,7 +14,7 @@
     :root {
       --bg-primary: #0d1b21;
       --bg-card: #1a252b;
-      --bg-input: #151f24;
+      --bg-input: #2a3a40;
       --accent: #00d4aa;
       --text-primary: #ffffff;
       --text-secondary: #8a9aa0;
@@ -309,7 +309,7 @@
     .input-bar {
       display: flex;
       align-items: center;
-      background: var(--bg-card);
+      background: var(--bg-input);
       border-radius: var(--radius-full);
       padding: 4px;
       border: 1px solid var(--border-medium);
@@ -332,16 +332,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      padding: 0 8px 0 10px;
+      gap: 4px;
+      padding: 10px;
       border-radius: var(--radius-full);
       border: none;
-      background: var(--bg-input);
+      background: var(--bg-card);
       color: var(--accent);
       cursor: pointer;
       transition: all 150ms ease;
       height: 40px;
-      width: auto;
+      min-width: 40px;
     }
 
     .format-btn:hover { 
@@ -393,7 +393,7 @@
       display: flex;
       align-items: center;
       gap: var(--space-sm);
-      padding: 9px 10px;
+      padding: 10px 12px;
       border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 150ms ease;
@@ -652,21 +652,11 @@
       flex-direction: column; 
     }
 
-    .guide-item {
-      display: flex;
-      align-items: flex-start;
-      gap: var(--space-md);
-      padding: var(--space-md) 0;
-      border-top: 1px solid var(--border-light);
-      font-size: 0.875rem;
-      line-height: 1.5;
-    }
-
     .guide-item:first-child { 
       border-top: none; 
       padding-top: 0; 
     }
-    
+
     .guide-item:last-child { 
       padding-bottom: 0; 
     }
@@ -683,20 +673,7 @@
       font-size: 0.75rem;
       font-weight: 700;
       flex-shrink: 0;
-      margin-top: -2px;
-    }
-
-    .guide-text {
-      color: var(--text-secondary);
-      font-size: 0.875rem;
-      line-height: 1.5;
-      padding-top: 1px;
-    }
-
-    .guide-text strong {
-      color: var(--text-primary);
-      font-weight: 600;
-      font-size: 0.9375rem;
+      margin-top: 2px;
     }
 
     /* ==================== DOWNLOADS TAB ==================== */
@@ -1099,6 +1076,83 @@
       opacity: 0.6;
     }
 
+    /* ==================== GUIDE ICONS ==================== */
+    .guide-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .guide-icon {
+      width: 28px;
+      height: 28px;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .guide-text strong {
+      display: block;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9375rem;
+      margin-bottom: 2px;
+    }
+
+    .guide-text {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      padding-top: 1px;
+    }
+
+    /* ==================== FEATURES BAR ==================== */
+    .features-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-sm);
+      flex: 1;
+    }
+
+    .feature-item svg {
+      width: 22px;
+      height: 22px;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .feature-title {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      line-height: 1.2;
+    }
+
+    .feature-desc {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+
     /* ==================== RESPONSIVE ==================== */
     @media (max-width: 380px) {
       :root { --space-md: 12px; --space-lg: 16px; }
@@ -1219,7 +1273,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
                 </svg>
-                <span class="sr-only">Video</span>
+                <span>Video</span>
                 <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
@@ -1228,7 +1282,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
                 </svg>
-                <span class="sr-only">Audio</span>
+                <span>Audio</span>
                 <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
@@ -1238,7 +1292,7 @@
 
           <div class="input-wrapper">
             <label for="linkInput" class="sr-only">Video URL</label>
-            <input type="url" id="linkInput" placeholder="Paste link from TikTok..." autocomplete="off" maxlength="2000" inputmode="url" aria-describedby="input-help">
+            <input type="url" id="linkInput" placeholder="Paste link from TikTok, YouTube, Facebook..." autocomplete="off" maxlength="2000" inputmode="url" aria-describedby="input-help">
           </div>
 
           <button type="button" class="paste-btn-bar" id="pasteBtn" aria-label="Paste link from clipboard">Paste</button>
@@ -1283,29 +1337,79 @@
           <ol class="guide-list">
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">1</span>
+              <svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
               <span class="guide-text">
-                <strong>Copy URL</strong> — Navigate to the video and copy its link from the address bar
+                <strong>Copy URL</strong>
+                Copy the video link from your browser or app
               </span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">2</span>
+              <svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="8" y="2" width="8" height="4" rx="1"/><rect x="3" y="6" width="18" height="16" rx="2"/>
+                <path d="M8 12h8M8 16h5"/>
+              </svg>
               <span class="guide-text">
-                <strong>Paste Link</strong> — Click the paste button or enter the URL above
+                <strong>Paste Link</strong>
+                Paste the link in the box above
               </span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">3</span>
+              <svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v10M8 10l4 4 4-4"/><path d="M5 19h14"/>
+              </svg>
               <span class="guide-text">
-                <strong>Download</strong> — Press the arrow button and wait for processing
+                <strong>Download</strong>
+                Click the download button and wait for processing
               </span>
             </li>
             <li class="guide-item">
               <span class="guide-number" aria-hidden="true">4</span>
+              <svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6a1 1 0 0 1 1-1h3l2 3h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6z"/>
+              </svg>
               <span class="guide-text">
-                <strong>Save File</strong> — Video saves automatically to your downloads folder
+                <strong>Save File</strong>
+                Video saves automatically to your device
               </span>
             </li>
           </ol>
+        </div>
+
+        <div class="features-bar">
+          <div class="feature-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+              <path d="M7 2l10 10-5 2-2 5L7 2z"/>
+            </svg>
+            <div>
+              <div class="feature-title">Ultra Fast</div>
+              <div class="feature-desc">Lightning speed downloads</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+            <div>
+              <div class="feature-title">Safe &amp; Secure</div>
+              <div class="feature-desc">100% Protected and private</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="9" height="14" rx="2"/>
+              <rect x="10" y="8" width="9" height="14" rx="2"/>
+            </svg>
+            <div>
+              <div class="feature-title">All Devices</div>
+              <div class="feature-desc">Android, Windows, Mac &amp; more</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1956,16 +2060,35 @@
       },
 
       removeItem(id) {
-        if (confirm('Remove this download from history?')) {
-          const downloads = Storage.loadDownloads();
-          const index     = downloads.findIndex(d => d.id === id);
-          if (index > -1) {
-            downloads.splice(index, 1);
-            Storage.saveDownloads(downloads);
-            this.render();
-            Toast.success('Download removed');
-          }
-        }
+        // FIX 3: replaced confirm() — it's synchronous, freezes the UI on
+        // mobile, and is silently suppressed in PWA/standalone mode on some
+        // Android/iOS browsers, making the delete button appear broken.
+        // Instead we remove immediately and show an undo Toast for 5 seconds.
+        const downloads = Storage.loadDownloads();
+        const index     = downloads.findIndex(d => d.id === id);
+        if (index === -1) return;
+        const [removed] = downloads.splice(index, 1);
+        Storage.saveDownloads(downloads);
+        this.render();
+
+        let undone = false;
+        const toast = Toast.show('Download removed', 'info', 5000);
+        const undoBtn = document.createElement('button');
+        undoBtn.textContent  = 'Undo';
+        undoBtn.style.cssText =
+          'margin-left:8px;background:transparent;border:1px solid var(--accent);' +
+          'color:var(--accent);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:0.75rem;';
+        undoBtn.addEventListener('click', () => {
+          if (undone) return;
+          undone = true;
+          const current = Storage.loadDownloads();
+          current.splice(index, 0, removed);
+          Storage.saveDownloads(current);
+          this.render();
+          toast.querySelector('.toast-close')?.click();
+          Toast.success('Undo successful');
+        });
+        toast.querySelector('.toast-message')?.appendChild(undoBtn);
       },
 
       add(downloadUrl, viewUrl, format, fileName, fileSize, thumbnail, duration, title) {
@@ -2347,15 +2470,23 @@
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            await writable.write(value);
+            // FIX 2: enforce the same size cap as run() — _streamToFilePicker
+            // previously had no limit, allowing files beyond MAX_FILE_SIZE to
+            // stream unchecked directly to disk.
             received += value.length;
+            if (received > CONFIG.MAX_FILE_SIZE) {
+              await writable.abort();
+              reader.cancel();
+              throw new Error('File exceeds the maximum allowed download size');
+            }
+            await writable.write(value);
             if (contentLength > 0) {
               onProgress?.(Math.min(99, Math.round(received / contentLength * 100)));
             }
           }
           onProgress?.(100);
         } catch (err) {
-          await writable.abort();
+          try { await writable.abort(); } catch (_) {}
           throw err;
         }
 
@@ -2373,9 +2504,9 @@
         if (!newWindow || newWindow.closed ||
             typeof newWindow.closed === 'undefined') {
           // FIX Bug 2: window.location.href navigates the current tab away from
-          // the app when the popup is blocked on iOS Safari. Using a hidden
-          // anchor click instead tells the browser to open/download the URL
-          // without leaving the page.
+          // the app when the popup is blocked on iOS Safari. A hidden anchor
+          // click with target="_blank" requests a new tab/download without
+          // leaving the page.
           Toast.warning('Popup blocked. Trying direct link.', 8000);
           const a = document.createElement('a');
           a.href = url;
@@ -2470,7 +2601,9 @@
       const link     = elements.linkInput.value.trim();
       if (!settings.autoDownload || !link ||
           !SecurityUtils.isValidHttpUrl(link) || isActivelyDownloading()) return;
-      handleDownload().catch(err => {
+      // FIX 4: use handleDownloadWithRetry so server-busy errors during
+      // auto-download are retried consistently with manual downloads.
+      handleDownloadWithRetry(0).catch(err => {
         if (err.name !== 'AbortError') console.error('Auto-download error:', err);
       });
     }
@@ -2508,12 +2641,23 @@
             `(${retryCount + 1}/${CONFIG.MAX_RETRIES})`,
             'loading'
           );
+          // FIX 1: do NOT throw here — throwing while a retry is scheduled
+          // caused the caller's .catch to call setDownloading(false) immediately,
+          // unlocking the UI before the retry fired and allowing a second
+          // concurrent download to start. Return instead so the UI stays locked
+          // until the scheduled retry resolves or fails.
           setTimeout(() => {
             handleDownloadWithRetry(retryCount + 1).catch(e => {
-              if (e.name !== 'AbortError') console.error('Retry error:', e);
+              if (e.name !== 'AbortError') {
+                console.error('Retry exhausted:', e);
+                setDownloading(false);
+                setMessage('Download failed. Please try again.', 'error');
+              }
             });
           }, delay);
+          return;
         }
+        // Non-retryable or retries exhausted — propagate so caller can handle
         throw err;
       }
     }
@@ -2799,7 +2943,9 @@
           if (hiddenMs > 30000 && hiddenAbortController &&
               hiddenAbortController === state.abortController) {
             state.abortController.abort();
-            Toast.info('Download aborted after 30s in background');
+            // FIX 5: show actual elapsed time instead of always hardcoding "30s"
+            const hiddenSec = Math.round(hiddenMs / 1000);
+            Toast.info(`Download aborted after ${hiddenSec}s in background`);
           }
           hiddenAbortController = null;
         }
