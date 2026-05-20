@@ -1508,8 +1508,15 @@
         'progress-wrap','progress-fill','progress-label',
         'qualitySelector'
       ];
+      // Warn on missing IDs in development so HTML regressions surface
+      // immediately rather than producing a silent null crash at call-time.
       ids.forEach(id => {
-        elements[id] = document.getElementById(id);
+        const el = document.getElementById(id);
+        if (!el && (window.location.hostname === 'localhost' ||
+                    window.location.hostname === '127.0.0.1')) {
+          console.warn(`[FlashVidz] cacheElements: #${id} not found in DOM`);
+        }
+        elements[id] = el;
       });
     }
 
@@ -1574,6 +1581,12 @@
           ];
 
           if (privatePatterns.some(Boolean)) return null;
+          // Upgrade http -> https (mirrors server-side normalizeThumbnailUrl)
+          // so CDN thumbnail URLs are never served over plain HTTP.
+          if (parsed.protocol === 'http:') {
+            parsed.protocol = 'https:';
+            return parsed.toString();
+          }
           return trimmed;
         } catch {
           return null;
@@ -2472,6 +2485,8 @@
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
+            // Guard: value can be undefined on some edge-case stream implementations
+            if (!value) continue;
             // FIX 2: enforce the same size cap as run() — _streamToFilePicker
             // previously had no limit, allowing files beyond MAX_FILE_SIZE to
             // stream unchecked directly to disk.
@@ -2696,8 +2711,6 @@
       if (elements.iosHint) {
         elements.iosHint.classList.toggle('visible', IS_IOS);
       }
-
-      updateMessage('Starting download...', 'loading');
 
       if (state.abortController) state.abortController.abort();
       state.abortController = new AbortController();
