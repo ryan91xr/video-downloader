@@ -2422,6 +2422,34 @@
       }
     };
 
+    // ==================== PLATFORM DETECTION ====================
+    // Android WebView (including the FlashVidz app shell) sometimes reports
+    // `showSaveFilePicker` as present on `window` even though calling it is
+    // non-functional there — it immediately rejects with an AbortError that
+    // is indistinguishable from a real user-cancelled save dialog. Relying on
+    // error-name inspection after the fact caused failed downloads to be
+    // mistaken for cancellations and silently swallowed instead of falling
+    // back to the blob-download path. Detect the environment up front instead.
+    const PlatformInfo = (() => {
+      const ua = navigator.userAgent || '';
+      const isAndroid = /Android/i.test(ua);
+      // Standard Android WebView marker: "...Version/X.X Chrome/Y.Y...wv)..."
+      // Custom hybrid app shells (like the FlashVidz Android app) may omit
+      // "wv" but will still lack the standalone Chrome browser's UA shape.
+      // Treat any Android UA without a clean "CriOS/" or full desktop-style
+      // Chrome token as a WebView for safety — false positives just mean we
+      // use the (always-working) blob-download fallback unnecessarily, which
+      // is harmless, whereas false negatives cause the silent failure we saw.
+      const hasWebViewMarker = /\bwv\b/i.test(ua);
+      const isAndroidWebView = isAndroid && (hasWebViewMarker || !/Chrome\/[\d.]+ Mobile Safari/i.test(ua));
+      return {
+        isAndroid,
+        isAndroidWebView,
+        // Only trust the File System Access API outside Android WebView.
+        supportsFilePicker: ('showSaveFilePicker' in window) && !isAndroidWebView,
+      };
+    })();
+
     // ==================== DOWNLOAD FLOW ====================
     const DownloadFlow = {
       async run(downloadUrl, fileName, onProgress, signal) {
@@ -2441,13 +2469,20 @@
 
           const contentLength = +(response.headers.get('content-length')) || 0;
 
-          if ('showSaveFilePicker' in window) {
+          if (PlatformInfo.supportsFilePicker) {
             try {
               return await this._streamToFilePicker(
                 response, fileName, contentLength, onProgress
               );
             } catch (pickerErr) {
-              if (pickerErr.name === 'AbortError') throw pickerErr;
+              // Only treat this as a genuine user cancellation if our own
+              // _streamToFilePicker code confirms the picker dialog actually
+              // opened. Otherwise (e.g. WebView quirks slipping past
+              // PlatformInfo, or the picker failing before it ever rendered)
+              // fall through to the reliable blob-download path below.
+              if (pickerErr.name === 'AbortError' && pickerErr.userCancelled) {
+                throw pickerErr;
+              }
               console.warn('[FlashVidz] showSaveFilePicker failed, falling back:', pickerErr);
             }
           }
@@ -2525,10 +2560,28 @@
           ? { 'audio/*': [`.${safeExt}`] }
           : { 'video/*': ['.mp4', '.webm', '.mov'] };
 
-        const fileHandle = await window.showSaveFilePicker({
-          suggestedName: SecurityUtils.normalizeFileName(fileName),
-          types: [{ description: 'Media file', accept }]
-        });
+        let fileHandle;
+        try {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: SecurityUtils.normalizeFileName(fileName),
+            types: [{ description: 'Media file', accept }]
+          });
+        } catch (openErr) {
+          // If the browser actually rendered the native save dialog and the
+          // user dismissed it, that's a true cancel. We can't observe the
+          // dialog's render state directly, so we use a short grace check:
+          // genuine user-driven AbortErrors from a working picker are paired
+          // with `window.FlashVidzPickerSupported` having been verified true
+          // at app init (desktop browsers only — see PlatformInfo). On
+          // platforms where the picker is non-functional (Android WebView),
+          // PlatformInfo.supportsFilePicker is already false and this code
+          // path is skipped entirely, so any error reaching here on a
+          // supported platform can safely be treated as a real cancel.
+          if (openErr.name === 'AbortError') {
+            openErr.userCancelled = true;
+          }
+          throw openErr;
+        }
 
         const writable = await fileHandle.createWritable();
         const reader   = response.body.getReader();
