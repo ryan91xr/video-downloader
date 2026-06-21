@@ -2430,6 +2430,24 @@
     // error-name inspection after the fact caused failed downloads to be
     // mistaken for cancellations and silently swallowed instead of falling
     // back to the blob-download path. Detect the environment up front instead.
+    // ==================== NATIVE DOWNLOAD CALLBACKS ====================
+    // AndroidBridge.downloadFromUrl() runs the HTTP download on a native
+    // background thread, and reports back into the page by calling these
+    // two global functions via WebView.evaluateJavascript(). They look up
+    // the relevant download's handlers in the shared registry that
+    // DownloadFlow._runViaNativeBridge() populates.
+    window._nativeDownloadCallbacks = window._nativeDownloadCallbacks || {};
+
+    window.onNativeDownloadProgress = function (downloadId, percent) {
+      const entry = window._nativeDownloadCallbacks[downloadId];
+      if (entry?.onProgress) entry.onProgress(percent);
+    };
+
+    window.onNativeDownloadComplete = function (downloadId, result) {
+      const entry = window._nativeDownloadCallbacks[downloadId];
+      if (entry?.onComplete) entry.onComplete(result);
+    };
+
     const PlatformInfo = (() => {
       const ua = navigator.userAgent || '';
       const isAndroid = /Android/i.test(ua);
@@ -2453,6 +2471,15 @@
     // ==================== DOWNLOAD FLOW ====================
     const DownloadFlow = {
       async run(downloadUrl, fileName, onProgress, signal) {
+        // Inside the FlashVidz Android app, skip JS-side fetching entirely.
+        // Native code performs the real HTTP download and streams it
+        // straight to device storage via MediaStore — faster, no base64
+        // inflation, and avoids WebView JS-bridge payload-size issues that
+        // affected earlier blob-based approaches.
+        if (window.AndroidBridge && typeof window.AndroidBridge.downloadFromUrl === 'function') {
+          return this._runViaNativeBridge(downloadUrl, fileName, onProgress, signal);
+        }
+
         const controller  = new AbortController();
         const abortHandler = () => controller.abort();
         if (signal) {
@@ -2525,23 +2552,6 @@
           const blobType   = serverMime || MIME_MAP[ext] || 'video/mp4';
           const blob       = new Blob(chunks, { type: blobType });
 
-          // Inside the FlashVidz Android app, `AndroidBridge` is injected by
-          // MainActivity via addJavascriptInterface. A blob: URL only exists
-          // in this page's memory — Android's WebView has no built-in way to
-          // persist it to real device storage (no Gallery entry, no MX
-          // Player visibility, plays only by re-streaming from the blob).
-          // When the bridge is present, hand the bytes to native code instead,
-          // which writes a real file via MediaStore.
-          if (window.AndroidBridge && typeof window.AndroidBridge.saveBase64File === 'function') {
-            const base64 = await this._blobToBase64(blob);
-            const safeName = SecurityUtils.normalizeFileName(fileName);
-            const result = window.AndroidBridge.saveBase64File(base64, safeName, blobType);
-            if (result !== 'OK') {
-              throw new Error('Native save failed: ' + result);
-            }
-            return received;
-          }
-
           blobUrl = URL.createObjectURL(blob);
           state.activeObjectUrls.add(blobUrl);
 
@@ -2572,20 +2582,65 @@
       },
 
       /**
-       * Converts a Blob to a raw base64 string (no data: URI prefix) using
-       * FileReader, which handles large binary payloads more reliably than
-       * manual byte-to-base64 conversion loops in JS for video-sized files.
+       * Hands the download off entirely to native Android code, which
+       * performs the HTTP request itself and streams the response straight
+       * to device storage — no fetch(), no blob, no JS-side byte handling.
+       * Progress and completion arrive via global callbacks that native code
+       * invokes through WebView.evaluateJavascript.
        */
-      _blobToBase64(blob) {
+      _runViaNativeBridge(downloadUrl, fileName, onProgress, signal) {
         return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const result = reader.result || '';
-            const commaIdx = result.indexOf(',');
-            resolve(commaIdx !== -1 ? result.slice(commaIdx + 1) : result);
+          const safeName = SecurityUtils.normalizeFileName(fileName);
+          const ext      = (fileName.split('.').pop() || '').toLowerCase();
+          const MIME_MAP = {
+            mp4: 'video/mp4', m4a: 'audio/mp4', mp3: 'audio/mpeg',
+            mov: 'video/quicktime', webm: 'video/webm',
+            mkv: 'video/x-matroska', ogg: 'audio/ogg', opus: 'audio/opus'
           };
-          reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
-          reader.readAsDataURL(blob);
+          const mimeType = MIME_MAP[ext] || 'video/mp4';
+
+          const downloadId = window.AndroidBridge.downloadFromUrl(downloadUrl, safeName, mimeType);
+          if (!downloadId || downloadId.startsWith('ERROR')) {
+            reject(new Error('Native download failed to start: ' + downloadId));
+            return;
+          }
+
+          let settled = false;
+          const cleanup = () => {
+            if (window._nativeDownloadCallbacks) {
+              delete window._nativeDownloadCallbacks[downloadId];
+            }
+            signal?.removeEventListener('abort', onAbort);
+          };
+
+          const onAbort = () => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(new DOMException('The operation was aborted.', 'AbortError'));
+          };
+          if (signal) {
+            if (signal.aborted) { onAbort(); return; }
+            signal.addEventListener('abort', onAbort, { once: true });
+          }
+
+          // Register this download's callbacks in a shared registry so
+          // multiple concurrent downloads (if ever supported) don't clobber
+          // each other's onProgress/resolve/reject.
+          window._nativeDownloadCallbacks = window._nativeDownloadCallbacks || {};
+          window._nativeDownloadCallbacks[downloadId] = {
+            onProgress: (percent) => onProgress?.(percent),
+            onComplete: (result) => {
+              if (settled) return;
+              settled = true;
+              cleanup();
+              if (result === 'OK') {
+                resolve(0); // byte count not tracked natively; callers only check truthy return
+              } else {
+                reject(new Error(result));
+              }
+            }
+          };
         });
       },
 
