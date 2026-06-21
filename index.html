@@ -2900,8 +2900,14 @@
         await handleDownload();
       } catch (err) {
         if (err.name === 'AbortError') return;
-        const isRetryable = err.message?.includes('try again later') ||
-                            err.message?.includes('busy');
+        // Matches the transient/platform-side wording server.js now uses
+        // for rate limits, TikTok bot-detection, YouTube PO-token blocks,
+        // and expired-cookie cases — all genuinely worth an automatic retry
+        // since they're not caused by anything wrong with this request.
+        const isRetryable = err.message?.includes('try again') ||
+                            err.message?.includes('busy') ||
+                            err.message?.includes('temporarily') ||
+                            err.message?.includes('rate-limiting');
         if (isRetryable && retryCount < CONFIG.MAX_RETRIES) {
           const delay = CONFIG.RETRY_DELAY * Math.pow(2, retryCount);
           setMessage(
@@ -3100,21 +3106,22 @@
         console.error('Download error:', err);
         let errorMsg = err.message || 'Download failed';
 
-        if (platform === 'instagram' || platform === 'facebook') {
-          if (errorMsg.includes('login') || errorMsg.includes('cookie')) {
-            errorMsg = `${platform.charAt(0).toUpperCase() + platform.slice(1)} ` +
-                       'login required. Please try again later.';
-          } else if (errorMsg.includes('private')) {
-            errorMsg = `This ${platform} post is private.`;
-          }
-        } else if (platform === 'youtube') {
-          if (errorMsg.includes('unavailable') || errorMsg.includes('bot') ||
-              errorMsg.includes('sign in')) {
-            errorMsg = 'YouTube download failed. Video may be age-restricted or blocked.';
-          }
+        // The server now returns clear, platform-aware messages directly
+        // (see server.js download error handler) — covers rate limits,
+        // TikTok bot-detection, YouTube PO-token blocks, Instagram
+        // sensitive-content restrictions, and expired-cookie cases with
+        // wording a user can actually act on. Only handle cases here that
+        // the server can't distinguish from the client side.
+        if ((platform === 'instagram' || platform === 'facebook') && errorMsg.includes('private')) {
+          errorMsg = `This ${platform} post is private.`;
         }
 
-        if (errorMsg.includes('try again later') || errorMsg.includes('busy')) {
+        const isRetryable = errorMsg.includes('try again') ||
+                             errorMsg.includes('busy') ||
+                             errorMsg.includes('temporarily') ||
+                             errorMsg.includes('rate-limiting');
+
+        if (isRetryable) {
           showErrorWithRetry(errorMsg);
           resetUI(2000, downloadId);
           throw err;
