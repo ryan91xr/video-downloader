@@ -2525,6 +2525,23 @@
           const blobType   = serverMime || MIME_MAP[ext] || 'video/mp4';
           const blob       = new Blob(chunks, { type: blobType });
 
+          // Inside the FlashVidz Android app, `AndroidBridge` is injected by
+          // MainActivity via addJavascriptInterface. A blob: URL only exists
+          // in this page's memory — Android's WebView has no built-in way to
+          // persist it to real device storage (no Gallery entry, no MX
+          // Player visibility, plays only by re-streaming from the blob).
+          // When the bridge is present, hand the bytes to native code instead,
+          // which writes a real file via MediaStore.
+          if (window.AndroidBridge && typeof window.AndroidBridge.saveBase64File === 'function') {
+            const base64 = await this._blobToBase64(blob);
+            const safeName = SecurityUtils.normalizeFileName(fileName);
+            const result = window.AndroidBridge.saveBase64File(base64, safeName, blobType);
+            if (result !== 'OK') {
+              throw new Error('Native save failed: ' + result);
+            }
+            return received;
+          }
+
           blobUrl = URL.createObjectURL(blob);
           state.activeObjectUrls.add(blobUrl);
 
@@ -2552,6 +2569,24 @@
         } finally {
           signal?.removeEventListener('abort', abortHandler);
         }
+      },
+
+      /**
+       * Converts a Blob to a raw base64 string (no data: URI prefix) using
+       * FileReader, which handles large binary payloads more reliably than
+       * manual byte-to-base64 conversion loops in JS for video-sized files.
+       */
+      _blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result || '';
+            const commaIdx = result.indexOf(',');
+            resolve(commaIdx !== -1 ? result.slice(commaIdx + 1) : result);
+          };
+          reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
+          reader.readAsDataURL(blob);
+        });
       },
 
       async _streamToFilePicker(response, fileName, contentLength, onProgress) {
