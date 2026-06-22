@@ -60,6 +60,12 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      /* Suppress Android WebView's native tap-highlight glow —
+         the bluish/teal system highlight that appears on recently-tapped
+         elements (cards, tabs, buttons) and can linger visibly, looking
+         like a stray border or glow. We handle our own :focus-visible
+         indicators below, so the system one is only visual noise here. */
+      -webkit-tap-highlight-color: transparent;
     }
 
     html {
