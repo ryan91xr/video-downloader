@@ -88,7 +88,14 @@
       overflow-x: hidden;
     }
 
-    :focus-visible {
+    /* Focus rings: only shown during keyboard navigation, never after touch taps.
+       We add a 'keyboard-nav' class to <body> when keyboard is detected, and
+       remove it on any touch/mouse event. This means mobile users never see
+       lingering focus outlines after tapping, while keyboard users still get
+       full accessibility indicators. */
+    :focus { outline: none; }
+    :focus-visible { outline: none; }
+    .keyboard-nav :focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
     }
@@ -3256,6 +3263,25 @@
     } else {
       init();
     }
+
+    // ==================== FOCUS RING MANAGEMENT ====================
+    // Show focus outlines only when actually using keyboard navigation.
+    // Touch and mouse users never see lingering focus rings after tapping —
+    // which was causing the teal glow border to appear on tabs, quality
+    // buttons, and cards after interaction on mobile.
+    (function setupFocusManagement() {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          document.body.classList.add('keyboard-nav');
+        }
+      }, { passive: true });
+      document.addEventListener('mousedown', () => {
+        document.body.classList.remove('keyboard-nav');
+      }, { passive: true });
+      document.addEventListener('touchstart', () => {
+        document.body.classList.remove('keyboard-nav');
+      }, { passive: true });
+    })();
   </script>
 </body>
 </html>
